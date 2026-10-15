@@ -1,3 +1,7 @@
 node_modules/
 .env
 .DS_Store
+# Thmanyah font files: the license forbids redistributing them, so each person keeps their own copy.
+fonts/thmanyah/*
+!fonts/thmanyah/README.md
+design/templates/fonts.local.css

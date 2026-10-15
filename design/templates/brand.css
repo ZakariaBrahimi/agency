@@ -13,6 +13,8 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--ink); overflow: hidden; }
+/* Arabic letters must stay joined: no tracking in RTL designs. */
+[dir="rtl"], [dir="rtl"] * { letter-spacing: 0 !important; }
 body { font-family: var(--font-body); color: #fff; -webkit-font-smoothing: antialiased; }
 
 /* Canvas = exact export size, set from ?w=&h= by render script */
@@ -23,6 +25,12 @@ body { font-family: var(--font-body); color: #fff; -webkit-font-smoothing: antia
   background:
     radial-gradient(ellipse 60% 90% at 78% 40%, color-mix(in srgb, var(--indigo) 55%, transparent), transparent 70%),
     radial-gradient(ellipse 40% 60% at 12% 110%, color-mix(in srgb, var(--lime) 14%, transparent), transparent 70%),
+    var(--ink);
+}
+[dir="rtl"] .bg-ink {
+  background:
+    radial-gradient(ellipse 60% 90% at 22% 40%, color-mix(in srgb, var(--indigo) 55%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 60% at 88% 110%, color-mix(in srgb, var(--lime) 14%, transparent), transparent 70%),
     var(--ink);
 }
 .grid::before {

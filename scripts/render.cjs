@@ -28,8 +28,35 @@ const JOBS = [
   { name: 'logo/logo-mark', url: T('logo.html?kind=mark'), w: 2400, h: 600, crop: '#logo', transparent: true },
   { name: 'logo/logo-horizontal', url: T('logo.html?kind=horizontal'), w: 2400, h: 600, crop: '#logo', transparent: true },
   { name: 'logo/logo-horizontal-dark', url: T('logo.html?kind=horizontal-dark'), w: 2400, h: 600, crop: '#logo', transparent: true },
-  { name: 'brand/name-options', url: T('name-options.html'), w: 1600, h: 1000 },
 ];
+
+// Thmanyah can't be committed (license), so it is loaded from fonts/thmanyah/ when present.
+function findFonts(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    return e.isDirectory() ? findFonts(p) : /\.(otf|ttf|woff2?)$/i.test(e.name) ? [p] : [];
+  });
+}
+function writeLocalFontCss() {
+  const css = findFonts(path.join(ROOT, 'fonts/thmanyah')).map((file) => {
+    const n = path.basename(file).replace(/[-_ ]/g, '').toLowerCase();
+    const family = /serifdisplay|display/.test(n) ? 'Thmanyah Serif Display' : /serif/.test(n) ? 'Thmanyah Serif Text' : 'Thmanyah Sans';
+    const weight = /black|heavy/.test(n) ? 900 : /bold/.test(n) ? 700 : /medium/.test(n) ? 500 : /light/.test(n) ? 300 : 400;
+    const rel = path.relative(path.join(ROOT, 'design/templates'), file).split(path.sep).join('/');
+    return { family, weight, css: `@font-face { font-family: '${family}'; font-weight: ${weight}; src: url('${encodeURI(rel)}'); }` };
+  });
+  fs.writeFileSync(path.join(ROOT, 'design/templates/fonts.local.css'), css.map((c) => c.css).join('\n') + '\n');
+  if (css.length) {
+    console.log(`✓ Thmanyah: ${css.map((c) => `${c.family} ${c.weight}`).join(', ')}`);
+  } else if (/thmanyah/i.test(brand.font)) {
+    let installed = false;
+    try { installed = /thmanyah/i.test(require('child_process').execSync('fc-list', { encoding: 'utf8' })); } catch {}
+    console.warn(installed
+      ? '✓ Thmanyah: using the copy installed on this computer'
+      : '! Thmanyah font not found: rendering with the IBM Plex Sans Arabic fallback. See fonts/thmanyah/README.md');
+  }
+}
 
 function writeLogoSvgs() {
   const dir = path.join(ROOT, 'brand/logo');
@@ -43,6 +70,7 @@ function writeLogoSvgs() {
 
 (async () => {
   const filter = process.argv[2];
+  writeLocalFontCss();
   if (!filter) writeLogoSvgs();
   const browser = await chromium.launch();
   for (const j of JOBS.filter((j) => !filter || j.name.includes(filter))) {

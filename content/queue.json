@@ -5,13 +5,18 @@
       "id": "2026-10-20-meet-mizan",
       "status": "draft",
       "publish_at": "2026-10-20T10:00:00+01:00",
-      "platforms": ["facebook", "instagram", "linkedin", "x"],
+      "platforms": [
+        "facebook",
+        "instagram",
+        "linkedin",
+        "x"
+      ],
       "image": "exports/posts/mizan-intro.png",
-      "alt": "Mizan dashboard showing revenue, expenses and balance, with a 'Built by Nawa' badge.",
+      "alt": "لوحة تحكم ميزان تعرض الإيرادات والمصروفات والرصيد، مع شارة «من تطوير نواة».",
       "mention": "mizan",
-      "caption": "Meet {{mention}}, your business in balance.\n\nSales, stock and cash in one clear view, built for teams who'd rather grow than reconcile spreadsheets.\n\nWe designed and built it in-house. A Nawa product.\n\n#SaaS #SmallBusiness #Mizan",
+      "caption": "تعرّفوا على {{mention}}: أعمالك في توازن.\n\nالمبيعات والمخزون والسيولة في لوحة واحدة واضحة، لفرق تفضّل النمو على مطاردة جداول البيانات.\n\nصمّمناه وطوّرناه بالكامل داخل فريقنا. أحد منتجات نواة.\n\n#ميزان #برمجيات #ريادة_الأعمال",
       "captions": {
-        "x": "Meet {{mention}}, your business in balance. Sales, stock and cash in one clear view.\n\nDesigned and built in-house. A Nawa product. #SaaS"
+        "x": "تعرّفوا على {{mention}}: أعمالك في توازن. المبيعات والمخزون والسيولة في لوحة واحدة واضحة.\n\nأحد منتجات نواة. #ميزان"
       }
     }
   ]

@@ -326,14 +326,15 @@
 <script>
 (() => {
   const O = Brand.OPTIONS;
+  const En = (b) => Brand.normalize(Object.assign({}, b, { lang: 'en' }));
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = 'brandPicker.v1';
   const slug = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '') || 'brand';
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // ----- State -----
-  let s = { b: Brand.normalize(Brand.DEFAULT_BRAND), nameKey: 'Nawa', paletteKey: 'core', taglineKey: 0, domainEdited: false };
-  try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (saved && saved.b) s = Object.assign(s, saved, { b: Brand.normalize(saved.b) }); } catch (e) {}
+  let s = { b: En({}), nameKey: 'Nawa', paletteKey: 'core', taglineKey: 0, domainEdited: false };
+  try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (saved && saved.b) s = Object.assign(s, saved, { b: En(saved.b) }); } catch (e) {}
   const remember = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} };
 
   function setName(name, arabic, key) {
@@ -419,7 +420,7 @@
   }
 
   function load(brand) {
-    s.b = Brand.normalize(clone(brand));
+    s.b = En(clone(brand));
     const n = O.names.find((x) => x.name === s.b.name); s.nameKey = n ? n.name : 'custom'; $('customName').value = n ? '' : s.b.name;
     const pk = Object.entries(O.palettes).find(([, p]) => ['dark', 'primary', 'accent', 'paper'].every((r) => p[r].toUpperCase() === String(s.b.palette[r]).toUpperCase()));
     s.paletteKey = pk ? pk[0] : 'custom';
@@ -440,7 +441,7 @@
     s.taglineKey = Math.floor(Math.random() * O.taglines.length); s.b.tagline = O.taglines[s.taglineKey]; $('customTagline').value = '';
     update(); status('Shuffled. Save it if you like it.');
   });
-  $('reset').addEventListener('click', () => { s.domainEdited = false; load(Brand.DEFAULT_BRAND); status('Back to the recommended brand.'); });
+  $('reset').addEventListener('click', () => { s.domainEdited = false; load(En({})); status('Back to the recommended brand.'); });
   $('copy').addEventListener('click', async () => {
     const json = JSON.stringify(s.b, null, 2);
     try { await navigator.clipboard.writeText(json); status('Settings copied. Paste them into brand/brand.json or send them to Claude.', true); $('copyBox').hidden = true; }
@@ -460,7 +461,7 @@
     host.innerHTML = '';
     if (!items.length) { host.innerHTML = '<p class="empty">Nothing saved yet. Set up a combination you like and press "Save to shortlist" to compare options side by side.</p>'; }
     items.forEach((it) => {
-      const b = Brand.normalize(it.brand);
+      const b = En(it.brand);
       const isFinal = finalDoc && finalDoc.id === it.id;
       const el = document.createElement('div'); el.className = 'sl' + (isFinal ? ' is-final' : '');
       el.innerHTML = `<div class="m">${Brand.markSVG(b)}</div><div><b></b><div class="meta"></div></div>
@@ -472,7 +473,7 @@
       el.querySelector('[data-a="del"]').onclick = () => removeItem(it);
       host.appendChild(el);
     });
-    const f = finalDoc && finalDoc.brand ? Brand.normalize(finalDoc.brand) : null;
+    const f = finalDoc && finalDoc.brand ? En(finalDoc.brand) : null;
     $('final').classList.toggle('on', !!f);
     if (f) { $('finalMark').innerHTML = Brand.markSVG(f); $('finalName').textContent = f.name; }
   }

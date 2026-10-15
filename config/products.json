@@ -2,7 +2,7 @@
   "_comment": "Our own SaaS products. Posts with \"mention\": \"<key>\" get {{mention}} swapped for the right tag on each platform. Fill in the real ids/handles.",
   "products": {
     "mizan": {
-      "name": "Mizan",
+      "name": "ميزان",
       "facebook_page_id": "",
       "instagram_username": "",
       "linkedin_org_id": "",

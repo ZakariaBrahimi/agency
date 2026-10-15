@@ -8,7 +8,9 @@ publisher that posts to social media on a schedule.
 brand/BRAND.md          name options + recommendation, colors, type, voice, logo rules
 brand/brand.json        THE chosen brand (name, palette, font, logo style, tagline); every design reads it
 brand/logo/*.svg        logo marks, generated from brand.json
-design/templates/brand-picker.html  interactive picker: try names/logos/colors/fonts live
+design/templates/brand-picker-ar.html  Arabic picker (RTL, Thmanyah font): the active direction
+design/templates/brand-picker.html     earlier English picker
+fonts/thmanyah/         put your own copy of the Thmanyah font here (git-ignored, see its README)
 design/templates/*.html designs as HTML (edit text/colors here, then re-render)
 exports/                ready-to-upload PNGs (profile photos, covers, posts, logos)
 content/queue.json      the content calendar the publisher reads
@@ -34,8 +36,16 @@ cover image be changed reliably through their APIs.
 
 ## Choosing or changing the brand
 
-Open the **Brand Picker** (`design/templates/brand-picker.html`, also published as an artifact). There are
-8 names (or type your own), 5 logo styles, 6 palettes (or custom colors), 7 fonts and 4 taglines (or your own).
+The brand is **Arabic-only** (`"lang": "ar"` in `brand/brand.json`). All designs are right-to-left with
+Arabic copy, and they use the **Thmanyah** font (خط ثمانية).
+
+**Thmanyah font:** its license forbids redistributing the files, so they are not in this repo. Download
+the font from Thmanyah's official page and put the files in `fonts/thmanyah/`, or install them on your
+computer. Without them, renders fall back to IBM Plex Sans Arabic and `npm run render` prints a warning.
+
+Open the **Arabic Brand Picker** (`design/templates/brand-picker-ar.html`, also published as an artifact).
+There are 8 Arabic names (or type your own), 5 logo styles, 6 palettes (or custom colors), Thmanyah Sans or
+Thmanyah Serif, and 4 taglines (or your own).
 Save the combinations you like to the shortlist and mark one as final, or use **Copy settings** and paste the
 result into `brand/brand.json`. Then run `npm run render` and every logo, cover, profile photo and post is
 redrawn with that brand.

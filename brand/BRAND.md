@@ -12,6 +12,24 @@ The brand has to work as a **parent brand**. When we post about our own product 
 
 ---
 
+## Arabic-only direction (current)
+
+The brand is now Arabic-only: the name is **نواة**, every design is right-to-left, and the font is
+**Thmanyah** (Thmanyah Sans for everything, Thmanyah Serif Display as an alternative for headlines).
+
+- **Logo:** the signature mark is the letter **ن**. Its dot is drawn in Lime and *is* the "core" (النواة).
+- **Default tagline:** «نبني المنتجات. ونصمّم العلامات.»
+- **Product posts:** they carry the badge «من تطوير نواة» and end with «أحد منتجات نواة».
+- **Rules:** never add letter-spacing to Arabic text, since it breaks the joins between letters.
+  Use Western digits (12,480) in UI mockups.
+- **Font license:** Thmanyah is free for commercial work but may not be redistributed. Keep the files
+  out of git (see `fonts/thmanyah/README.md`).
+
+Use the Arabic Brand Picker (`design/templates/brand-picker-ar.html`) to explore the other names,
+logos, colors and taglines.
+
+The sections below document the earlier English exploration.
+
 ## 2. Name options
 
 | # | Name | Meaning | Feel | Product line-up reads as | Palette direction |

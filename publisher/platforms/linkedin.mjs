@@ -17,7 +17,7 @@ export function caption(post, products) {
     ? `@[${escape(product.name)}](urn:li:organization:${product.linkedin_org_id})`
     : escape(product?.name ?? '');
   return escape(renderCaption(post, name, products, () => MENTION))
-    .replace(/\\#(\w+)/g, '{hashtag|\\#|$1}')
+    .replace(/\\#([\p{L}\p{M}\p{N}\\_]+)/gu, (m, tag) => `{hashtag|\\#|${tag}}`)
     .replaceAll(MENTION, tag);
 }
 
