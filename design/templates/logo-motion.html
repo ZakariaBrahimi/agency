@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نواة · Logo motion</title>
+<link rel="stylesheet" href="fonts.local.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;700&display=swap">
+<style>
+  html, body { margin: 0; background: #0B1220; overflow: hidden; }
+  svg { display: block; }
+  text { font-family: "Thmanyah Sans", "IBM Plex Sans Arabic", sans-serif; }
+</style></head>
+<body>
+<!-- LOGO-MOTION:START -->
+<svg id="stage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" role="img" aria-label="نواة">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="60%">
+      <stop offset="0" stop-color="#5B4BFF" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#5B4BFF" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse">
+      <path d="M54 0H0V54" fill="none" stroke="#fff" stroke-opacity=".045" stroke-width="1.5"/>
+    </pattern>
+    <clipPath id="bloom"><circle id="bloomC" cx="256" cy="148" r="0"/></clipPath>
+  </defs>
+  <rect id="bg" width="1080" height="1080" fill="#0B1220"/>
+  <rect id="bgGrid" width="1080" height="1080" fill="url(#grid)"/>
+  <rect id="bgGlow" width="1080" height="1080" fill="url(#glow)" opacity="0"/>
+  <g id="world">
+    <g id="mark">
+      <rect width="512" height="512" rx="120" fill="#5B4BFF" clip-path="url(#bloom)"/>
+      <!-- the bowl of ن, drawn right to left like Arabic writing -->
+      <path id="bowl" d="M366 236 A110 110 0 0 1 146 236" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/>
+      <circle id="ring" cx="256" cy="148" r="40" fill="none" stroke="#C6F432" stroke-width="10" opacity="0"/>
+      <g id="dotG"><circle id="dot" cx="0" cy="0" r="40" fill="#C6F432"/></g>
+    </g>
+    <text id="word" x="540" y="790" text-anchor="middle" font-size="150" font-weight="700" fill="#fff" opacity="0">نواة</text>
+    <text id="tag" x="540" y="880" text-anchor="middle" font-size="44" font-weight="500" fill="#fff" opacity="0">نطلق <tspan fill="#C6F432">المنتجات الرقمية.</tspan> ونروي <tspan fill="#C6F432">القصص.</tspan></text>
+  </g>
+</svg>
+<script>
+(() => {
+  // One seekable timeline: render(t) draws the frame at t seconds, so the same code plays live
+  // and renders frame-exact video. Sound cues (see scripts/logo-sound.py) sit on these times.
+  const DURATION = 5;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const inQuad = (k) => k * k;
+  const outCubic = (k) => 1 - Math.pow(1 - k, 3);
+  const inOutCubic = (k) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+  const outBack = (k) => 1 + 2.4 * Math.pow(k - 1, 3) + 1.4 * Math.pow(k - 1, 2);
+
+  const params = new URLSearchParams(location.search);
+  const H = +params.get('h') || 1080;  // 1920 renders the vertical (story/reel) version
+  const stage = $('stage');
+  stage.setAttribute('viewBox', `0 0 1080 ${H}`);
+  stage.setAttribute('height', H);
+  ['bg', 'bgGrid', 'bgGlow'].forEach((id) => $(id).setAttribute('height', H));
+  $('world').setAttribute('transform', `translate(0 ${(H - 1080) / 2})`);
+
+  function render(t) {
+    // 1. The lime dot (the "core") falls in and bounces twice: 0.15 → 1.05s
+    let dy;
+    if (t < 0.55) dy = lerp(-560, 148, inQuad(seg(t, 0.15, 0.55)));
+    else if (t < 0.85) { const k = seg(t, 0.55, 0.85); dy = 148 - 46 * 4 * k * (1 - k); }
+    else if (t < 1.05) { const k = seg(t, 0.85, 1.05); dy = 148 - 14 * 4 * k * (1 - k); }
+    else dy = 148;
+    const sq = (at, d, amt) => { const k = seg(t, at, at + d); return k > 0 && k < 1 ? amt * Math.sin(Math.PI * k) : 0; };
+    const squash = sq(0.55, 0.16, 0.28) + sq(0.85, 0.12, 0.12) + sq(1.05, 0.1, 0.05);
+    // 4. On the chime the dot pulses
+    const pulse = 1 + 0.22 * Math.sin(Math.PI * seg(t, 1.7, 2.05));
+    $('dotG').setAttribute('transform', `translate(256 ${dy + 40 * squash}) scale(${(1 + squash) * pulse} ${(1 - squash) * pulse})`);
+
+    // 2. The impact blooms the indigo badge out from the dot: 0.55 → 1.05s
+    $('bloomC').setAttribute('r', 400 * outCubic(seg(t, 0.55, 1.05)));
+    $('bgGlow').setAttribute('opacity', outCubic(seg(t, 0.6, 1.4)));
+
+    // 3. The bowl of ن writes itself, right to left: 1.05 → 1.65s
+    $('bowl').setAttribute('stroke-dashoffset', 1000 * (1 - inOutCubic(seg(t, 1.05, 1.65))));
+    $('bowl').setAttribute('opacity', t > 1.05 ? 1 : 0); // hide the round cap before the stroke starts
+
+    // 4. A ring ripples out of the core: 1.7 → 2.4s
+    const rk = seg(t, 1.7, 2.4);
+    $('ring').setAttribute('r', lerp(44, 150, outCubic(rk)));
+    $('ring').setAttribute('opacity', rk > 0 && rk < 1 ? 0.9 * (1 - rk) : 0);
+
+    // 5. The mark rises and the name and tagline arrive: 2.2 → 3.5s
+    const mk = inOutCubic(seg(t, 2.2, 2.9));
+    const size = lerp(560, 400, mk), cy = lerp(540, 380, mk);
+    $('mark').setAttribute('transform', `translate(${540 - size / 2} ${cy - size / 2}) scale(${size / 512})`);
+    const wk = outBack(seg(t, 2.5, 3.05)), tk = outCubic(seg(t, 2.85, 3.45));
+    $('word').setAttribute('opacity', clamp(seg(t, 2.5, 2.8)));
+    $('word').setAttribute('transform', `translate(0 ${40 * (1 - wk)})`);
+    $('tag').setAttribute('opacity', tk);
+    $('tag').setAttribute('transform', `translate(0 ${24 * (1 - tk)})`);
+  }
+
+  window.LOGO_MOTION = { render, DURATION };
+  render(params.has('t') ? +params.get('t') : DURATION);
+})();
+</script>
+<!-- LOGO-MOTION:END -->
+</body></html>

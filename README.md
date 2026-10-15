@@ -107,3 +107,9 @@ Locally: `node --env-file=.env publisher/publish.mjs --dry-run`.
 
 Platforms that have no credentials set are skipped with a notice. Nothing fails, so you can
 connect platforms one at a time.
+
+## Logo animation
+
+`design/templates/logo-motion.html` animates the mark on one seekable timeline, and
+`scripts/logo-sound.py` synthesizes the matching sound effects. The rendered videos (with sound) are in
+`exports/motion/`: `logo-square.mp4` (1080×1080) and `logo-vertical.mp4` (1080×1920, stories and reels).
