@@ -1,12 +1,21 @@
 # Nawa landing page
 
-`index.html` is the whole site in a single file, with no build step. Arabic is the default
+There are two variants, each a complete page in a single file with no build step:
+
+- `index.html` (variant A) presents the studio's two sides: products we launch, and stories we tell.
+- `variant-b.html` (variant B) leads with the two client offers: **social media ads** (Meta and
+  TikTok) and a **product team** (product owners, designers and developers who dig into your idea
+  and build it). It also has engagement models, and a contact box where visitors pick what they
+  need, which fills in the email subject.
+
+Both pages share the same brand, base styles and language behavior. To publish variant B as the
+home page, rename it to `index.html`. Arabic is the default
 (right-to-left). Visitors can switch to English or French with the ع / EN / FR switch. The choice
 is remembered, and you can link straight to a language with `#en` or `#fr`.
 
 ## Before going live
 
-Edit the `SITE` settings at the top of the script in `index.html`:
+Edit the `SITE` settings at the top of the script in each page:
 
 - `email`: the contact address (currently `hello@nawa.studio`).
 - `mizanUrl`: Mizan's website. The "Visit Mizan" button stays hidden until this is set.
