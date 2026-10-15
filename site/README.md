@@ -1,48 +1,55 @@
-# Nawa landing page
+# Nawa website
 
-There are two variants, each a complete page in a single file with no build step:
+A static site with no build step, deployed on Vercel (project `nawa-studio`, root directory `site/`).
+Every push to the production branch redeploys it automatically.
 
-- `index.html` (variant A) presents the studio's two sides: products we launch, and stories we tell.
-- `variant-b.html` (variant B) follows the client journey, in this order:
-  1. we develop your product, with product owners, designers and developers who dig into the idea;
-  2. we create its visual identity and presence;
-  3. we design its social media content;
-  4. we promote it with ads (Meta and TikTok);
-  5. we study the results;
-  6. we improve, and the cycle starts again.
+Live: https://nawa-studio.vercel.app (Arabic) · `/en` · `/fr`
 
-  It also has engagement models that map to those steps, and a contact box where visitors pick
-  where to start, which fills in the email subject.
+```
+site/
+  index.html            the landing page (the six-step journey)
+  assets/css/styles.css all styles, including the motion
+  assets/js/i18n.js     all page text: ar (default), en, fr
+  assets/js/main.js     language switch, contact chooser, scroll and hero animations
+  assets/img/           favicon, apple-touch icon, og.png (share image)
+  404.html              not-found page
+  vercel.json           clean URLs, /en and /fr routes, cache and security headers
+  robots.txt, sitemap.xml
+  variant-a.html        the earlier "two sides" version, kept for reference
+```
 
-Both pages share the same brand, base styles and language behavior. To publish variant B as the
-home page, rename it to `index.html`. Arabic is the default
-(right-to-left). Visitors can switch to English or French with the ع / EN / FR switch. The choice
-is remembered, and you can link straight to a language with `#en` or `#fr`.
+## Languages
+
+Arabic is the default at `/`. Visitors switch with the ع / EN / FR control, and the address
+changes to `/en` or `/fr`, which you can share directly. On `/`, a visitor's last choice is
+remembered. Opened as a local file, the same switch uses `#en` / `#fr`.
+
+To change any wording, edit `assets/js/i18n.js`. Each key exists in `ar`, `en` and `fr`.
+
+## Motion
+
+- On load, the hero text rises in and the six steps of the cycle pop in one after another. The
+  steps then light up in turn, pausing while the pointer is over the cycle.
+- On scroll, sections slide in, the report bars and progress bars grow, the ad sparkline and the
+  idea-to-launch timeline draw themselves, and the sprint tasks tick in.
+- Visitors who ask their device to reduce motion get the static page, and so does any browser
+  without IntersectionObserver. Nothing is hidden for them.
 
 ## Before going live
 
-Edit the `SITE` settings at the top of the script in each page:
-
-- `email`: the contact address (currently `hello@nawa.studio`).
-- `mizanUrl`: Mizan's website. The "Visit Mizan" button stays hidden until this is set.
-- `socials`: the real profile links, once the handles are confirmed.
-
-All page text lives in the `T` object (`ar`, `en`, `fr`), so wording changes happen there.
+- `assets/js/main.js` → `SITE`: the real contact email (currently `hello@nawa.studio`) and the
+  social profile links.
+- **Custom domain:** add `nawa.studio` in Vercel (Project → Settings → Domains), then replace
+  `https://nawa-studio.vercel.app` in `index.html`, `robots.txt` and `sitemap.xml`.
+- **Share image:** `assets/img/og.png` is rendered from the brand with
+  `node scripts/render.cjs og` from the repo root.
 
 ## Thmanyah font
 
-The page asks for Thmanyah Sans first. It works for any visitor who has the font installed, and
-for everyone once you self-host the font with the site:
-
-1. Copy your Thmanyah Sans files, unchanged, into `site/fonts/`, and set the three `@font-face`
-   `url(...)` values in `index.html` to their exact file names. Don't convert or rename the font
-   itself, because the license forbids modifying it.
-2. Deploy them with the site. Using the font on your own website is allowed. Don't commit the files
-   to a public repo, and don't offer them for download. `site/fonts/` is git-ignored for that reason.
-
-Without the font, Arabic falls back to IBM Plex Sans Arabic, and English and French use Inter.
-
-## Hosting
-
-The folder is static, so any static host works (Vercel, Netlify, Cloudflare Pages, GitHub Pages).
-Point the `nawa.studio` domain at it.
+The page asks for Thmanyah Sans first, and visitors who have it installed see it. To serve it to
+everyone, copy the original font files, unchanged, into `site/assets/fonts/`. Then add
+`url("../fonts/<exact file name>")` after `local(...)` in the three `@font-face` rules at the top
+of `assets/css/styles.css`. The license allows using the font on your own site, but not
+modifying or redistributing it. `site/assets/fonts/` is git-ignored, so the files never land in
+the repo; upload them through your own deploy (for example `vercel deploy` from your machine).
+Without them, Arabic falls back to IBM Plex Sans Arabic, and English and French use Inter.

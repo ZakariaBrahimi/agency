@@ -5,4 +5,4 @@ node_modules/
 fonts/thmanyah/*
 !fonts/thmanyah/README.md
 design/templates/fonts.local.css
-site/fonts/
+site/assets/fonts/

@@ -24,6 +24,8 @@ const JOBS = [
   // YouTube banner: only the central 1546x423 is visible on every device
   { name: 'covers/youtube-banner', url: T('cover.html'), w: 2560, h: 1440, safe: [507, 508, 1546, 423] },
   { name: 'posts/mizan-intro', url: T('product-post.html'), w: 1080, h: 1350 },
+  // Website share image (Open Graph), written straight into the site
+  { name: 'og', url: T('cover.html'), w: 1200, h: 630, safe: [60, 70, 1080, 490], out: 'site/assets/img/og.png' },
   // Logos: transparent, cropped to the artwork
   { name: 'logo/logo-mark', url: T('logo.html?kind=mark'), w: 2400, h: 600, crop: '#logo', transparent: true },
   { name: 'logo/logo-horizontal', url: T('logo.html?kind=horizontal'), w: 2400, h: 600, crop: '#logo', transparent: true },
@@ -84,7 +86,7 @@ function writeLogoSvgs() {
     await page.goto(url);
     await page.waitForLoadState('networkidle');
     await page.evaluate(() => document.fonts.ready);
-    const out = path.join(ROOT, 'exports', j.name + '.png');
+    const out = path.join(ROOT, j.out || path.join('exports', j.name + '.png'));
     fs.mkdirSync(path.dirname(out), { recursive: true });
     const clip = j.crop ? await page.locator(j.crop).boundingBox() : { x: 0, y: 0, width: j.w, height: j.h };
     await page.screenshot({ path: out, clip, omitBackground: !!j.transparent });

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>نواة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="نواة: استوديو يطلق المنتجات الرقمية ويروي القصص. منتجات SaaS، تصميم المحتوى والهويات البصرية.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Thmanyah is used when installed or self-hosted next to this page (see site/README.md);
+     the files are not committed because the font license forbids redistribution. */
+  @font-face { font-family: "Thmanyah Sans"; font-weight: 400; src: local("Thmanyah Sans"), local("ThmanyahSans-Regular"), url("fonts/ThmanyahSans-Regular.otf") format("opentype"); font-display: swap; }
+  @font-face { font-family: "Thmanyah Sans"; font-weight: 500; src: local("Thmanyah Sans Medium"), local("ThmanyahSans-Medium"), url("fonts/ThmanyahSans-Medium.otf") format("opentype"); font-display: swap; }
+  @font-face { font-family: "Thmanyah Sans"; font-weight: 700; src: local("Thmanyah Sans Bold"), local("ThmanyahSans-Bold"), url("fonts/ThmanyahSans-Bold.otf") format("opentype"); font-display: swap; }
+
+  /* Layout: a dark ink hero with the product and post mockups, then light "paper" sections, one idea each;
+     the lime dot (the nun's dot, the "core") marks every key moment. Single deliberate look for the brand. */
+  :root {
+    --ink: #0B1220;
+    --ink-2: #151D2E;
+    --indigo: #5B4BFF;
+    --indigo-2: #8A7FFF;
+    --lime: #C6F432;
+    --paper: #F6F5F2;
+    --card: #FFFFFF;
+    --text: #0B1220;
+    --muted: #5A6170;
+    --line: #E3E1DB;
+    --on-ink: #FFFFFF;
+    --on-ink-muted: #A9B0C0;
+    --font-ar: "Thmanyah Sans", "IBM Plex Sans Arabic", Tahoma, sans-serif;
+    --font-lat: "Inter", "Helvetica Neue", Arial, sans-serif;
+    --font: var(--font-ar);
+    --radius: 22px;
+    --wrap: 1180px;
+    color-scheme: light;
+  }
+  html[lang="en"], html[lang="fr"] { --font: var(--font-lat); }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--paper); color: var(--text); font-family: var(--font); font-size: 17px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  html[lang="en"] body, html[lang="fr"] body { line-height: 1.6; }
+  a { color: inherit; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+  .lime { color: var(--lime); }
+  .dot { display: inline-block; width: .42em; height: .42em; border-radius: 50%; background: var(--lime); vertical-align: middle; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+  :focus-visible { outline: 3px solid var(--indigo); outline-offset: 3px; border-radius: 6px; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 16px; padding: 13px 22px; border-radius: 999px; border: 1.5px solid transparent; cursor: pointer; font-family: inherit; transition: transform .15s, background .15s, border-color .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:hover { transform: none; } }
+  .btn-lime { background: var(--lime); color: var(--ink); }
+  .btn-ghost { border-color: rgba(255,255,255,.28); color: var(--on-ink); }
+  .btn-ghost:hover { border-color: var(--on-ink); }
+  .btn-dark { background: var(--ink); color: var(--on-ink); }
+  .btn .arr { display: inline-block; }
+  [dir="rtl"] .btn .arr { transform: scaleX(-1); }
+
+  /* Header */
+  header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--ink) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,.08); color: var(--on-ink); }
+  .nav { display: flex; align-items: center; gap: 24px; min-height: 68px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 22px; flex: none; }
+  .brand svg { width: 36px; height: 36px; display: block; }
+  .links { display: flex; gap: 22px; margin-inline-start: 12px; }
+  .links a { text-decoration: none; color: var(--on-ink-muted); font-size: 15px; font-weight: 500; }
+  .links a:hover { color: var(--on-ink); }
+  .nav-end { margin-inline-start: auto; display: flex; align-items: center; gap: 12px; }
+  .langs { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); }
+  .langs button { border: 0; background: none; color: var(--on-ink-muted); font: 600 13px/1 var(--font-lat); padding: 8px 11px; border-radius: 999px; cursor: pointer; }
+  .langs button[lang="ar"] { font-family: var(--font-ar); font-size: 14px; }
+  .langs button[aria-pressed="true"] { background: var(--on-ink); color: var(--ink); }
+  .nav .btn { padding: 10px 18px; font-size: 15px; }
+  @media (max-width: 920px) { .links { display: none; } }
+  @media (max-width: 520px) { .nav .btn { display: none; } .brand span { font-size: 20px; } }
+
+  /* Hero */
+  .hero { background:
+      radial-gradient(ellipse 55% 75% at var(--glow-x, 25%) 35%, color-mix(in srgb, var(--indigo) 55%, transparent), transparent 70%),
+      radial-gradient(ellipse 35% 50% at var(--glow-x2, 90%) 110%, color-mix(in srgb, var(--lime) 12%, transparent), transparent 70%),
+      var(--ink);
+    color: var(--on-ink); position: relative; overflow: hidden; }
+  [dir="ltr"] .hero { --glow-x: 75%; --glow-x2: 10%; }
+  .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 56px 56px; mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 30%, transparent 80%); }
+  .hero-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: 48px; align-items: center; padding-block: 88px 104px; }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: minmax(0, 1fr); padding-block: 56px 72px; gap: 56px; } }
+  .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--on-ink-muted); padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); }
+  .hero h1 { font-weight: 700; font-size: clamp(38px, 4.8vw, 68px); line-height: 1.18; margin-block: 24px 22px; }
+  html[lang="en"] .hero h1, html[lang="fr"] .hero h1 { font-weight: 800; letter-spacing: -.035em; line-height: 1.02; font-size: clamp(40px, 6vw, 78px); }
+  .hero .sub { font-size: clamp(17px, 1.6vw, 20px); color: var(--on-ink-muted); max-width: 34em; }
+  .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 34px; }
+
+  /* Hero mockups */
+  .stage { position: relative; height: 430px; max-width: 520px; width: 100%; justify-self: center; }
+  @media (max-width: 520px) { .stage { height: 360px; } }
+  .mock { position: absolute; border-radius: var(--radius); background: color-mix(in srgb, var(--ink) 86%, white); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 40px 80px -30px rgba(0,0,0,.7); }
+  .dash { inset-inline-start: 0; top: 40px; width: min(340px, 78%); padding: 22px; }
+  .dash .hd { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .dash .hd i { width: 26px; height: 26px; border-radius: 8px; background: var(--indigo); flex: none; }
+  .dash .hd .up { margin-inline-start: auto; font: 600 12px/1 var(--font-lat); color: var(--lime); background: color-mix(in srgb, var(--lime) 14%, transparent); padding: 6px 9px; border-radius: 999px; }
+  .dash .lbl { color: var(--on-ink-muted); font-size: 13px; margin-top: 16px; }
+  .dash .kpi { font: 800 38px/1.1 var(--font-lat); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 96px; margin-top: 16px; }
+  .bars b { flex: 1; border-radius: 6px 6px 3px 3px; background: color-mix(in srgb, var(--indigo-2) 55%, transparent); }
+  .bars b:last-child { background: var(--lime); }
+  .post { inset-inline-end: 0; top: 170px; width: min(250px, 58%); padding: 14px; transform: rotate(var(--tilt, -4deg)); }
+  [dir="ltr"] .post { --tilt: 4deg; }
+  .post .img { aspect-ratio: 1.15; border-radius: 14px; background: linear-gradient(225deg, var(--indigo) 0%, var(--indigo-2) 55%, var(--lime) 135%); display: grid; place-items: center; }
+  .post .img svg { width: 34%; height: auto; }
+  .post .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; color: var(--on-ink-muted); }
+  .post .meta b { color: var(--on-ink); font: 600 13px var(--font-lat); }
+  .chip { position: absolute; inset-inline-end: 34%; top: 6px; padding: 9px 14px; border-radius: 14px; background: var(--lime); color: var(--ink); font-weight: 700; font-size: 14px; transform: rotate(var(--chip-tilt, 3deg)); box-shadow: 0 18px 34px -14px color-mix(in srgb, var(--lime) 60%, transparent); }
+  [dir="ltr"] .chip { --chip-tilt: -3deg; }
+  .core { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: var(--lime); inset-inline-start: 6%; bottom: 34px; box-shadow: 0 0 0 10px color-mix(in srgb, var(--lime) 14%, transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .core { animation: pulse 3.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 18px color-mix(in srgb, var(--lime) 6%, transparent); } }
+  }
+
+  /* Sections */
+  section.band { padding-block: 104px; }
+  @media (max-width: 720px) { section.band { padding-block: 72px; } }
+  .kicker { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--indigo); }
+  html[lang="en"] .kicker, html[lang="fr"] .kicker { text-transform: uppercase; letter-spacing: .08em; font-size: 12.5px; }
+  .kicker .dot { width: 9px; height: 9px; }
+  .band h2 { font-weight: 700; font-size: clamp(30px, 3.6vw, 46px); line-height: 1.3; margin-top: 14px; max-width: 18em; }
+  html[lang="en"] .band h2, html[lang="fr"] .band h2 { font-weight: 800; letter-spacing: -.025em; line-height: 1.12; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 36em; margin-top: 14px; }
+
+  /* Pillars */
+  .pillars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 48px; }
+  @media (max-width: 820px) { .pillars { grid-template-columns: minmax(0, 1fr); } }
+  .pillar { background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 32px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+  .pillar h3 { font-size: 28px; font-weight: 700; line-height: 1.35; }
+  html[lang="en"] .pillar h3, html[lang="fr"] .pillar h3 { letter-spacing: -.02em; line-height: 1.2; }
+  .pillar p { color: var(--muted); }
+  .pillar ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .pillar li { display: flex; gap: 12px; align-items: baseline; font-weight: 500; }
+  .pillar li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--indigo); transform: translateY(-2px); }
+  .vis { border-radius: 18px; background: var(--ink); padding: 18px; display: grid; gap: 12px; min-height: 168px; }
+  .vis-dash { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+  .vis-dash .k { background: rgba(255,255,255,.06); border-radius: 12px; padding: 10px 12px; color: var(--on-ink); }
+  .vis-dash .k small { display: block; color: var(--on-ink-muted); font-size: 12px; }
+  .vis-dash .k b { font: 800 22px/1.2 var(--font-lat); font-variant-numeric: tabular-nums; }
+  .vis-dash .bars { grid-column: 1 / -1; height: 70px; margin: 0; }
+  .vis-posts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tile { aspect-ratio: 1; border-radius: 12px; display: grid; place-items: center; }
+  .tile svg { width: 38%; }
+  .t1 { background: var(--indigo); } .t2 { background: var(--lime); } .t3 { background: linear-gradient(225deg, var(--indigo), var(--indigo-2)); }
+  .t4 { background: #222B40; } .t5 { background: linear-gradient(225deg, var(--indigo-2), var(--lime)); } .t6 { background: var(--indigo); }
+  .tile.cal { color: var(--on-ink); font: 700 13px var(--font-lat); display: grid; place-content: center; text-align: center; line-height: 1.2; }
+  .tile.cal span { font-size: 26px; font-weight: 800; }
+
+  /* Products */
+  .products { background: var(--ink); color: var(--on-ink); }
+  .products .kicker { color: var(--lime); }
+  .products .lead { color: var(--on-ink-muted); }
+  .prod-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; margin-top: 48px; }
+  @media (max-width: 860px) { .prod-grid { grid-template-columns: minmax(0, 1fr); } }
+  .prod { border-radius: 28px; padding: 34px; display: grid; gap: 16px; align-content: start; min-width: 0; position: relative; overflow: hidden; }
+  .prod.mizan { background: linear-gradient(160deg, color-mix(in srgb, var(--indigo) 80%, var(--ink)), var(--ink-2) 75%); border: 1px solid rgba(255,255,255,.12); }
+  .prod.next { border: 1.5px dashed rgba(255,255,255,.22); }
+  .tag { justify-self: start; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--lime); color: var(--ink); }
+  .prod.next .tag { background: rgba(255,255,255,.1); color: var(--on-ink); }
+  .prod h3 { font-size: clamp(40px, 5vw, 64px); font-weight: 700; line-height: 1.2; }
+  html[lang="en"] .prod h3, html[lang="fr"] .prod h3 { font-weight: 800; letter-spacing: -.035em; line-height: 1.05; }
+  .prod.next h3 { font-size: 30px; }
+  .prod p { color: var(--on-ink-muted); max-width: 30em; font-size: 18px; }
+  .prod .btn { justify-self: start; margin-top: 8px; }
+  .builtby { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--on-ink-muted); }
+  .builtby svg { width: 22px; height: 22px; }
+
+  /* Services */
+  .svc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 48px; border-top: 1px solid var(--line); }
+  @media (max-width: 900px) { .svc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .svc { grid-template-columns: minmax(0, 1fr); } }
+  .svc article { padding: 28px 0 32px; padding-inline-end: 28px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .svc h3 { font-size: 21px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .svc h3::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lime) 30%, transparent); flex: none; }
+  .svc p { color: var(--muted); }
+
+  /* Process (a real sequence, so it is numbered) */
+  .steps { list-style: none; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; counter-reset: step; }
+  @media (max-width: 900px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+  .steps li { counter-increment: step; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+  .steps li::before { content: counter(step); font: 800 15px/1 var(--font-lat); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--lime); }
+  .steps h3 { font-size: 22px; font-weight: 700; }
+  .steps p { color: var(--muted); font-size: 16px; }
+
+  /* Contact */
+  .contact { padding-block: 0 104px; }
+  .cta-box { background: var(--indigo); color: var(--on-ink); border-radius: 32px; padding: clamp(32px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: center; position: relative; overflow: hidden; }
+  @media (max-width: 820px) { .cta-box { grid-template-columns: minmax(0, 1fr); } }
+  .cta-box::after { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; background: var(--lime); opacity: .9; inset-inline-end: -70px; top: -70px; }
+  .cta-box h2 { font-size: clamp(28px, 3.4vw, 44px); font-weight: 700; line-height: 1.3; position: relative; z-index: 1; }
+  html[lang="en"] .cta-box h2, html[lang="fr"] .cta-box h2 { font-weight: 800; letter-spacing: -.025em; line-height: 1.12; }
+  .cta-box p { color: color-mix(in srgb, var(--on-ink) 82%, transparent); margin-top: 12px; font-size: 18px; }
+  .mailcard { position: relative; z-index: 1; background: var(--ink); border-radius: 22px; padding: 22px; display: grid; gap: 14px; }
+  .mail { font: 700 clamp(18px, 2.2vw, 24px)/1.3 var(--font-lat); direction: ltr; text-align: start; user-select: all; overflow-wrap: anywhere; color: var(--on-ink); }
+  [dir="rtl"] .mail { text-align: right; }
+  .mailcard .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .mailcard .btn-ghost { font-size: 15px; padding: 11px 16px; }
+  .copied { font-size: 14px; color: var(--lime); min-height: 1.4em; }
+
+  /* Footer */
+  footer { background: var(--ink); color: var(--on-ink-muted); padding-block: 40px; font-size: 15px; }
+  .foot { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .foot .brand { color: var(--on-ink); }
+  .foot .tl { color: var(--on-ink-muted); }
+  .socials { display: flex; gap: 16px; margin-inline-start: auto; flex-wrap: wrap; }
+  .socials a { text-decoration: none; font: 500 14px var(--font-lat); }
+  .socials a:hover { color: var(--on-ink); }
+  .legal { width: 100%; font-size: 13px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 18px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="Nawa">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
+      <span data-i="brand">نواة</span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="#what" data-i="nav.what">ما نفعله</a>
+      <a href="#products" data-i="nav.products">منتجاتنا</a>
+      <a href="#services" data-i="nav.services">خدماتنا</a>
+      <a href="#process" data-i="nav.process">كيف نعمل</a>
+    </nav>
+    <div class="nav-end">
+      <div class="langs" role="group" aria-label="Language">
+        <button type="button" lang="ar" data-lang="ar">ع</button>
+        <button type="button" lang="en" data-lang="en">EN</button>
+        <button type="button" lang="fr" data-lang="fr">FR</button>
+      </div>
+      <a class="btn btn-lime" href="#contact" data-i="nav.cta">ابدأ مشروعك</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span><span data-i="hero.eyebrow">استوديو برمجيات وتصميم</span></span>
+        <h1 data-i-html="hero.title">نطلق <span class="lime">المنتجات الرقمية.</span><br>ونروي <span class="lime">القصص.</span></h1>
+        <p class="sub" data-i="hero.sub">نواة استوديو يبني منتجاته الرقمية ويطلقها، ويصمّم محتوى التواصل الاجتماعي والهويات البصرية لعلامات تريد أن تُرى وتُتذكَّر.</p>
+        <div class="ctas">
+          <a class="btn btn-lime" href="#contact"><span data-i="hero.cta1">ابدأ مشروعك</span><span class="arr" aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="#products" data-i="hero.cta2">تعرّف على ميزان</a>
+        </div>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="chip" data-i="mock.campaign">حملة جديدة ✦</div>
+        <div class="mock dash">
+          <div class="hd"><i></i><span data-i="mock.mizan">ميزان</span><span class="up" dir="ltr">▲ 18%</span></div>
+          <div class="lbl" data-i="mock.revenue">الإيرادات هذا الشهر</div>
+          <div class="kpi" dir="ltr">248k</div>
+          <div class="bars"><b style="height:38%"></b><b style="height:52%"></b><b style="height:46%"></b><b style="height:64%"></b><b style="height:58%"></b><b style="height:78%"></b><b style="height:100%"></b></div>
+        </div>
+        <div class="mock post">
+          <div class="img"><svg viewBox="72 72 368 368"><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#0B1220"/></svg></div>
+          <div class="meta"><span data-i="mock.ready">منشور جاهز للنشر</span><b dir="ltr">♥ 2.4k</b></div>
+        </div>
+        <span class="core"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="what">
+    <div class="wrap">
+      <span class="kicker"><span class="dot"></span><span data-i="what.kicker">ما نفعله</span></span>
+      <h2 data-i="what.title">استوديو واحد، بوجهين: منتجات نبنيها، وقصص نرويها.</h2>
+      <div class="pillars">
+        <article class="pillar">
+          <div class="vis vis-dash" aria-hidden="true">
+            <div class="k"><small data-i="mock.revenue2">الإيرادات</small><b dir="ltr">248k</b></div>
+            <div class="k"><small data-i="mock.expenses">المصروفات</small><b dir="ltr">131k</b></div>
+            <div class="k"><small data-i="mock.balance">الرصيد</small><b dir="ltr">117k</b></div>
+            <div class="bars"><b style="height:40%"></b><b style="height:55%"></b><b style="height:48%"></b><b style="height:66%"></b><b style="height:60%"></b><b style="height:74%"></b><b style="height:88%"></b><b style="height:100%"></b></div>
+          </div>
+          <h3 data-i="p1.title">نطلق المنتجات الرقمية</h3>
+          <p data-i="p1.body">نصمّم منتجات SaaS ونطوّرها ونشغّلها بأنفسنا، من الفكرة الأولى إلى أول عميل يدفع.</p>
+          <ul>
+            <li data-i="p1.i1">تصميم المنتج وتجربة المستخدم</li>
+            <li data-i="p1.i2">تطوير الويب والتطبيقات</li>
+            <li data-i="p1.i3">الإطلاق والتشغيل والتحسين المستمر</li>
+          </ul>
+        </article>
+        <article class="pillar">
+          <div class="vis vis-posts" aria-hidden="true">
+            <div class="tile t1"><svg viewBox="72 72 368 368"><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg></div>
+            <div class="tile t2"></div>
+            <div class="tile t3"></div>
+            <div class="tile t4 cal"><span dir="ltr">12</span><em data-i="mock.posts" style="font-style:normal">منشورًا</em></div>
+            <div class="tile t5"></div>
+            <div class="tile t6"><svg viewBox="72 72 368 368"><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#C6F432" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#FFFFFF"/></svg></div>
+          </div>
+          <h3 data-i="p2.title">ونروي القصص</h3>
+          <p data-i="p2.body">نحوّل علامتك إلى محتوى يُشارَك: هوية بصرية، وتصاميم منشورات، وحملات بخطة نشر واضحة.</p>
+          <ul>
+            <li data-i="p2.i1">الهوية البصرية ودليل العلامة</li>
+            <li data-i="p2.i2">تصميم المنشورات وأغلفة المنصات</li>
+            <li data-i="p2.i3">خطط المحتوى والحملات</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band products" id="products">
+    <div class="wrap">
+      <span class="kicker"><span class="dot"></span><span data-i="prod.kicker">منتجاتنا</span></span>
+      <h2 data-i="prod.title">منتجات بنيناها، ونستخدمها كل يوم.</h2>
+      <p class="lead" data-i="prod.lead">عندما ننشر عن منتج من منتجاتنا، نقولها بوضوح: هذا من صنع نواة.</p>
+      <div class="prod-grid">
+        <article class="prod mizan">
+          <span class="tag" data-i="prod.mizan.tag">من منتجاتنا</span>
+          <h3><span data-i="mock.mizan">ميزان</span><span class="lime">.</span></h3>
+          <p data-i="prod.mizan.body">أعمالك في توازن. المبيعات والمخزون والسيولة في لوحة واحدة واضحة، لفرق تفضّل النمو على مطاردة جداول البيانات.</p>
+          <span class="builtby"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg><span data-i="prod.builtby">من تطوير نواة</span></span>
+          <a class="btn btn-lime" id="mizanLink" href="#" hidden><span data-i="prod.mizan.cta">زوروا ميزان</span><span class="arr" aria-hidden="true">→</span></a>
+        </article>
+        <article class="prod next">
+          <span class="tag" data-i="prod.next.tag">قريبًا</span>
+          <h3 data-i="prod.next.title">المنتج التالي</h3>
+          <p data-i="prod.next.body">نعمل على منتجنا القادم. تابعونا لتكونوا أول من يجرّبه.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="services">
+    <div class="wrap">
+      <span class="kicker"><span class="dot"></span><span data-i="svc.kicker">لعملائنا</span></span>
+      <h2 data-i="svc.title">ما نقدّمه لعلامتك</h2>
+      <div class="svc">
+        <article><h3 data-i="svc.1.t">الهوية البصرية</h3><p data-i="svc.1.d">شعار وألوان وخطوط، ودليل استخدام واضح.</p></article>
+        <article><h3 data-i="svc.2.t">تصميم المنشورات</h3><p data-i="svc.2.d">قوالب ومنشورات وأغلفة بمقاسات كل منصة.</p></article>
+        <article><h3 data-i="svc.3.t">إدارة المحتوى</h3><p data-i="svc.3.d">تقويم نشر شهري، ونشر مجدول تلقائيًا.</p></article>
+        <article><h3 data-i="svc.4.t">الحملات الإعلانية</h3><p data-i="svc.4.d">تصاميم ونصوص إعلانات تُختبر وتُحسَّن.</p></article>
+        <article><h3 data-i="svc.5.t">مواقع الويب</h3><p data-i="svc.5.d">صفحات هبوط ومواقع سريعة بلغتين أو ثلاث.</p></article>
+        <article><h3 data-i="svc.6.t">منتجات SaaS حسب الطلب</h3><p data-i="svc.6.d">نبني منتجك الرقمي بالطريقة نفسها التي نبني بها منتجاتنا.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="process" style="padding-top:0">
+    <div class="wrap">
+      <span class="kicker"><span class="dot"></span><span data-i="proc.kicker">كيف نعمل</span></span>
+      <h2 data-i="proc.title">أربع خطوات، من الفكرة إلى النمو.</h2>
+      <ol class="steps">
+        <li><h3 data-i="proc.1.t">نفهم</h3><p data-i="proc.1.d">نتعرّف على جمهورك وأهدافك قبل أي تصميم.</p></li>
+        <li><h3 data-i="proc.2.t">نصمّم</h3><p data-i="proc.2.d">نقترح اتجاهات واضحة، ونطوّر ما تختاره منها.</p></li>
+        <li><h3 data-i="proc.3.t">نطلق</h3><p data-i="proc.3.d">ننشر المنتج أو الحملة على المنصات المناسبة.</p></li>
+        <li><h3 data-i="proc.4.t">ننمو</h3><p data-i="proc.4.d">نقيس النتائج ونحسّن كل شهر.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="cta-box">
+        <div>
+          <h2 data-i="cta.title">عندك فكرة منتج، أو علامة تحتاج صوتًا؟</h2>
+          <p data-i="cta.body">أخبرنا عنها، ونعود إليك خلال يومي عمل.</p>
+        </div>
+        <div class="mailcard">
+          <span class="mail" id="mail">hello@nawa.studio</span>
+          <div class="row">
+            <a class="btn btn-lime" id="mailLink" href="mailto:hello@nawa.studio" data-i="cta.btn">راسلنا</a>
+            <button type="button" class="btn btn-ghost" id="copyMail" data-i="cta.copy">انسخ البريد</button>
+          </div>
+          <span class="copied" id="copied" role="status"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top" aria-label="Nawa">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
+      <span data-i="brand">نواة</span>
+    </a>
+    <span class="tl" data-i="foot.tagline">نطلق المنتجات الرقمية. ونروي القصص.</span>
+    <div class="socials" id="socials"></div>
+    <div class="legal" data-i="foot.legal">© 2026 نواة. جميع الحقوق محفوظة.</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // Site settings: replace with the real addresses before going live.
+  const SITE = {
+    email: 'hello@nawa.studio',
+    mizanUrl: '', // e.g. the Mizan website; the "Visit Mizan" button stays hidden while empty
+    socials: [
+      ['Instagram', 'https://instagram.com/nawa.studio'],
+      ['Facebook', 'https://facebook.com/nawa.studio'],
+      ['LinkedIn', 'https://www.linkedin.com/company/nawa-studio'],
+      ['X', 'https://x.com/nawastudio'],
+    ],
+  };
+
+  const T = {
+    ar: {
+      'meta.title': 'نواة | نطلق المنتجات الرقمية ونروي القصص',
+      brand: 'نواة',
+      'nav.what': 'ما نفعله', 'nav.products': 'منتجاتنا', 'nav.services': 'خدماتنا', 'nav.process': 'كيف نعمل', 'nav.cta': 'ابدأ مشروعك',
+      'hero.eyebrow': 'استوديو برمجيات وتصميم',
+      'hero.title': 'نطلق <span class="lime">المنتجات الرقمية.</span><br>ونروي <span class="lime">القصص.</span>',
+      'hero.sub': 'نواة استوديو يبني منتجاته الرقمية ويطلقها، ويصمّم محتوى التواصل الاجتماعي والهويات البصرية لعلامات تريد أن تُرى وتُتذكَّر.',
+      'hero.cta1': 'ابدأ مشروعك', 'hero.cta2': 'تعرّف على ميزان',
+      'mock.campaign': 'حملة جديدة ✦', 'mock.mizan': 'ميزان', 'mock.revenue': 'الإيرادات هذا الشهر', 'mock.ready': 'منشور جاهز للنشر',
+      'mock.revenue2': 'الإيرادات', 'mock.expenses': 'المصروفات', 'mock.balance': 'الرصيد', 'mock.posts': 'منشورًا',
+      'what.kicker': 'ما نفعله', 'what.title': 'استوديو واحد، بوجهين: منتجات نبنيها، وقصص نرويها.',
+      'p1.title': 'نطلق المنتجات الرقمية', 'p1.body': 'نصمّم منتجات SaaS ونطوّرها ونشغّلها بأنفسنا، من الفكرة الأولى إلى أول عميل يدفع.',
+      'p1.i1': 'تصميم المنتج وتجربة المستخدم', 'p1.i2': 'تطوير الويب والتطبيقات', 'p1.i3': 'الإطلاق والتشغيل والتحسين المستمر',
+      'p2.title': 'ونروي القصص', 'p2.body': 'نحوّل علامتك إلى محتوى يُشارَك: هوية بصرية، وتصاميم منشورات، وحملات بخطة نشر واضحة.',
+      'p2.i1': 'الهوية البصرية ودليل العلامة', 'p2.i2': 'تصميم المنشورات وأغلفة المنصات', 'p2.i3': 'خطط المحتوى والحملات',
+      'prod.kicker': 'منتجاتنا', 'prod.title': 'منتجات بنيناها، ونستخدمها كل يوم.', 'prod.lead': 'عندما ننشر عن منتج من منتجاتنا، نقولها بوضوح: هذا من صنع نواة.',
+      'prod.mizan.tag': 'من منتجاتنا', 'prod.mizan.body': 'أعمالك في توازن. المبيعات والمخزون والسيولة في لوحة واحدة واضحة، لفرق تفضّل النمو على مطاردة جداول البيانات.',
+      'prod.builtby': 'من تطوير نواة', 'prod.mizan.cta': 'زوروا ميزان',
+      'prod.next.tag': 'قريبًا', 'prod.next.title': 'المنتج التالي', 'prod.next.body': 'نعمل على منتجنا القادم. تابعونا لتكونوا أول من يجرّبه.',
+      'svc.kicker': 'لعملائنا', 'svc.title': 'ما نقدّمه لعلامتك',
+      'svc.1.t': 'الهوية البصرية', 'svc.1.d': 'شعار وألوان وخطوط، ودليل استخدام واضح.',
+      'svc.2.t': 'تصميم المنشورات', 'svc.2.d': 'قوالب ومنشورات وأغلفة بمقاسات كل منصة.',
+      'svc.3.t': 'إدارة المحتوى', 'svc.3.d': 'تقويم نشر شهري، ونشر مجدول تلقائيًا.',
+      'svc.4.t': 'الحملات الإعلانية', 'svc.4.d': 'تصاميم ونصوص إعلانات تُختبر وتُحسَّن.',
+      'svc.5.t': 'مواقع الويب', 'svc.5.d': 'صفحات هبوط ومواقع سريعة بلغتين أو ثلاث.',
+      'svc.6.t': 'منتجات SaaS حسب الطلب', 'svc.6.d': 'نبني منتجك الرقمي بالطريقة نفسها التي نبني بها منتجاتنا.',
+      'proc.kicker': 'كيف نعمل', 'proc.title': 'أربع خطوات، من الفكرة إلى النمو.',
+      'proc.1.t': 'نفهم', 'proc.1.d': 'نتعرّف على جمهورك وأهدافك قبل أي تصميم.',
+      'proc.2.t': 'نصمّم', 'proc.2.d': 'نقترح اتجاهات واضحة، ونطوّر ما تختاره منها.',
+      'proc.3.t': 'نطلق', 'proc.3.d': 'ننشر المنتج أو الحملة على المنصات المناسبة.',
+      'proc.4.t': 'ننمو', 'proc.4.d': 'نقيس النتائج ونحسّن كل شهر.',
+      'cta.title': 'عندك فكرة منتج، أو علامة تحتاج صوتًا؟', 'cta.body': 'أخبرنا عنها، ونعود إليك خلال يومي عمل.',
+      'cta.btn': 'راسلنا', 'cta.copy': 'انسخ البريد', 'cta.copied': 'نُسخ البريد.', 'cta.copyFail': 'حدّد العنوان وانسخه يدويًا.',
+      'foot.tagline': 'نطلق المنتجات الرقمية. ونروي القصص.', 'foot.legal': '© 2026 نواة. جميع الحقوق محفوظة.',
+    },
+    en: {
+      'meta.title': 'Nawa | We launch digital products. We tell stories.',
+      brand: 'Nawa',
+      'nav.what': 'What we do', 'nav.products': 'Products', 'nav.services': 'Services', 'nav.process': 'How we work', 'nav.cta': 'Start a project',
+      'hero.eyebrow': 'Software & design studio',
+      'hero.title': 'We launch <span class="lime">digital products.</span><br>We tell <span class="lime">stories.</span>',
+      'hero.sub': 'Nawa is a studio that builds and launches its own digital products, and designs social media content and visual identities for brands that want to be seen and remembered.',
+      'hero.cta1': 'Start a project', 'hero.cta2': 'Meet Mizan',
+      'mock.campaign': 'New campaign ✦', 'mock.mizan': 'Mizan', 'mock.revenue': 'Revenue this month', 'mock.ready': 'Ready to publish',
+      'mock.revenue2': 'Revenue', 'mock.expenses': 'Expenses', 'mock.balance': 'Balance', 'mock.posts': 'posts',
+      'what.kicker': 'What we do', 'what.title': 'One studio, two sides: products we build, and stories we tell.',
+      'p1.title': 'We launch digital products', 'p1.body': 'We design, build and run our own SaaS products, from the first idea to the first paying customer.',
+      'p1.i1': 'Product design and UX', 'p1.i2': 'Web and app development', 'p1.i3': 'Launch, operations and ongoing improvement',
+      'p2.title': 'We tell stories', 'p2.body': 'We turn your brand into content people share: a visual identity, post designs, and campaigns with a clear publishing plan.',
+      'p2.i1': 'Visual identity and brand guidelines', 'p2.i2': 'Social post and cover design', 'p2.i3': 'Content calendars and campaigns',
+      'prod.kicker': 'Our products', 'prod.title': 'Products we built, and use every day.', 'prod.lead': 'When we post about one of our products, we say it plainly: this one is made by Nawa.',
+      'prod.mizan.tag': 'Our product', 'prod.mizan.body': "Your business, in balance. Sales, stock and cash in one clear view, for teams who'd rather grow than chase spreadsheets.",
+      'prod.builtby': 'Built by Nawa', 'prod.mizan.cta': 'Visit Mizan',
+      'prod.next.tag': 'Coming soon', 'prod.next.title': 'The next product', 'prod.next.body': "We're working on our next product. Follow us to be the first to try it.",
+      'svc.kicker': 'For clients', 'svc.title': 'What we do for your brand',
+      'svc.1.t': 'Visual identity', 'svc.1.d': 'Logo, colors, type, and clear usage guidelines.',
+      'svc.2.t': 'Post design', 'svc.2.d': 'Templates, posts and covers sized for every platform.',
+      'svc.3.t': 'Content management', 'svc.3.d': 'A monthly publishing calendar, scheduled automatically.',
+      'svc.4.t': 'Ad campaigns', 'svc.4.d': 'Ad visuals and copy, tested and improved.',
+      'svc.5.t': 'Websites', 'svc.5.d': 'Fast landing pages and sites in two or three languages.',
+      'svc.6.t': 'Custom SaaS', 'svc.6.d': 'We build your digital product the way we build our own.',
+      'proc.kicker': 'How we work', 'proc.title': 'Four steps, from idea to growth.',
+      'proc.1.t': 'Understand', 'proc.1.d': 'We learn your audience and goals before designing anything.',
+      'proc.2.t': 'Design', 'proc.2.d': 'We propose clear directions and develop the one you pick.',
+      'proc.3.t': 'Launch', 'proc.3.d': 'We ship the product or campaign on the right channels.',
+      'proc.4.t': 'Grow', 'proc.4.d': 'We measure results and improve every month.',
+      'cta.title': 'Have a product idea, or a brand that needs a voice?', 'cta.body': 'Tell us about it. We reply within two working days.',
+      'cta.btn': 'Email us', 'cta.copy': 'Copy address', 'cta.copied': 'Address copied.', 'cta.copyFail': 'Select the address and copy it.',
+      'foot.tagline': 'We launch digital products. We tell stories.', 'foot.legal': '© 2026 Nawa. All rights reserved.',
+    },
+    fr: {
+      'meta.title': 'Nawa | Nous lançons des produits numériques. Nous racontons des histoires.',
+      brand: 'Nawa',
+      'nav.what': 'Ce que nous faisons', 'nav.products': 'Produits', 'nav.services': 'Services', 'nav.process': 'Méthode', 'nav.cta': 'Lancer un projet',
+      'hero.eyebrow': 'Studio logiciel & design',
+      'hero.title': 'Nous lançons des <span class="lime">produits numériques.</span><br>Nous racontons des <span class="lime">histoires.</span>',
+      'hero.sub': 'Nawa est un studio qui conçoit et lance ses propres produits numériques, et qui crée contenus pour les réseaux sociaux et identités visuelles pour les marques qui veulent être vues et retenues.',
+      'hero.cta1': 'Lancer un projet', 'hero.cta2': 'Découvrir Mizan',
+      'mock.campaign': 'Nouvelle campagne ✦', 'mock.mizan': 'Mizan', 'mock.revenue': 'Revenus ce mois-ci', 'mock.ready': 'Prête à publier',
+      'mock.revenue2': 'Revenus', 'mock.expenses': 'Dépenses', 'mock.balance': 'Solde', 'mock.posts': 'publications',
+      'what.kicker': 'Ce que nous faisons', 'what.title': 'Un studio, deux facettes : des produits que nous créons, des histoires que nous racontons.',
+      'p1.title': 'Nous lançons des produits numériques', 'p1.body': 'Nous concevons, développons et exploitons nos propres produits SaaS, de la première idée au premier client payant.',
+      'p1.i1': 'Design produit et expérience utilisateur', 'p1.i2': 'Développement web et applications', 'p1.i3': 'Lancement, exploitation et amélioration continue',
+      'p2.title': 'Nous racontons des histoires', 'p2.body': 'Nous transformons votre marque en contenu que l’on partage : identité visuelle, visuels de publications et campagnes avec un calendrier clair.',
+      'p2.i1': 'Identité visuelle et charte de marque', 'p2.i2': 'Visuels de publications et couvertures', 'p2.i3': 'Calendriers éditoriaux et campagnes',
+      'prod.kicker': 'Nos produits', 'prod.title': 'Des produits que nous avons créés, et que nous utilisons chaque jour.', 'prod.lead': 'Quand nous parlons de l’un de nos produits, nous le disons clairement : il est fait par Nawa.',
+      'prod.mizan.tag': 'Notre produit', 'prod.mizan.body': 'Votre activité, en équilibre. Ventes, stock et trésorerie dans un seul tableau clair, pour les équipes qui préfèrent grandir plutôt que courir après des tableurs.',
+      'prod.builtby': 'Conçu par Nawa', 'prod.mizan.cta': 'Découvrir Mizan',
+      'prod.next.tag': 'Bientôt', 'prod.next.title': 'Le prochain produit', 'prod.next.body': 'Notre prochain produit est en préparation. Suivez-nous pour l’essayer en premier.',
+      'svc.kicker': 'Pour nos clients', 'svc.title': 'Ce que nous apportons à votre marque',
+      'svc.1.t': 'Identité visuelle', 'svc.1.d': 'Logo, couleurs, typographies et charte d’utilisation claire.',
+      'svc.2.t': 'Visuels de publications', 'svc.2.d': 'Modèles, publications et couvertures au format de chaque plateforme.',
+      'svc.3.t': 'Gestion de contenu', 'svc.3.d': 'Un calendrier éditorial mensuel, publié automatiquement.',
+      'svc.4.t': 'Campagnes publicitaires', 'svc.4.d': 'Visuels et textes d’annonces, testés et optimisés.',
+      'svc.5.t': 'Sites web', 'svc.5.d': 'Pages d’atterrissage et sites rapides, en deux ou trois langues.',
+      'svc.6.t': 'SaaS sur mesure', 'svc.6.d': 'Nous construisons votre produit numérique comme nous construisons les nôtres.',
+      'proc.kicker': 'Notre méthode', 'proc.title': 'Quatre étapes, de l’idée à la croissance.',
+      'proc.1.t': 'Comprendre', 'proc.1.d': 'Nous apprenons à connaître votre public et vos objectifs avant de dessiner quoi que ce soit.',
+      'proc.2.t': 'Concevoir', 'proc.2.d': 'Nous proposons des pistes claires et développons celle que vous choisissez.',
+      'proc.3.t': 'Lancer', 'proc.3.d': 'Nous publions le produit ou la campagne sur les bons canaux.',
+      'proc.4.t': 'Grandir', 'proc.4.d': 'Nous mesurons les résultats et améliorons chaque mois.',
+      'cta.title': 'Une idée de produit, ou une marque qui a besoin d’une voix ?', 'cta.body': 'Parlez-nous-en. Nous vous répondons sous deux jours ouvrés.',
+      'cta.btn': 'Écrivez-nous', 'cta.copy': 'Copier l’adresse', 'cta.copied': 'Adresse copiée.', 'cta.copyFail': 'Sélectionnez l’adresse et copiez-la.',
+      'foot.tagline': 'Nous lançons des produits numériques. Nous racontons des histoires.', 'foot.legal': '© 2026 Nawa. Tous droits réservés.',
+    },
+  };
+
+  const LANGS = ['ar', 'en', 'fr'];
+  const html = document.documentElement;
+  let lang = 'ar';
+
+  function setLang(next, save) {
+    lang = LANGS.includes(next) ? next : 'ar';
+    const t = T[lang];
+    html.lang = lang;
+    html.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = t['meta.title'];
+    document.querySelectorAll('[data-i]').forEach((el) => { if (t[el.dataset.i] != null) el.textContent = t[el.dataset.i]; });
+    document.querySelectorAll('[data-i-html]').forEach((el) => { if (t[el.dataset.iHtml] != null) el.innerHTML = t[el.dataset.iHtml]; });
+    document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('copied').textContent = '';
+    if (save) {
+      try { localStorage.setItem('nawa.lang', lang); } catch (e) {}
+      try { history.replaceState(null, '', lang === 'ar' ? location.pathname + location.search : '#' + lang); } catch (e) {}
+    }
+  }
+  const $ = (id) => document.getElementById(id);
+
+  // Arabic first. A #en / #fr link or a saved choice switches the language.
+  let start = 'ar';
+  try { start = localStorage.getItem('nawa.lang') || start; } catch (e) {}
+  const h = location.hash.slice(1);
+  if (LANGS.includes(h)) start = h;
+  setLang(start, false);
+  document.querySelectorAll('.langs button').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang, true)));
+
+  // Settings
+  $('mail').textContent = SITE.email;
+  $('mailLink').href = 'mailto:' + SITE.email;
+  if (SITE.mizanUrl) { $('mizanLink').href = SITE.mizanUrl; $('mizanLink').hidden = false; }
+  $('socials').innerHTML = '';
+  SITE.socials.forEach(([name, url]) => { const a = document.createElement('a'); a.href = url; a.textContent = name; a.rel = 'noopener'; $('socials').appendChild(a); });
+
+  $('copyMail').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(SITE.email); $('copied').textContent = T[lang]['cta.copied']; }
+    catch (e) {
+      const r = document.createRange(); r.selectNodeContents($('mail'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      $('copied').textContent = T[lang]['cta.copyFail'];
+    }
+  });
+})();
+</script>
+</body>
+</html>
