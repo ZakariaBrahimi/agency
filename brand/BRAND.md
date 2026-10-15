@@ -21,7 +21,7 @@ Decided: the recommended Arabic brand.
 | Name | **نواة** (Nawa), handle and domain `nawa.studio` |
 | Logo | Signature **ن** (white), with its dot in Lime as the "core" |
 | Colors | Ink `#0B1220` · Indigo `#5B4BFF` · Lime `#C6F432` · Paper `#F6F5F2` |
-| Font | **Thmanyah Sans** |
+| Font | **Thmanyah Sans** (Arabic) · **Bricolage Grotesque** (English and French headlines and big numbers) · **Instrument Sans** (English and French text and UI) |
 | Tagline | «نطلق المنتجات الرقمية. ونروي القصص.» |
 | Profile photo | Indigo background |
 
