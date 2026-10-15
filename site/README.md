@@ -3,10 +3,16 @@
 There are two variants, each a complete page in a single file with no build step:
 
 - `index.html` (variant A) presents the studio's two sides: products we launch, and stories we tell.
-- `variant-b.html` (variant B) leads with the two client offers: **social media ads** (Meta and
-  TikTok) and a **product team** (product owners, designers and developers who dig into your idea
-  and build it). It also has engagement models, and a contact box where visitors pick what they
-  need, which fills in the email subject.
+- `variant-b.html` (variant B) follows the client journey, in this order:
+  1. we develop your product, with product owners, designers and developers who dig into the idea;
+  2. we create its visual identity and presence;
+  3. we design its social media content;
+  4. we promote it with ads (Meta and TikTok);
+  5. we study the results;
+  6. we improve, and the cycle starts again.
+
+  It also has engagement models that map to those steps, and a contact box where visitors pick
+  where to start, which fills in the email subject.
 
 Both pages share the same brand, base styles and language behavior. To publish variant B as the
 home page, rename it to `index.html`. Arabic is the default
