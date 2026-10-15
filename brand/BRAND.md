@@ -22,13 +22,13 @@ Decided: the recommended Arabic brand.
 | Logo | Signature **ن** (white), with its dot in Lime as the "core" |
 | Colors | Ink `#0B1220` · Indigo `#5B4BFF` · Lime `#C6F432` · Paper `#F6F5F2` |
 | Font | **Thmanyah Sans** |
-| Tagline | «نبني المنتجات. ونصمّم العلامات.» |
+| Tagline | «نطلق المنتجات الرقمية. ونروي القصص.» |
 | Profile photo | Indigo background |
 
 These values live in `brand/brand.json`. The brand is Arabic-only, and every design is right-to-left.
 
 - **Logo:** the signature mark is the letter **ن**. Its dot is drawn in Lime and *is* the "core" (النواة).
-- **Default tagline:** «نبني المنتجات. ونصمّم العلامات.»
+- **Tagline:** «نطلق المنتجات الرقمية. ونروي القصص.»
 - **Product posts:** they carry the badge «من تطوير نواة» and end with «أحد منتجات نواة».
 - **Rules:** never add letter-spacing to Arabic text, since it breaks the joins between letters.
   Use Western digits (12,480) in UI mockups.

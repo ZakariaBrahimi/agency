@@ -7,7 +7,7 @@
     latin: 'Nawa',
     domain: 'nawa.studio',
     handle: 'nawa.studio',
-    tagline: 'نبني *المنتجات.*|ونصمّم العلامات.',
+    tagline: 'نطلق *المنتجات الرقمية.*|ونروي *القصص.*',
     palette: { dark: '#0B1220', primary: '#5B4BFF', accent: '#C6F432', paper: '#F6F5F2' },
     font: 'Thmanyah Sans',
     logo: 'signature',
