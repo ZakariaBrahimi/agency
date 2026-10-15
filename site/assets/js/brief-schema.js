@@ -38,7 +38,15 @@ export function moneyLabel(table, tier, currency, lang) {
   }[tier];
   return tpl ? `${tpl[lang] || tpl.ar} ${unit}` : '';
 }
-const money = (table, extra = []) => ['t1', 't2', 't3', 't4'].map((id) => ({ id, money: table })).concat(extra);
+const CUSTOM = { id: 'custom', custom: true, label: L('مبلغ آخر', 'Other amount', 'Autre montant') };
+const money = (table, extra = []) => ['t1', 't2', 't3', 't4'].map((id) => ({ id, money: table })).concat(extra, [CUSTOM]);
+
+// A custom amount is stored as "custom:<digits>", e.g. "custom:250000".
+export const CUSTOM_PREFIX = 'custom:';
+export const isCustom = (v) => typeof v === 'string' && (v === 'custom' || v.startsWith(CUSTOM_PREFIX));
+export const customAmount = (v) => (isCustom(v) ? v.slice(CUSTOM_PREFIX.length) : '');
+export const moneyUnit = (currency, lang) => { const u = CURRENCY_UNIT[currency] || CURRENCY_UNIT[DEFAULT_CURRENCY]; return u[lang] || u.ar; };
+export const formatAmount = (digits, currency, lang) => `${num(digits, lang)} ${moneyUnit(currency, lang)}`;
 
 // Services follow the six-step journey ("results" covers studying results and improving).
 export const SERVICES = [
@@ -211,6 +219,7 @@ const optionLabel = (q, id, lang, currency) => {
 /** Human-readable value of one answered question. */
 export function formatAnswer(q, value, lang, currency = DEFAULT_CURRENCY) {
   if (value == null || value === '' || (Array.isArray(value) && !value.length)) return '';
+  if (q.kind === 'single' && q.money && isCustom(value)) return customAmount(value) ? formatAmount(customAmount(value), currency, lang) : '';
   if (q.kind === 'single') return optionLabel(q, value, lang, currency);
   if (q.kind === 'multi') return value.map((v) => optionLabel(q, v, lang, currency)).join(lang === 'ar' ? '، ' : ', ');
   return String(value);
@@ -223,7 +232,11 @@ function checkQuestion(q, value, errors, path) {
   const empty = value == null || value === '' || (Array.isArray(value) && !value.length);
   if (q.required && empty) errors.push(path);
   if (empty) return undefined;
-  if (q.kind === 'single') return q.options.some((o) => o.id === value) ? value : (errors.push(path), undefined);
+  if (q.kind === 'single' && q.money && isCustom(value)) {
+    const digits = customAmount(value);
+    return /^[1-9]\d{0,11}$/.test(digits) ? CUSTOM_PREFIX + digits : (errors.push(path), undefined);
+  }
+  if (q.kind === 'single') return q.options.some((o) => o.id === value && !o.custom) ? value : (errors.push(path), undefined);
   if (q.kind === 'multi') {
     const ok = Array.isArray(value) ? [...new Set(value)].filter((v) => q.options.some((o) => o.id === v)) : [];
     if (q.required && !ok.length) errors.push(path);

@@ -58,8 +58,8 @@
   .btn:hover { transform: translateY(-1px); }
   @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:hover { transform: none; } }
   .btn-lime { background: var(--lime); color: var(--ink); }
-  .btn-ghost { border-color: rgba(255,255,255,.28); color: var(--on-ink); }
-  .btn-ghost:hover { border-color: var(--on-ink); }
+  .btn-ghost { background: transparent; border-color: rgba(255,255,255,.28); color: var(--on-ink); }
+  .btn-ghost:hover { border-color: var(--on-ink); background: rgba(255,255,255,.08); }
   .btn-dark { background: var(--ink); color: var(--on-ink); }
   .btn .arr { display: inline-block; }
   [dir="rtl"] .btn .arr { transform: scaleX(-1); }

@@ -82,6 +82,10 @@ html[lang="en"] .step h1, html[lang="fr"] .step h1, html[lang="en"] .step h2, ht
 .pick:hover { border-color: color-mix(in srgb, var(--indigo) 45%, var(--line)); }
 .pick[aria-pressed="true"], .pick[aria-checked="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .pick[aria-checked="true"] { background: var(--indigo); border-color: var(--indigo); }
+.amount { display: flex; align-items: center; gap: 10px; max-width: 340px; }
+.amount input { flex: 1; min-width: 0; font: 700 18px var(--font-lat); letter-spacing: .01em; text-align: left; }
+.amount .unit { flex: none; font-weight: 700; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .amount:not([hidden]) { animation: rise .35s cubic-bezier(.2,.7,.2,1) both; } }
 .msg { font-size: 13.5px; color: #B42318; min-height: 0; }
 .field.err input, .field.err textarea, .field.err .pick { border-color: #E5484D; }
 .hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

@@ -1,7 +1,7 @@
 // /start: the project brief builder.
 // Step 1 picks services; step 2 shows only the follow-up questions for those services;
 // steps 3 and 4 collect project and contact details. The preview card mirrors every answer.
-import { LANGS, SERVICES, PROJECT, CONTACT, CURRENCIES, DEFAULT_CURRENCY, CURRENCY_SHORT, CURRENCY_NAME, t, serviceById, formatAnswer, optionText, validateBrief } from './brief-schema.js';
+import { LANGS, SERVICES, PROJECT, CONTACT, CURRENCIES, DEFAULT_CURRENCY, CURRENCY_SHORT, CURRENCY_NAME, CUSTOM_PREFIX, isCustom, customAmount, moneyUnit, t, serviceById, formatAnswer, optionText, validateBrief } from './brief-schema.js';
 
 const UI = {
   ar: {
@@ -20,7 +20,7 @@ const UI = {
     doneT: 'وصلنا طلبك. شكرًا!', doneL: 'سيراجعه فريقنا ونتواصل معك خلال يومي عمل.', ref: 'رقم الطلب:',
     home: 'العودة إلى الموقع', again: 'إرسال طلب آخر',
     pvTitle: 'ملخّص طلبك', pvSub: 'هذا ما سيصلنا عند الإرسال.', pvEmpty: 'اختر خدمة لتبدأ ملخّص طلبك.',
-    currency: 'العملة', pvProject: 'المشروع', pvContact: 'التواصل', pvShow: 'معاينة الطلب', optional: 'اختياري',
+    currency: 'العملة', amountLabel: 'المبلغ', amountPh: 'مثال: 500,000', amount: 'أدخل المبلغ بالأرقام', pvProject: 'المشروع', pvContact: 'التواصل', pvShow: 'معاينة الطلب', optional: 'اختياري',
   },
   en: {
     title: 'Start your project | Nawa', brand: 'Nawa', back: 'Back to the site',
@@ -38,7 +38,7 @@ const UI = {
     doneT: 'We got your request. Thank you!', doneL: 'Our team will review it and get back to you within two working days.', ref: 'Request number:',
     home: 'Back to the site', again: 'Send another request',
     pvTitle: 'Your request', pvSub: 'This is what we’ll receive when you send it.', pvEmpty: 'Pick a service to start your summary.',
-    currency: 'Currency', pvProject: 'Project', pvContact: 'Contact', pvShow: 'Preview request', optional: 'optional',
+    currency: 'Currency', amountLabel: 'Amount', amountPh: 'e.g. 500,000', amount: 'Enter the amount in numbers', pvProject: 'Project', pvContact: 'Contact', pvShow: 'Preview request', optional: 'optional',
   },
   fr: {
     title: 'Lancer votre projet | Nawa', brand: 'Nawa', back: 'Retour au site',
@@ -56,7 +56,7 @@ const UI = {
     doneT: 'Demande bien reçue. Merci !', doneL: 'Notre équipe l’étudie et vous répond sous deux jours ouvrés.', ref: 'Numéro de demande :',
     home: 'Retour au site', again: 'Envoyer une autre demande',
     pvTitle: 'Votre demande', pvSub: 'Voici ce que nous recevrons à l’envoi.', pvEmpty: 'Choisissez un service pour commencer le résumé.',
-    currency: 'Devise', pvProject: 'Projet', pvContact: 'Contact', pvShow: 'Voir la demande', optional: 'facultatif',
+    currency: 'Devise', amountLabel: 'Montant', amountPh: 'ex. 500 000', amount: 'Saisissez le montant en chiffres', pvProject: 'Projet', pvContact: 'Contact', pvShow: 'Voir la demande', optional: 'facultatif',
   },
 };
 
@@ -115,24 +115,49 @@ function renderField(q, value, path, onChange) {
       b.type = 'button';
       b.className = 'pick';
       b.textContent = optionText(o, lang, state.currency);
-      const on = q.kind === 'single' ? value === o.id : Array.isArray(value) && value.includes(o.id);
+      const on = o.custom ? isCustom(value) : q.kind === 'single' ? value === o.id : Array.isArray(value) && value.includes(o.id);
       b.setAttribute(q.kind === 'single' ? 'aria-checked' : 'aria-pressed', String(on));
       if (q.kind === 'single') b.setAttribute('role', 'radio');
       b.addEventListener('click', () => {
         let next;
-        if (q.kind === 'single') next = value === o.id && !q.required ? undefined : o.id;
+        if (o.custom) next = isCustom(value) ? value : CUSTOM_PREFIX + (amountDigits || '');
+        else if (q.kind === 'single') next = value === o.id && !q.required ? undefined : o.id;
         else { const cur = Array.isArray(value) ? value : []; next = cur.includes(o.id) ? cur.filter((x) => x !== o.id) : [...cur, o.id]; }
         value = next;
         box.querySelectorAll('.pick').forEach((c, i) => {
           const id = q.options[i].id;
-          const sel = q.kind === 'single' ? next === id : (next || []).includes(id);
+          const sel = q.options[i].custom ? isCustom(next) : q.kind === 'single' ? next === id : (next || []).includes(id);
           c.setAttribute(q.kind === 'single' ? 'aria-checked' : 'aria-pressed', String(sel));
         });
         if (!calm) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
         clearError(wrap);
+        if (amountBox) {
+          amountBox.hidden = !isCustom(next);
+          if (o.custom) amountBox.querySelector('input').focus();
+        }
         onChange(next);
       });
       box.appendChild(b);
+    }
+
+    // Budget questions: "Other amount" opens a number field in the chosen currency.
+    let amountBox = null;
+    let amountDigits = customAmount(value);
+    if (q.money) {
+      amountBox = document.createElement('div');
+      amountBox.className = 'amount';
+      amountBox.hidden = !isCustom(value);
+      amountBox.innerHTML = `<input type="text" inputmode="numeric" autocomplete="off" dir="ltr" id="${fieldId(path)}-amt" aria-label="${esc(ui('amountLabel'))}" placeholder="${esc(ui('amountPh'))}"><span class="unit">${esc(moneyUnit(state.currency, lang))}</span>`;
+      const inp = amountBox.querySelector('input');
+      inp.value = group(amountDigits);
+      inp.addEventListener('input', () => {
+        amountDigits = toDigits(inp.value).replace(/^0+/, '').slice(0, 12);
+        inp.value = group(amountDigits);
+        value = CUSTOM_PREFIX + amountDigits;
+        clearError(wrap);
+        onChange(value);
+      });
+      wrap.insertBefore(amountBox, wrap.querySelector('.msg'));
     }
   } else {
     const id = fieldId(path);
@@ -154,6 +179,9 @@ function renderField(q, value, path, onChange) {
   return wrap;
 }
 
+// Accept Western, Arabic-Indic and Persian digits; keep digits only.
+const toDigits = (s) => String(s).replace(/[\u0660-\u0669]/g, (d) => d.charCodeAt(0) - 0x0660).replace(/[\u06F0-\u06F9]/g, (d) => d.charCodeAt(0) - 0x06F0).replace(/\D/g, '');
+const group = (d) => (d ? d.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '');
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 function clearError(wrap) { wrap.classList.remove('err'); const m = wrap.querySelector('.msg'); if (m) m.textContent = ''; }
 
@@ -250,7 +278,8 @@ function showErrors(paths) {
     const wrap = document.querySelector(`.field[data-path="${p}"]`);
     if (!wrap) continue;
     wrap.classList.add('err');
-    const val = p.endsWith('.email') && (state.contact.email || '') ? 'email' : p === 'contact.whatsapp' ? 'whatsapp' : 'required';
+    const amount = wrap.querySelector('.amount');
+    const val = amount && !amount.hidden ? 'amount' : p.endsWith('.email') && (state.contact.email || '') ? 'email' : p === 'contact.whatsapp' ? 'whatsapp' : 'required';
     wrap.querySelector('.msg').textContent = ui(val);
     if (!calm) { wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake'); }
     first ||= wrap;
@@ -258,7 +287,7 @@ function showErrors(paths) {
   if (first) {
     showError(ui('fix'));
     first.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
-    (first.querySelector('input, textarea, .pick'))?.focus({ preventScroll: true });
+    (first.querySelector('.amount:not([hidden]) input, input, textarea, .pick'))?.focus({ preventScroll: true });
   }
 }
 function showError(msg) { const e = $('formError'); e.textContent = msg; e.hidden = false; }
