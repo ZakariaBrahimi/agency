@@ -1,7 +1,7 @@
 // /start: the project brief builder.
 // Step 1 picks services; step 2 shows only the follow-up questions for those services;
 // steps 3 and 4 collect project and contact details. The preview card mirrors every answer.
-import { LANGS, SERVICES, PROJECT, CONTACT, t, serviceById, formatAnswer, validateBrief } from './brief-schema.js';
+import { LANGS, SERVICES, PROJECT, CONTACT, CURRENCIES, DEFAULT_CURRENCY, CURRENCY_SHORT, CURRENCY_NAME, t, serviceById, formatAnswer, optionText, validateBrief } from './brief-schema.js';
 
 const UI = {
   ar: {
@@ -20,7 +20,7 @@ const UI = {
     doneT: 'وصلنا طلبك. شكرًا!', doneL: 'سيراجعه فريقنا ونتواصل معك خلال يومي عمل.', ref: 'رقم الطلب:',
     home: 'العودة إلى الموقع', again: 'إرسال طلب آخر',
     pvTitle: 'ملخّص طلبك', pvSub: 'هذا ما سيصلنا عند الإرسال.', pvEmpty: 'اختر خدمة لتبدأ ملخّص طلبك.',
-    pvProject: 'المشروع', pvContact: 'التواصل', pvShow: 'معاينة الطلب', optional: 'اختياري',
+    currency: 'العملة', pvProject: 'المشروع', pvContact: 'التواصل', pvShow: 'معاينة الطلب', optional: 'اختياري',
   },
   en: {
     title: 'Start your project | Nawa', brand: 'Nawa', back: 'Back to the site',
@@ -38,7 +38,7 @@ const UI = {
     doneT: 'We got your request. Thank you!', doneL: 'Our team will review it and get back to you within two working days.', ref: 'Request number:',
     home: 'Back to the site', again: 'Send another request',
     pvTitle: 'Your request', pvSub: 'This is what we’ll receive when you send it.', pvEmpty: 'Pick a service to start your summary.',
-    pvProject: 'Project', pvContact: 'Contact', pvShow: 'Preview request', optional: 'optional',
+    currency: 'Currency', pvProject: 'Project', pvContact: 'Contact', pvShow: 'Preview request', optional: 'optional',
   },
   fr: {
     title: 'Lancer votre projet | Nawa', brand: 'Nawa', back: 'Retour au site',
@@ -56,7 +56,7 @@ const UI = {
     doneT: 'Demande bien reçue. Merci !', doneL: 'Notre équipe l’étudie et vous répond sous deux jours ouvrés.', ref: 'Numéro de demande :',
     home: 'Retour au site', again: 'Envoyer une autre demande',
     pvTitle: 'Votre demande', pvSub: 'Voici ce que nous recevrons à l’envoi.', pvEmpty: 'Choisissez un service pour commencer le résumé.',
-    pvProject: 'Projet', pvContact: 'Contact', pvShow: 'Voir la demande', optional: 'facultatif',
+    currency: 'Devise', pvProject: 'Projet', pvContact: 'Contact', pvShow: 'Voir la demande', optional: 'facultatif',
   },
 };
 
@@ -77,10 +77,11 @@ const fullBtn = document.getElementById('fullJourney'); // lives in the services
 
 let lang = 'ar';
 let step = 1;
-let state = { services: [], answers: {}, project: {}, contact: {} };
+const blank = () => ({ currency: DEFAULT_CURRENCY, services: [], answers: {}, project: {}, contact: {} });
+let state = blank();
 const startedAt = Date.now();
 
-try { const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (d && Array.isArray(d.services)) state = { ...state, ...d }; } catch {}
+try { const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (d && Array.isArray(d.services)) state = { ...state, ...d, currency: CURRENCIES.includes(d.currency) ? d.currency : DEFAULT_CURRENCY }; } catch {}
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
 const ui = (k) => UI[lang][k] ?? UI.ar[k] ?? '';
 
@@ -97,13 +98,23 @@ function renderField(q, value, path, onChange) {
   const opt = !q.required && (q.kind === 'input' || q.kind === 'text') ? ` <span class="opt">(${ui('optional')})</span>` : '';
 
   if (q.kind === 'single' || q.kind === 'multi') {
-    wrap.innerHTML = `<span class="label" id="${labelId}">${esc(t(q.label, lang))}${req}</span><div class="picks" role="${q.kind === 'single' ? 'radiogroup' : 'group'}" aria-labelledby="${labelId}"></div><span class="msg" aria-live="polite"></span>`;
+    const cur = q.money ? `<span class="cur" role="group" aria-label="${esc(ui('currency'))}">${CURRENCIES.map((c) => `<button type="button" data-cur="${c}" aria-pressed="${state.currency === c}" title="${esc(t(CURRENCY_NAME[c], lang))}">${esc(t(CURRENCY_SHORT[c], lang))}</button>`).join('')}</span>` : '';
+    wrap.innerHTML = `<span class="label-row"><span class="label" id="${labelId}">${esc(t(q.label, lang))}${req}</span>${cur}</span><div class="picks" role="${q.kind === 'single' ? 'radiogroup' : 'group'}" aria-labelledby="${labelId}"></div><span class="msg" aria-live="polite"></span>`;
     const box = wrap.querySelector('.picks');
+    wrap.querySelectorAll('[data-cur]').forEach((cb) => cb.addEventListener('click', () => {
+      if (state.currency === cb.dataset.cur) return;
+      state.currency = cb.dataset.cur;
+      save();
+      // Re-draw the current step so every budget question shows the new ranges, keeping focus here.
+      goTo(step, false);
+      renderPreview();
+      document.querySelector(`.field[data-path="${path}"] [data-cur="${state.currency}"]`)?.focus();
+    }));
     for (const o of q.options) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'pick';
-      b.textContent = t(o.label, lang);
+      b.textContent = optionText(o, lang, state.currency);
       const on = q.kind === 'single' ? value === o.id : Array.isArray(value) && value.includes(o.id);
       b.setAttribute(q.kind === 'single' ? 'aria-checked' : 'aria-pressed', String(on));
       if (q.kind === 'single') b.setAttribute('role', 'radio');
@@ -273,13 +284,13 @@ function renderPreview() {
       const s = serviceById(id);
       rows.length = 0;
       for (const q of s.questions) {
-        const v = formatAnswer(q, state.answers[id]?.[q.id], lang);
+        const v = formatAnswer(q, state.answers[id]?.[q.id], lang, state.currency);
         if (v) row(`${id}.${q.id}`, t(q.label, lang).replace(/[؟?]\s*$/, ''), v);
       }
       out += `<section class="pv-sec"><h3>${esc(t(s.title, lang))}</h3>${rows.join('') || '<p class="pv-dim">…</p>'}</section>`;
     }
     rows.length = 0;
-    for (const q of PROJECT) { const v = formatAnswer(q, p[q.id], lang); if (v && q.id !== 'business') row(`p.${q.id}`, t(q.label, lang).replace(/[؟?]\s*$/, ''), v); }
+    for (const q of PROJECT) { const v = formatAnswer(q, p[q.id], lang, state.currency); if (v && q.id !== 'business') row(`p.${q.id}`, t(q.label, lang).replace(/[؟?]\s*$/, ''), v); }
     if (rows.length) out += `<section class="pv-sec"><h3>${esc(ui('pvProject'))}</h3>${rows.join('')}</section>`;
     rows.length = 0;
     for (const q of CONTACT) { const v = formatAnswer(q, c[q.id], lang); if (v) row(`c.${q.id}`, t(q.label, lang).replace(/[؟?]\s*$/, ''), v); }
@@ -365,7 +376,7 @@ $('fullJourney').addEventListener('click', () => {
   save(); renderServices(); renderPreview(); hideError();
 });
 $('again').addEventListener('click', () => {
-  state = { services: [], answers: {}, project: {}, contact: {} };
+  state = blank();
   $('done').hidden = true; $('briefForm').hidden = false;
   document.querySelector('.progress').hidden = false; document.querySelector('.bar').hidden = false;
   document.body.classList.remove('submitted');

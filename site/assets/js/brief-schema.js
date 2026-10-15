@@ -7,6 +7,39 @@ const opt = (id, ar, en, fr) => ({ id, label: L(ar, en, fr) });
 
 export const LANGS = ['ar', 'en', 'fr'];
 
+// ---------- money ----------
+// Budgets default to Algerian dinars; clients can switch to US dollars or euros.
+// Each currency has its own round tiers (not a straight conversion), so the ranges read naturally.
+export const CURRENCIES = ['DZD', 'USD', 'EUR'];
+export const DEFAULT_CURRENCY = 'DZD';
+export const CURRENCY_NAME = {
+  DZD: L('دينار جزائري', 'Algerian dinar', 'Dinar algérien'),
+  USD: L('دولار أمريكي', 'US dollar', 'Dollar américain'),
+  EUR: L('يورو', 'Euro', 'Euro'),
+};
+const CURRENCY_UNIT = { DZD: L('دج', 'DZD', 'DA'), USD: L('دولار', 'USD', 'USD'), EUR: L('يورو', 'EUR', 'EUR') };
+export const CURRENCY_SHORT = { DZD: L('دج', 'DZD', 'DA'), USD: L('$', '$', '$'), EUR: L('€', '€', '€') };
+const TIERS = {
+  project: { DZD: [150000, 700000, 2000000], USD: [1000, 5000, 15000], EUR: [1000, 5000, 15000] },
+  ads: { DZD: [40000, 150000, 400000], USD: [300, 1000, 3000], EUR: [300, 1000, 3000] },
+};
+const num = (n, lang) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'fr' ? '\u202f' : ',');
+
+/** Label of a budget tier (t1..t4) in a currency, e.g. "150,000 إلى 700,000 دج". */
+export function moneyLabel(table, tier, currency, lang) {
+  const cur = CURRENCIES.includes(currency) ? currency : DEFAULT_CURRENCY;
+  const [a, b, c] = TIERS[table][cur].map((n) => num(n, lang));
+  const unit = CURRENCY_UNIT[cur][lang] || CURRENCY_UNIT[cur].ar;
+  const tpl = {
+    t1: L(`أقل من ${a}`, `Under ${a}`, `Moins de ${a}`),
+    t2: L(`${a} إلى ${b}`, `${a} to ${b}`, `${a} à ${b}`),
+    t3: L(`${b} إلى ${c}`, `${b} to ${c}`, `${b} à ${c}`),
+    t4: L(`أكثر من ${c}`, `Over ${c}`, `Plus de ${c}`),
+  }[tier];
+  return tpl ? `${tpl[lang] || tpl.ar} ${unit}` : '';
+}
+const money = (table, extra = []) => ['t1', 't2', 't3', 't4'].map((id) => ({ id, money: table })).concat(extra);
+
 // Services follow the six-step journey ("results" covers studying results and improving).
 export const SERVICES = [
   {
@@ -107,12 +140,7 @@ export const SERVICES = [
         opt('awareness', 'انتشار ومعرفة بالعلامة', 'Brand awareness', 'Notoriété'),
         opt('installs', 'تحميل التطبيق', 'App installs', 'Installations d’appli'),
       ] },
-      { id: 'budget', kind: 'single', required: true, label: L('ميزانية الإعلانات الشهرية (بالدولار)', 'Monthly ad budget (USD)', 'Budget publicitaire mensuel (USD)'), options: [
-        opt('lt300', 'أقل من 300', 'Under 300', 'Moins de 300'),
-        opt('300_1000', '300 إلى 1,000', '300 to 1,000', '300 à 1 000'),
-        opt('1000_3000', '1,000 إلى 3,000', '1,000 to 3,000', '1 000 à 3 000'),
-        opt('gt3000', 'أكثر من 3,000', 'Over 3,000', 'Plus de 3 000'),
-      ] },
+      { id: 'budget', kind: 'single', required: true, money: 'ads', label: L('ميزانية الإعلانات الشهرية', 'Monthly ad budget', 'Budget publicitaire mensuel'), options: money('ads') },
     ],
   },
   {
@@ -149,13 +177,9 @@ export const PROJECT = [
     opt('3m', 'خلال 3 أشهر', 'Within 3 months', 'D’ici 3 mois'),
     opt('flex', 'مرن', 'Flexible', 'Flexible'),
   ] },
-  { id: 'budget', kind: 'single', required: true, label: L('الميزانية التقريبية للمشروع (بالدولار)', 'Approximate project budget (USD)', 'Budget approximatif du projet (USD)'), options: [
-    opt('lt1k', 'أقل من 1,000', 'Under 1,000', 'Moins de 1 000'),
-    opt('1k_5k', '1,000 إلى 5,000', '1,000 to 5,000', '1 000 à 5 000'),
-    opt('5k_15k', '5,000 إلى 15,000', '5,000 to 15,000', '5 000 à 15 000'),
-    opt('gt15k', 'أكثر من 15,000', 'Over 15,000', 'Plus de 15 000'),
+  { id: 'budget', kind: 'single', required: true, money: 'project', label: L('الميزانية التقريبية للمشروع', 'Approximate project budget', 'Budget approximatif du projet'), options: money('project', [
     opt('unsure', 'لم أحدد بعد', 'Not sure yet', 'Pas encore défini'),
-  ] },
+  ]) },
 ];
 
 // Step 4: how to reach the client.
@@ -175,13 +199,20 @@ export const CONTACT = [
 
 export const t = (label, lang) => (label ? label[lang] || label.ar : '');
 export const serviceById = (id) => SERVICES.find((s) => s.id === id);
-const optionLabel = (q, id, lang) => t(q.options?.find((o) => o.id === id)?.label, lang) || String(id);
+/** Text of one option; budget tiers depend on the chosen currency. */
+export function optionText(o, lang, currency = DEFAULT_CURRENCY) {
+  return o.money ? moneyLabel(o.money, o.id, currency, lang) : t(o.label, lang);
+}
+const optionLabel = (q, id, lang, currency) => {
+  const o = q.options?.find((x) => x.id === id);
+  return o ? optionText(o, lang, currency) : String(id);
+};
 
 /** Human-readable value of one answered question. */
-export function formatAnswer(q, value, lang) {
+export function formatAnswer(q, value, lang, currency = DEFAULT_CURRENCY) {
   if (value == null || value === '' || (Array.isArray(value) && !value.length)) return '';
-  if (q.kind === 'single') return optionLabel(q, value, lang);
-  if (q.kind === 'multi') return value.map((v) => optionLabel(q, v, lang)).join(lang === 'ar' ? '، ' : ', ');
+  if (q.kind === 'single') return optionLabel(q, value, lang, currency);
+  if (q.kind === 'multi') return value.map((v) => optionLabel(q, v, lang, currency)).join(lang === 'ar' ? '، ' : ', ');
   return String(value);
 }
 
@@ -211,7 +242,11 @@ function checkQuestion(q, value, errors, path) {
 export function validateBrief(input, only) {
   const errors = [];
   const src = input && typeof input === 'object' ? input : {};
-  const out = { lang: LANGS.includes(src.lang) ? src.lang : 'ar', services: [], answers: {}, project: {}, contact: {} };
+  const out = {
+    lang: LANGS.includes(src.lang) ? src.lang : 'ar',
+    currency: CURRENCIES.includes(src.currency) ? src.currency : DEFAULT_CURRENCY,
+    services: [], answers: {}, project: {}, contact: {},
+  };
 
   out.services = Array.isArray(src.services) ? [...new Set(src.services)].filter((id) => serviceById(id)) : [];
   if ((!only || only === 'services') && !out.services.length) errors.push('services');
@@ -251,13 +286,13 @@ export function summarize(brief, lang = 'ar') {
   for (const id of brief.services) {
     const svc = serviceById(id);
     const parts = svc.questions
-      .map((q) => [q, formatAnswer(q, brief.answers?.[id]?.[q.id], lang)])
+      .map((q) => [q, formatAnswer(q, brief.answers?.[id]?.[q.id], lang, brief.currency)])
       .filter(([, v]) => v)
       .map(([q, v]) => `${t(q.label, lang).replace(/[؟?]\s*$/, '')}: ${v}`);
     if (parts.length) lines.push(`• ${t(svc.title, lang)}\n  ${parts.join('\n  ')}`);
   }
   const p = brief.project || {};
-  const proj = PROJECT.map((q) => [q, formatAnswer(q, p[q.id], lang)]).filter(([, v]) => v)
+  const proj = PROJECT.map((q) => [q, formatAnswer(q, p[q.id], lang, brief.currency)]).filter(([, v]) => v)
     .map(([q, v]) => `${t(q.label, lang).replace(/[؟?]\s*$/, '')}: ${v}`);
   if (proj.length) lines.push(proj.join('\n'));
   return lines.join('\n\n');

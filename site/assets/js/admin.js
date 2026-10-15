@@ -1,5 +1,5 @@
 // /admin: requests dashboard. Talks to /api/admin/* (session cookie set by /api/admin/login).
-import { SERVICES, PROJECT, CONTACT, t, serviceById, formatAnswer } from './brief-schema.js';
+import { SERVICES, PROJECT, CONTACT, CURRENCY_NAME, DEFAULT_CURRENCY, t, serviceById, formatAnswer } from './brief-schema.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -123,8 +123,8 @@ function select(id) {
   if (window.matchMedia('(max-width: 900px)').matches) $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function rows(list, values, lang = 'ar') {
-  return list.map((q) => [q, formatAnswer(q, values?.[q.id], lang)]).filter(([, v]) => v)
+function rows(list, values, currency, lang = 'ar') {
+  return list.map((q) => [q, formatAnswer(q, values?.[q.id], lang, currency)]).filter(([, v]) => v)
     .map(([q, v]) => `<div class="kv"><span>${esc(t(q.label, lang).replace(/[؟?]\s*$/, ''))}</span><b>${esc(v)}</b></div>`).join('');
 }
 
@@ -135,6 +135,7 @@ function renderDetail() {
   const c = b.contact || {};
   const wa = (c.whatsapp || '').replace(/[^\d]/g, '');
   const services = (b.services || []).map((id) => serviceById(id)).filter(Boolean);
+  const currency = b.business?.currency || DEFAULT_CURRENCY;
   box.innerHTML = `
     <div class="d-head">
       <div>
@@ -158,8 +159,8 @@ function renderDetail() {
 
     <div class="d-tags">${services.map((s) => `<span class="pv-tag">${esc(t(s.title, 'ar'))}</span>`).join('')}</div>
 
-    ${services.map((s) => `<section class="d-sec"><h3>${esc(t(s.title, 'ar'))}</h3>${rows(s.questions, b.answers?.[s.id]) || '<p class="muted">لا توجد إجابات.</p>'}</section>`).join('')}
-    <section class="d-sec"><h3>المشروع</h3>${rows(PROJECT, b.business)}</section>
+    ${services.map((s) => `<section class="d-sec"><h3>${esc(t(s.title, 'ar'))}</h3>${rows(s.questions, b.answers?.[s.id], currency) || '<p class="muted">لا توجد إجابات.</p>'}</section>`).join('')}
+    <section class="d-sec"><h3>المشروع</h3>${rows(PROJECT, b.business, currency)}<div class="kv"><span>العملة</span><b>${esc(t(CURRENCY_NAME[currency], 'ar'))}</b></div></section>
     ${c.notes ? `<section class="d-sec"><h3>ملاحظات العميل</h3><p class="notes">${esc(c.notes)}</p></section>` : ''}
 
     <section class="d-sec">

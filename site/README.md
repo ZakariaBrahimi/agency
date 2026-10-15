@@ -36,6 +36,10 @@ api/admin/*.js                sign-in, list/update briefs, Telegram setup (admin
 4. On `/admin` you sign in with your password, read each brief, change its status, add private notes, and
    reply on WhatsApp or by email in one tap.
 
+**Currency:** budgets default to Algerian dinars (DZD). A دج / $ / € switch next to each budget question
+changes both budget questions together. Each currency has its own round ranges, set in `TIERS` in
+`brief-schema.js`, and the chosen currency is saved with the request and shown in Telegram and `/admin`.
+
 **Spam protection:** a hidden honeypot field, a minimum time on the form, a per-IP rate limit, and
 server-side validation of every field.
 

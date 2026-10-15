@@ -27,7 +27,7 @@ function telegramText(id, b) {
     `${escapeHtml(formatAnswer(field(PROJECT, 'sector'), p.sector, 'ar'))}${p.country ? ' · ' + escapeHtml(p.country) : ''}`,
     '',
     `<b>الخدمات:</b> ${escapeHtml(services)}`,
-    `<b>الميزانية:</b> ${escapeHtml(formatAnswer(field(PROJECT, 'budget'), p.budget, 'ar'))}`,
+    `<b>الميزانية:</b> ${escapeHtml(formatAnswer(field(PROJECT, 'budget'), p.budget, 'ar', b.currency))}`,
     `<b>البدء:</b> ${escapeHtml(formatAnswer(field(PROJECT, 'timeline'), p.timeline, 'ar'))}`,
     '',
     `<b>التواصل المفضّل:</b> ${escapeHtml(formatAnswer(field(CONTACT, 'prefer'), c.prefer, 'ar'))}`,
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
   try {
     await insertBrief({
       id, lang: brief.lang, services: brief.services, answers: brief.answers,
-      business: brief.project, contact: brief.contact, summary: summarize(brief, 'ar'),
+      business: { ...brief.project, currency: brief.currency }, contact: brief.contact, summary: summarize(brief, 'ar'),
     });
   } catch (e) {
     console.error('save failed', e.message);
