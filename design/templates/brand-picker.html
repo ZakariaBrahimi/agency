@@ -1,0 +1,518 @@
+<title>Brand Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;600;800&family=Manrope:wght@400;600;800&family=Syne:wght@400;600;800&family=Unbounded:wght@400;600;700&family=Cairo:wght@400;600;800&family=DM+Serif+Display&display=swap">
+<style>
+  /* Layout: a control rail on the left drives a wall of live previews on the right; stacks on phones. */
+  :root {
+    --bg: #ECEEF1;
+    --panel: #FFFFFF;
+    --fg: #14161A;
+    --muted: #5C636E;
+    --line: #D8DCE2;
+    --focus: #2F5BFF;
+    --chip: #F4F5F7;
+    --ok: #17803D;
+    --ui: "Geist", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0F1113; --panel: #181B1E; --fg: #ECEEF0; --muted: #9AA1AA; --line: #2B2F34; --focus: #7C95FF; --chip: #202428; --ok: #4ADE80; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #0F1113; --panel: #181B1E; --fg: #ECEEF0; --muted: #9AA1AA; --line: #2B2F34; --focus: #7C95FF; --chip: #202428; --ok: #4ADE80; color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 14px; line-height: 1.45; }
+  .app { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 20px; align-items: start;
+    padding-block: 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+  .rail { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 22px; }
+  @media (min-width: 901px) { .rail { position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 40px); overflow-y: auto; } }
+  .rail header h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+  .rail header p { margin: 4px 0 0; color: var(--muted); }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+  legend { padding: 0; margin-bottom: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12px; margin: 0; }
+  .hint code { font-family: var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+  button, .opt { font: inherit; color: inherit; }
+  .opt { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--chip); border: 1px solid transparent; border-radius: 10px; padding: 9px 10px; cursor: pointer; min-width: 0; }
+  .opt:hover { border-color: var(--line); }
+  .opt[aria-pressed="true"] { border-color: var(--focus); box-shadow: inset 0 0 0 1px var(--focus); background: var(--panel); }
+  .opt:disabled { opacity: .4; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .names { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .names .opt { flex-direction: column; align-items: flex-start; gap: 1px; position: relative; }
+  .names b { font-size: 15px; }
+  .names .ar { font-size: 13px; color: var(--muted); }
+  .names small { color: var(--muted); font-size: 12px; line-height: 1.3; }
+  .rec { position: absolute; top: 7px; right: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--ok); }
+
+  .logos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .logos .opt { flex-direction: column; gap: 6px; padding: 8px; font-size: 11px; text-align: center; justify-content: flex-start; }
+  .logos .m { width: 100%; aspect-ratio: 1; max-width: 100%; }
+  .logos .m svg { width: 100%; height: 100%; display: block; }
+
+  .palettes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .palettes .opt { flex-direction: column; align-items: stretch; gap: 6px; font-size: 12px; }
+  .sw { display: flex; height: 22px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+  .sw i { flex: 1; }
+  .custom-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .custom-colors label { display: grid; gap: 4px; font-size: 11px; color: var(--muted); }
+  .custom-colors input { width: 100%; height: 34px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--panel); cursor: pointer; }
+  .custom-colors span { font-family: var(--mono); font-size: 11px; color: var(--fg); }
+
+  .fonts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .fonts .opt span:first-child { font-size: 22px; line-height: 1; width: 56px; flex: none; overflow: hidden; }
+  .fonts .opt span:last-child { font-size: 12px; color: var(--muted); }
+
+  .taglines { display: grid; gap: 6px; }
+  .taglines .opt { display: block; font-size: 13px; }
+  .taglines .opt em { font-style: normal; text-decoration: underline; text-decoration-color: var(--focus); text-underline-offset: 3px; }
+
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg .opt { padding: 6px 12px; }
+  input[type="text"], textarea { width: 100%; font: inherit; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  textarea { resize: vertical; min-height: 44px; }
+  .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .row2 label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 9px; padding: 9px 14px; cursor: pointer; font-weight: 500; }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .status { font-size: 12px; color: var(--muted); min-height: 1.2em; margin: 0; }
+  .status.ok { color: var(--ok); }
+
+  /* Preview wall */
+  .wall { display: grid; gap: 20px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+  .card h2 { margin: 0 0 10px; font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+  .card h2 span:last-child { text-transform: none; letter-spacing: 0; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 20px; }
+  @media (max-width: 640px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+  .frame { position: relative; width: 100%; max-width: 100%; overflow: hidden; border-radius: 8px; }
+  .frame > .art { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  .circle { border-radius: 50%; }
+  .stacked { display: grid; gap: 20px; }
+
+  /* Final choice + shortlist */
+  .final { display: none; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--ok); background: var(--panel); }
+  .final.on { display: flex; }
+  .final .m { width: 40px; height: 40px; flex: none; }
+  .final .m svg { width: 100%; height: 100%; display: block; }
+  .final p { margin: 0; }
+  .final small { color: var(--muted); display: block; }
+  .shortlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .sl { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px; border-radius: 10px; background: var(--chip); border: 1px solid transparent; }
+  .sl.is-final { border-color: var(--ok); }
+  .sl .m svg { width: 44px; height: 44px; display: block; }
+  .sl b { display: block; }
+  .sl .meta { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  .sl .acts { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+  .sl .acts button { font-size: 12px; padding: 5px 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .empty { color: var(--muted); font-size: 13px; margin: 0; }
+
+  /* ---------- Brand artwork (mirrors design/templates, scoped under .pv) ---------- */
+  .pv { --indigo-2: color-mix(in srgb, var(--indigo) 72%, white); --font-body: Inter, "Helvetica Neue", Arial, sans-serif; font-family: var(--font-body); color: #fff; -webkit-font-smoothing: antialiased; }
+  .pv * { margin: 0; padding: 0; box-sizing: border-box; }
+  .pv [data-mark] svg { width: 100%; height: 100%; display: block; }
+  .pv .lime { color: var(--lime); }
+  .pv.bg-ink { position: relative; overflow: hidden; background:
+      radial-gradient(ellipse 60% 90% at 78% 40%, color-mix(in srgb, var(--indigo) 55%, transparent), transparent 70%),
+      radial-gradient(ellipse 40% 60% at 12% 110%, color-mix(in srgb, var(--lime) 14%, transparent), transparent 70%),
+      var(--ink); }
+  .pv.grid::before { content: ""; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 48px 48px; mask-image: radial-gradient(ellipse 80% 80% at 60% 50%, #000 30%, transparent 80%); }
+  .pv .pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); font-size: 15px; font-weight: 500; letter-spacing: .02em; color: rgba(255,255,255,.85); }
+  .pv .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); }
+
+  .pv.cover { width: 1640px; height: 624px; }
+  .pv .stage { position: absolute; left: 200px; top: 70px; width: 1200px; height: 400px; transform-origin: 0 0; }
+  .pv .copy { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 640px; }
+  .pv .copy h1 { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 76px; line-height: .98; letter-spacing: -.035em; margin: 22px 0 18px; white-space: nowrap; }
+  .pv .copy p { font-size: 22px; color: rgba(255,255,255,.72); }
+  .pv .copy p b { color: #fff; font-weight: 600; }
+  .pv .cards { position: absolute; right: 0; top: 0; width: 520px; height: 400px; }
+  .pv .cardx { position: absolute; border-radius: 22px; background: color-mix(in srgb, var(--ink) 88%, white); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 30px 60px -20px rgba(0,0,0,.6); }
+  .pv .dash { left: 0; top: 48px; width: 330px; height: 250px; padding: 22px; }
+  .pv .dash .hd { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
+  .pv .dash .hd i { width: 26px; height: 26px; border-radius: 8px; background: var(--indigo); display: block; }
+  .pv .dash .hd span { margin-left: auto; font-size: 12px; color: var(--lime); font-weight: 600; background: color-mix(in srgb, var(--lime) 14%, transparent); padding: 4px 9px; border-radius: 999px; }
+  .pv .kpi { font-family: var(--font-display); font-size: 40px; font-weight: var(--display-weight); margin-top: 18px; letter-spacing: -.02em; }
+  .pv .kpi small { font-family: var(--font-body); font-size: 14px; color: rgba(255,255,255,.55); font-weight: 500; margin-left: 6px; letter-spacing: 0; }
+  .pv .bars { display: flex; align-items: flex-end; gap: 9px; height: 88px; margin-top: 16px; }
+  .pv .bars b { flex: 1; border-radius: 6px 6px 3px 3px; background: color-mix(in srgb, var(--indigo-2) 50%, transparent); }
+  .pv .bars b:last-child { background: var(--lime); }
+  .pv .post { right: 0; top: 140px; width: 230px; height: 236px; padding: 14px; transform: rotate(4deg); }
+  .pv .post .img { height: 150px; border-radius: 14px; background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-2) 55%, var(--lime) 130%); display: grid; place-items: center; }
+  .pv .post .img [data-mark] { width: 72px; height: 72px; }
+  .pv .post .meta { display: flex; gap: 12px; margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.7); }
+  .pv .post .meta b { color: #fff; }
+  .pv .post .line { height: 8px; border-radius: 4px; background: rgba(255,255,255,.14); margin-top: 10px; width: 80%; }
+  .pv .chip { position: absolute; right: 196px; top: 16px; padding: 10px 14px; border-radius: 14px; background: var(--lime); color: var(--ink); font-weight: 700; font-size: 14px; transform: rotate(-3deg); }
+
+  .pv.profile { width: 1080px; height: 1080px; display: grid; place-items: center; background: radial-gradient(circle at 70% 25%, var(--indigo-2), var(--indigo) 60%); }
+  .pv.profile.v-dark { background: radial-gradient(circle at 70% 25%, color-mix(in srgb, var(--ink) 80%, white), var(--ink) 65%); }
+  .pv.profile [data-mark] { width: 640px; height: 640px; }
+
+  .pv.ppost { width: 1080px; height: 1350px; padding: 84px; display: flex; flex-direction: column; }
+  .pv.ppost .top { display: flex; align-items: center; justify-content: space-between; }
+  .pv.ppost .badge { display: inline-flex; align-items: center; gap: 12px; padding: 12px 20px 12px 12px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); font-size: 24px; font-weight: 600; }
+  .pv.ppost .badge [data-mark] { width: 40px; height: 40px; }
+  .pv.ppost .kicker { font-size: 24px; font-weight: 600; color: var(--ink); background: var(--lime); padding: 12px 22px; border-radius: 999px; }
+  .pv.ppost h3 { font-family: var(--font-display); font-size: 148px; font-weight: var(--display-weight); letter-spacing: -.045em; line-height: .9; margin-top: 90px; }
+  .pv.ppost .tag { font-size: 44px; line-height: 1.2; color: rgba(255,255,255,.78); margin-top: 28px; max-width: 820px; font-weight: 500; letter-spacing: -.01em; }
+  .pv.ppost .ui { margin-top: 72px; border-radius: 32px; background: color-mix(in srgb, var(--ink) 88%, white); border: 1px solid rgba(255,255,255,.12); padding: 36px; }
+  .pv.ppost .row { display: flex; gap: 22px; }
+  .pv.ppost .k { flex: 1; border-radius: 20px; background: rgba(255,255,255,.05); padding: 22px; }
+  .pv.ppost .k small { font-size: 20px; color: rgba(255,255,255,.55); }
+  .pv.ppost .k div { font-family: var(--font-display); font-size: 48px; font-weight: var(--display-weight); margin-top: 6px; letter-spacing: -.02em; }
+  .pv.ppost .k div em { font-style: normal; color: var(--lime); font-size: 22px; margin-left: 8px; font-family: var(--font-body); }
+  .pv.ppost .bars { height: 300px; gap: 14px; margin-top: 32px; }
+  .pv.ppost .bars b { border-radius: 10px 10px 4px 4px; }
+  .pv.ppost .foot { display: flex; justify-content: space-between; margin-top: auto; font-size: 26px; color: rgba(255,255,255,.7); }
+  .pv.ppost .foot b { color: #fff; }
+
+  .pv.lockup { width: 1500px; height: 600px; display: flex; align-items: center; justify-content: center; gap: 72px; background: var(--paper); }
+  .pv.lockup.dark { background: var(--ink); }
+  .pv.lockup [data-mark] { width: 360px; height: 360px; flex: none; }
+  .pv.lockup .word { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 190px; letter-spacing: -.03em; line-height: 1; color: var(--ink); white-space: nowrap; }
+  .pv.lockup.dark .word { color: #fff; }
+
+  @media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .15s, box-shadow .15s; } }
+</style>
+
+<div class="app">
+  <form class="rail" id="rail" autocomplete="off">
+    <header>
+      <h1>Brand Picker</h1>
+      <p>Pick a name, logo, colors, font and tagline. The previews update as you go. Save the ones you like to the shortlist, then mark one as final.</p>
+    </header>
+
+    <fieldset>
+      <legend>Name</legend>
+      <div class="names" id="names"></div>
+      <div class="row2">
+        <label for="customName">Or type your own<input type="text" id="customName" placeholder="e.g. Fikra"></label>
+        <label for="domain">Domain / handle<input type="text" id="domain" placeholder="name.studio"></label>
+      </div>
+      <p class="hint">Choosing a name also loads the palette that suits it. You can change the palette afterwards.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Logo</legend>
+      <div class="logos" id="logos"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Colors</legend>
+      <div class="palettes" id="palettes"></div>
+      <div class="custom-colors" id="customColors"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Font</legend>
+      <div class="fonts" id="fonts"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tagline</legend>
+      <div class="taglines" id="taglines"></div>
+      <textarea id="customTagline" rows="2" placeholder="Write your own"></textarea>
+      <p class="hint">Wrap words in <code>*stars*</code> to highlight them. Use <code>|</code> for a new line.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Details</legend>
+      <div class="seg" id="wordCase" role="group" aria-label="Wordmark case"></div>
+      <div class="seg" id="profileBg" role="group" aria-label="Profile photo background"></div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="button" class="btn primary" id="save">Save to shortlist</button>
+      <button type="button" class="btn" id="shuffle">Surprise me</button>
+      <button type="button" class="btn" id="reset">Recommended</button>
+      <button type="button" class="btn" id="copy">Copy settings</button>
+    </div>
+    <p class="status" id="status" role="status"></p>
+    <textarea id="copyBox" rows="5" hidden readonly aria-label="Brand settings JSON"></textarea>
+  </form>
+
+  <main class="wall">
+    <div class="final" id="final">
+      <div class="m" id="finalMark"></div>
+      <p><b id="finalName"></b> is your final choice.<small>Tell Claude "apply my final brand" to render every design with it.</small></p>
+    </div>
+
+    <section class="card">
+      <h2><span>Shortlist</span><span id="slCount"></span></h2>
+      <div class="shortlist" id="shortlist"><p class="empty">Nothing saved yet. Set up a combination you like and press "Save to shortlist" to compare options side by side.</p></div>
+    </section>
+
+    <div id="pv" class="stacked">
+      <section class="card">
+        <h2><span>Facebook cover</span><span>1640 × 624</span></h2>
+        <div class="frame" data-w="1640" data-h="624"><div class="art pv cover bg-ink grid">
+          <div class="stage">
+            <div class="copy">
+              <span class="pill"><span class="dot"></span>SaaS · Social media · Design</span>
+              <h1 data-brand="tagline"></h1>
+              <p>Home of <b>Mizan</b> and what's next &nbsp;·&nbsp; <b data-brand="domain"></b></p>
+            </div>
+            <div class="cards">
+              <div class="cardx dash">
+                <div class="hd"><i></i>Mizan<span>▲ 32%</span></div>
+                <div class="kpi">12,480<small>active users</small></div>
+                <div class="bars"><b style="height:38%"></b><b style="height:52%"></b><b style="height:46%"></b><b style="height:64%"></b><b style="height:58%"></b><b style="height:78%"></b><b style="height:100%"></b></div>
+              </div>
+              <div class="cardx post">
+                <div class="img"><div data-mark="bare" data-dot="dark"></div></div>
+                <div class="meta"><span>♥ <b>2.4k</b></span><span>↗ <b>318</b></span></div>
+                <div class="line"></div>
+              </div>
+              <div class="chip">New campaign ✦</div>
+            </div>
+          </div>
+        </div></div>
+      </section>
+
+      <div class="pair">
+        <section class="card">
+          <h2><span>Profile photo</span><span>1080 × 1080</span></h2>
+          <div class="frame circle" data-w="1080" data-h="1080"><div class="art pv profile" id="profileArt"><div data-mark="bare"></div></div></div>
+        </section>
+        <section class="card">
+          <h2><span>Product post</span><span>1080 × 1350</span></h2>
+          <div class="frame" data-w="1080" data-h="1350"><div class="art pv ppost bg-ink grid">
+            <div class="top">
+              <span class="badge"><span data-mark="badge"></span>Built by&nbsp;<span data-brand="name"></span></span>
+              <span class="kicker">Our product</span>
+            </div>
+            <h3>Mizan<span class="lime">.</span></h3>
+            <p class="tag">Your business, in balance. Sales, stock and cash in one clear view.</p>
+            <div class="ui">
+              <div class="row">
+                <div class="k"><small>Revenue</small><div>248k<em>▲ 18%</em></div></div>
+                <div class="k"><small>Expenses</small><div>131k<em>▼ 6%</em></div></div>
+                <div class="k"><small>Balance</small><div>117k</div></div>
+              </div>
+              <div class="bars"><b style="height:40%"></b><b style="height:55%"></b><b style="height:48%"></b><b style="height:66%"></b><b style="height:60%"></b><b style="height:74%"></b><b style="height:70%"></b><b style="height:88%"></b><b style="height:100%"></b></div>
+            </div>
+            <div class="foot"><span>Follow <b>@mizan</b></span><span>A <b data-brand="name"></b> product · <span data-brand="domain"></span></span></div>
+          </div></div>
+        </section>
+      </div>
+
+      <div class="pair">
+        <section class="card">
+          <h2><span>Logo on light</span></h2>
+          <div class="frame" data-w="1500" data-h="600"><div class="art pv lockup"><span data-mark="badge"></span><span class="word" data-brand="wordmark"></span></div></div>
+        </section>
+        <section class="card">
+          <h2><span>Logo on dark</span></h2>
+          <div class="frame" data-w="1500" data-h="600"><div class="art pv lockup dark"><span data-mark="badge"></span><span class="word" data-brand="wordmark"></span></div></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="brand.js"></script>
+<script>
+(() => {
+  const O = Brand.OPTIONS;
+  const $ = (id) => document.getElementById(id);
+  const STORE_KEY = 'brandPicker.v1';
+  const slug = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '') || 'brand';
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  // ----- State -----
+  let s = { b: Brand.normalize(Brand.DEFAULT_BRAND), nameKey: 'Nawa', paletteKey: 'core', taglineKey: 0, domainEdited: false };
+  try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (saved && saved.b) s = Object.assign(s, saved, { b: Brand.normalize(saved.b) }); } catch (e) {}
+  const remember = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} };
+
+  function setName(name, arabic, key) {
+    s.b.name = name; s.b.arabic = arabic || ''; s.nameKey = key;
+    if (!s.domainEdited) { s.b.domain = slug(name) + '.studio'; s.b.handle = s.b.domain; }
+    if (s.b.logo === 'signature' && Brand.letterOf(name) !== 'N') s.b.logo = 'core';
+  }
+  function setPalette(key) { s.paletteKey = key; const p = O.palettes[key]; s.b.palette = { dark: p.dark, primary: p.primary, accent: p.accent, paper: p.paper }; }
+
+  // ----- Build controls once -----
+  const opt = (html, onClick, label) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.innerHTML = html; if (label) b.setAttribute('aria-label', label); b.addEventListener('click', onClick); return b; };
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+  const nameBtns = O.names.map((n) => {
+    const b = opt(`<b>${esc(n.name)}</b><span class="ar" lang="ar">${esc(n.arabic)}</span><small>${esc(n.meaning)}</small>${n.recommended ? '<span class="rec">RECOMMENDED</span>' : ''}`,
+      () => { setName(n.name, n.arabic, n.name); setPalette(n.palette); $('customName').value = ''; update(); });
+    b.dataset.key = n.name; $('names').appendChild(b); return b;
+  });
+  $('customName').addEventListener('input', (e) => { const v = e.target.value.trim(); if (v) { setName(v, '', 'custom'); update(); } });
+  $('domain').addEventListener('input', (e) => { s.domainEdited = true; s.b.domain = e.target.value.trim(); s.b.handle = s.b.domain; update(); });
+
+  const logoBtns = Object.entries(O.logos).map(([key, label]) => {
+    const short = { signature: 'Signature', core: 'Core dot', orbit: 'Orbit', bracket: 'Frame', stack: 'Stack' }[key];
+    const b = opt(`<span class="m"></span><span>${short}</span>`, () => { s.b.logo = key; update(); }, label);
+    b.dataset.key = key; $('logos').appendChild(b); return b;
+  });
+
+  const palBtns = Object.entries(O.palettes).map(([key, p]) => {
+    const b = opt(`<span class="sw"><i style="background:${p.dark}"></i><i style="background:${p.primary}"></i><i style="background:${p.accent}"></i><i style="background:${p.paper}"></i></span><span>${esc(p.label)}</span>`, () => { setPalette(key); update(); });
+    b.dataset.key = key; $('palettes').appendChild(b); return b;
+  });
+  const COLOR_ROLES = [['dark', 'Dark'], ['primary', 'Primary'], ['accent', 'Accent'], ['paper', 'Light']];
+  const colorInputs = COLOR_ROLES.map(([role, label]) => {
+    const l = document.createElement('label'); l.htmlFor = 'c-' + role;
+    l.innerHTML = `${label}<input type="color" id="c-${role}"><span></span>`;
+    $('customColors').appendChild(l);
+    const i = l.querySelector('input');
+    i.addEventListener('input', () => { s.b.palette[role] = i.value.toUpperCase(); s.paletteKey = 'custom'; update(); });
+    return { role, i, out: l.querySelector('span') };
+  });
+
+  const fontBtns = O.fonts.map((f) => {
+    const b = opt(`<span style="font-family:${esc(Brand.fontStack(f))};font-weight:${Brand.weight(f)}">Aa</span><span>${esc(f)}</span>`, () => { s.b.font = f; update(); });
+    b.dataset.key = f; $('fonts').appendChild(b); return b;
+  });
+
+  const tagBtns = O.taglines.map((t, i) => {
+    const b = opt(esc(t).replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\|/g, ' '), () => { s.b.tagline = t; s.taglineKey = i; $('customTagline').value = ''; update(); });
+    b.dataset.key = i; $('taglines').appendChild(b); return b;
+  });
+  $('customTagline').addEventListener('input', (e) => { const v = e.target.value.trim(); if (v) { s.b.tagline = v; s.taglineKey = 'custom'; update(); } });
+
+  const segBtns = (host, field, items) => items.map(([v, label]) => { const b = opt(label, () => { s.b[field] = v; update(); }); b.dataset.key = v; $(host).appendChild(b); return b; });
+  const caseBtns = segBtns('wordCase', 'wordCase', [['lower', 'lowercase'], ['title', 'Title'], ['upper', 'UPPER']]);
+  const bgBtns = segBtns('profileBg', 'profileBg', [['primary', 'Profile: color'], ['dark', 'Profile: dark']]);
+
+  // ----- Preview scaling -----
+  const frames = [...document.querySelectorAll('.frame')];
+  frames.forEach((f) => { f.style.aspectRatio = `${f.dataset.w} / ${f.dataset.h}`; f.firstElementChild.style.width = f.dataset.w + 'px'; f.firstElementChild.style.height = f.dataset.h + 'px'; });
+  const scale = () => frames.forEach((f) => { f.firstElementChild.style.transform = `scale(${f.clientWidth / f.dataset.w})`; });
+  new ResizeObserver(scale).observe(document.querySelector('.wall'));
+
+  const h1 = document.querySelector('.pv .copy h1');
+  const fitHeadline = () => { let px = 76; h1.style.fontSize = px + 'px'; while (h1.scrollWidth > 640 && px > 40) h1.style.fontSize = --px + 'px'; };
+
+  // ----- Render -----
+  const press = (btns, key) => btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.key === String(key))));
+  function update() {
+    const b = s.b;
+    Brand.apply(b, $('pv'));
+    $('profileArt').classList.toggle('v-dark', b.profileBg === 'dark');
+    press(nameBtns, s.nameKey); press(palBtns, s.paletteKey); press(fontBtns, b.font);
+    press(tagBtns, s.taglineKey); press(caseBtns, b.wordCase); press(bgBtns, b.profileBg); press(logoBtns, b.logo);
+    logoBtns.forEach((btn) => {
+      const k = btn.dataset.key;
+      btn.querySelector('.m').innerHTML = Brand.markSVG(Object.assign({}, b, { logo: k }));
+      btn.disabled = k === 'signature' && Brand.letterOf(b.name) !== 'N';
+      btn.title = btn.disabled ? 'Only for names that start with N' : '';
+    });
+    colorInputs.forEach(({ role, i, out }) => { i.value = b.palette[role]; out.textContent = b.palette[role]; });
+    if (document.activeElement !== $('domain')) $('domain').value = b.domain;
+    fitHeadline(); scale(); remember();
+  }
+
+  function load(brand) {
+    s.b = Brand.normalize(clone(brand));
+    const n = O.names.find((x) => x.name === s.b.name); s.nameKey = n ? n.name : 'custom'; $('customName').value = n ? '' : s.b.name;
+    const pk = Object.entries(O.palettes).find(([, p]) => ['dark', 'primary', 'accent', 'paper'].every((r) => p[r].toUpperCase() === String(s.b.palette[r]).toUpperCase()));
+    s.paletteKey = pk ? pk[0] : 'custom';
+    const ti = O.taglines.indexOf(s.b.tagline); s.taglineKey = ti >= 0 ? ti : 'custom'; $('customTagline').value = ti >= 0 ? '' : s.b.tagline;
+    s.domainEdited = s.b.domain !== slug(s.b.name) + '.studio';
+    update();
+  }
+
+  // ----- Buttons -----
+  const status = (msg, ok) => { $('status').textContent = msg; $('status').classList.toggle('ok', !!ok); };
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  $('shuffle').addEventListener('click', () => {
+    const n = pick(O.names); setName(n.name, n.arabic, n.name); $('customName').value = '';
+    setPalette(pick(Object.keys(O.palettes)));
+    s.b.font = pick(O.fonts);
+    const logos = Object.keys(O.logos).filter((k) => k !== 'signature' || Brand.letterOf(n.name) === 'N');
+    s.b.logo = pick(logos);
+    s.taglineKey = Math.floor(Math.random() * O.taglines.length); s.b.tagline = O.taglines[s.taglineKey]; $('customTagline').value = '';
+    update(); status('Shuffled. Save it if you like it.');
+  });
+  $('reset').addEventListener('click', () => { s.domainEdited = false; load(Brand.DEFAULT_BRAND); status('Back to the recommended brand.'); });
+  $('copy').addEventListener('click', async () => {
+    const json = JSON.stringify(s.b, null, 2);
+    try { await navigator.clipboard.writeText(json); status('Settings copied. Paste them into brand/brand.json or send them to Claude.', true); $('copyBox').hidden = true; }
+    catch (e) { const box = $('copyBox'); box.hidden = false; box.value = json; box.focus(); box.select(); status('Copy the selected text below.'); }
+  });
+
+  // ----- Shortlist + final choice (shared store when available, this browser otherwise) -----
+  let db = null, items = [], finalDoc = null;
+  const LOCAL_SL = 'brandPicker.shortlist';
+  const localItems = () => { try { return JSON.parse(localStorage.getItem(LOCAL_SL) || '[]'); } catch (e) { return []; } };
+  const saveLocal = (arr) => { try { localStorage.setItem(LOCAL_SL, JSON.stringify(arr)); } catch (e) {} };
+
+  function describe(b) { return `${b.font} · ${O.logos[b.logo] ? { signature: 'Signature', core: 'Core dot', orbit: 'Orbit', bracket: 'Frame', stack: 'Stack' }[b.logo] : b.logo}`; }
+  function renderShortlist() {
+    const host = $('shortlist');
+    $('slCount').textContent = items.length ? `${items.length} saved` : '';
+    host.innerHTML = '';
+    if (!items.length) { host.innerHTML = '<p class="empty">Nothing saved yet. Set up a combination you like and press "Save to shortlist" to compare options side by side.</p>'; }
+    items.forEach((it) => {
+      const b = Brand.normalize(it.brand);
+      const isFinal = finalDoc && finalDoc.id === it.id;
+      const el = document.createElement('div'); el.className = 'sl' + (isFinal ? ' is-final' : '');
+      el.innerHTML = `<div class="m">${Brand.markSVG(b)}</div><div><b></b><div class="meta"></div></div>
+        <div class="acts"><button type="button" data-a="load">Load</button><button type="button" data-a="final">${isFinal ? 'Final ✓' : 'Make final'}</button><button type="button" data-a="del">Remove</button></div>`;
+      el.querySelector('b').textContent = b.name;
+      el.querySelector('.meta').textContent = `${describe(b)} · ${Brand.taglinePlain(b.tagline)}`;
+      el.querySelector('[data-a="load"]').onclick = () => { load(b); status(`Loaded ${b.name}.`); };
+      el.querySelector('[data-a="final"]').onclick = () => makeFinal(it);
+      el.querySelector('[data-a="del"]').onclick = () => removeItem(it);
+      host.appendChild(el);
+    });
+    const f = finalDoc && finalDoc.brand ? Brand.normalize(finalDoc.brand) : null;
+    $('final').classList.toggle('on', !!f);
+    if (f) { $('finalMark').innerHTML = Brand.markSVG(f); $('finalName').textContent = f.name; }
+  }
+
+  $('save').addEventListener('click', async () => {
+    const it = { id: 'b' + Date.now().toString(36), brand: clone(s.b), savedAt: new Date().toISOString() };
+    if (db) {
+      try { await db.collection('shortlist').doc(it.id).set({ brand: it.brand, savedAt: it.savedAt }); status(`Saved ${s.b.name} to the shortlist.`, true); }
+      catch (e) { status(e && e.code === 'quota_exceeded' ? 'The shortlist is full. Remove a few saved options first.' : 'Could not save right now. Try again in a moment.'); }
+    } else {
+      items = [...items, it]; saveLocal(items); renderShortlist(); status(`Saved ${s.b.name} in this browser.`, true);
+    }
+  });
+  async function makeFinal(it) {
+    const doc = { id: it.id, brand: it.brand, chosenAt: new Date().toISOString() };
+    if (db) { try { await db.doc('choice/final').set(doc); status(`${it.brand.name} is now your final choice.`, true); } catch (e) { status('Could not save the final choice. Try again in a moment.'); } }
+    else { finalDoc = doc; try { localStorage.setItem('brandPicker.final', JSON.stringify(doc)); } catch (e) {} renderShortlist(); status(`${it.brand.name} marked final in this browser. Use "Copy settings" to send it to Claude.`, true); }
+  }
+  async function removeItem(it) {
+    if (db) { try { await db.collection('shortlist').doc(it.id).delete(); } catch (e) { status('Could not remove it right now.'); } }
+    else { items = items.filter((x) => x.id !== it.id); saveLocal(items); renderShortlist(); }
+  }
+
+  // Start with this browser's copy; switch to the shared store once it answers.
+  items = localItems();
+  try { finalDoc = JSON.parse(localStorage.getItem('brandPicker.final') || 'null'); } catch (e) {}
+  load(s.b);
+  renderShortlist();
+  document.fonts && document.fonts.ready.then(() => { fitHeadline(); });
+
+  if (window.claude && window.claude.use) {
+    window.claude.use('db').then((store) => {
+      if (!store) return;
+      db = store;
+      db.collection('shortlist').orderBy('savedAt').onSnapshot((snap) => {
+        items = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+        renderShortlist();
+      }, () => {});
+      db.doc('choice/final').onSnapshot((d) => { finalDoc = d.exists ? Object.assign({}, d.data()) : null; renderShortlist(); }, () => {});
+    });
+  }
+})();
+</script>

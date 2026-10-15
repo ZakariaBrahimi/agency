@@ -1,22 +1,20 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Nawa profile</title>
+<html><head><meta charset="utf-8"><title>Profile photo</title>
 <link rel="stylesheet" href="brand.css">
 <style>
-  /* Platforms crop profile photos to a circle: keep the mark inside the central ~70%. */
+  /* Platforms crop profile photos to a circle: the mark sits inside the central ~60%. */
   .canvas { width: 1080px; height: 1080px; display: grid; place-items: center;
     background: radial-gradient(circle at 70% 25%, var(--indigo-2), var(--indigo) 60%); }
-  .canvas.v-ink { background: radial-gradient(circle at 70% 25%, #1B2540, var(--ink) 65%); }
-  svg { width: 640px; height: 640px; }
+  .canvas.v-dark { background: radial-gradient(circle at 70% 25%, color-mix(in srgb, var(--ink) 80%, white), var(--ink) 65%); }
+  [data-mark] { width: 640px; height: 640px; }
+  [data-mark] svg { width: 100%; height: 100%; display: block; }
 </style></head>
 <body>
-<div class="canvas" id="c">
-  <svg viewBox="112 112 288 288" aria-label="Nawa">
-    <path d="M168 344 V168 L344 344 V260" fill="none" stroke="#fff" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="344" cy="164" r="38" fill="#C6F432"/>
-  </svg>
-</div>
+<div class="canvas" id="c"><div data-mark="bare"></div></div>
+<script src="brand.js"></script>
+<script>Brand.apply(window.BRAND);</script>
 <script>
-  const p = new URLSearchParams(location.search);
-  if (p.get('variant') === 'ink') document.getElementById('c').classList.add('v-ink');
+  const v = new URLSearchParams(location.search).get('variant') || (window.BRAND && window.BRAND.profileBg) || 'primary';
+  if (v === 'dark') document.getElementById('c').classList.add('v-dark');
 </script>
 </body></html>

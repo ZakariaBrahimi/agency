@@ -1,8 +1,9 @@
 :root {
   --ink: #0B1220;
-  --ink-2: #131C2E;
+  --ink-2: color-mix(in srgb, var(--ink) 90%, white);
+  --display-weight: 800;
   --indigo: #5B4BFF;
-  --indigo-2: #7A6CFF;
+  --indigo-2: color-mix(in srgb, var(--indigo) 72%, white);
   --lime: #C6F432;
   --paper: #F6F5F2;
   --slate: #64748B;
@@ -20,8 +21,8 @@ body { font-family: var(--font-body); color: #fff; -webkit-font-smoothing: antia
 /* Ink background with indigo glow + subtle grid */
 .bg-ink {
   background:
-    radial-gradient(ellipse 60% 90% at 78% 40%, rgba(91, 75, 255, .55), transparent 70%),
-    radial-gradient(ellipse 40% 60% at 12% 110%, rgba(198, 244, 50, .14), transparent 70%),
+    radial-gradient(ellipse 60% 90% at 78% 40%, color-mix(in srgb, var(--indigo) 55%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 60% at 12% 110%, color-mix(in srgb, var(--lime) 14%, transparent), transparent 70%),
     var(--ink);
 }
 .grid::before {
@@ -42,3 +43,4 @@ body { font-family: var(--font-body); color: #fff; -webkit-font-smoothing: antia
   font-size: 15px; font-weight: 500; letter-spacing: .02em; color: rgba(255,255,255,.85);
 }
 .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); }
+

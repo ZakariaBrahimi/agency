@@ -6,7 +6,9 @@ publisher that posts to social media on a schedule.
 
 ```
 brand/BRAND.md          name options + recommendation, colors, type, voice, logo rules
-brand/logo/*.svg        logo source files
+brand/brand.json        THE chosen brand (name, palette, font, logo style, tagline); every design reads it
+brand/logo/*.svg        logo marks, generated from brand.json
+design/templates/brand-picker.html  interactive picker: try names/logos/colors/fonts live
 design/templates/*.html designs as HTML (edit text/colors here, then re-render)
 exports/                ready-to-upload PNGs (profile photos, covers, posts, logos)
 content/queue.json      the content calendar the publisher reads
@@ -19,7 +21,7 @@ publisher/              auto-publisher (Facebook, Instagram, LinkedIn, X); Node 
 
 | Where | File | Size |
 |-------|------|------|
-| Profile photo (all platforms) | `exports/profile/nawa-profile-indigo.png` (or `-ink`) | 1080×1080 |
+| Profile photo (all platforms) | `exports/profile/profile-primary.png` (or `-dark`) | 1080×1080 |
 | Facebook Page cover | `exports/covers/facebook-cover.png` | 1640×624 |
 | LinkedIn Page cover | `exports/covers/linkedin-cover.png` | 1584×396 |
 | X header | `exports/covers/x-header.png` | 1500×500 |
@@ -29,6 +31,14 @@ publisher/              auto-publisher (Facebook, Instagram, LinkedIn, X); Node 
 
 Upload the profile photos and covers once, by hand. The platforms don't let a Page's profile or
 cover image be changed reliably through their APIs.
+
+## Choosing or changing the brand
+
+Open the **Brand Picker** (`design/templates/brand-picker.html`, also published as an artifact). There are
+8 names (or type your own), 5 logo styles, 6 palettes (or custom colors), 7 fonts and 4 taglines (or your own).
+Save the combinations you like to the shortlist and mark one as final, or use **Copy settings** and paste the
+result into `brand/brand.json`. Then run `npm run render` and every logo, cover, profile photo and post is
+redrawn with that brand.
 
 ## Editing designs
 

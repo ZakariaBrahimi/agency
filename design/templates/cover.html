@@ -6,13 +6,13 @@
      (passed as ?w&h&sx&sy&sw&sh). The background bleeds across the full canvas. */
   .stage { position: absolute; width: 1200px; height: 400px; transform-origin: 0 0; }
   .copy { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 640px; }
-  .copy h1 { font-family: var(--font-display); font-weight: 800; font-size: 76px; line-height: .98;
-    letter-spacing: -.035em; margin: 22px 0 18px; }
+  .copy h1 { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 76px; line-height: .98;
+    letter-spacing: -.035em; margin: 22px 0 18px; white-space: nowrap; }
   .copy p { font-size: 22px; color: rgba(255,255,255,.72); }
   .copy p b { color: #fff; font-weight: 600; }
 
   .cards { position: absolute; right: 0; top: 0; width: 520px; height: 400px; }
-  .card { position: absolute; border-radius: 22px; background: rgba(19, 28, 46, .92);
+  .card { position: absolute; border-radius: 22px; background: color-mix(in srgb, var(--ink) 88%, white);
     border: 1px solid rgba(255,255,255,.12); box-shadow: 0 30px 60px -20px rgba(0,0,0,.6); }
 
   /* SaaS dashboard card (product) */
@@ -20,17 +20,17 @@
   .dash .hd { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; }
   .dash .hd i { width: 26px; height: 26px; border-radius: 8px; background: var(--indigo); display: block; }
   .dash .hd span { margin-left: auto; font-size: 12px; color: var(--lime); font-weight: 600;
-    background: rgba(198,244,50,.12); padding: 4px 9px; border-radius: 999px; }
-  .dash .kpi { font-family: var(--font-display); font-size: 40px; font-weight: 800; margin-top: 18px; letter-spacing: -.02em; }
+    background: color-mix(in srgb, var(--lime) 14%, transparent); padding: 4px 9px; border-radius: 999px; }
+  .dash .kpi { font-family: var(--font-display); font-size: 40px; font-weight: var(--display-weight); margin-top: 18px; letter-spacing: -.02em; }
   .dash .kpi small { font-size: 14px; color: rgba(255,255,255,.55); font-weight: 500; margin-left: 6px; letter-spacing: 0; }
   .bars { display: flex; align-items: flex-end; gap: 9px; height: 88px; margin-top: 16px; }
-  .bars b { flex: 1; border-radius: 6px 6px 3px 3px; background: rgba(122,108,255,.45); }
+  .bars b { flex: 1; border-radius: 6px 6px 3px 3px; background: color-mix(in srgb, var(--indigo-2) 50%, transparent); }
   .bars b:last-child { background: var(--lime); }
 
   /* Social post card (design) */
   .post { right: 0; top: 140px; width: 230px; height: 236px; padding: 14px; transform: rotate(4deg); }
   .post .img { height: 150px; border-radius: 14px;
-    background: linear-gradient(135deg, var(--indigo) 0%, #A78BFA 55%, var(--lime) 130%);
+    background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-2) 55%, var(--lime) 130%);
     display: grid; place-items: center; }
   .post .img svg { width: 64px; height: 64px; }
   .post .meta { display: flex; gap: 12px; margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.7); }
@@ -39,7 +39,7 @@
 
   .chip { position: absolute; right: 196px; top: 16px; padding: 10px 14px; border-radius: 14px;
     background: var(--lime); color: var(--ink); font-weight: 700; font-size: 14px;
-    box-shadow: 0 16px 30px -12px rgba(198,244,50,.5); transform: rotate(-3deg); }
+    box-shadow: 0 16px 30px -12px color-mix(in srgb, var(--lime) 50%, transparent); transform: rotate(-3deg); }
 
 </style></head>
 <body>
@@ -47,8 +47,8 @@
   <div class="stage" id="s">
     <div class="copy">
       <span class="pill"><span class="dot"></span>SaaS · Social media · Design</span>
-      <h1>We build <span class="lime">products.</span><br>We design brands.</h1>
-      <p>Home of <b>Mizan</b> — and what's next. &nbsp;·&nbsp; <b>nawa.studio</b></p>
+      <h1 data-brand="tagline">We build <span class="lime">products.</span><br>We design brands.</h1>
+      <p>Home of <b>Mizan</b> — and what's next. &nbsp;·&nbsp; <b data-brand="domain">nawa.studio</b></p>
     </div>
     <div class="cards">
       <div class="card dash">
@@ -57,7 +57,7 @@
         <div class="bars"><b style="height:38%"></b><b style="height:52%"></b><b style="height:46%"></b><b style="height:64%"></b><b style="height:58%"></b><b style="height:78%"></b><b style="height:100%"></b></div>
       </div>
       <div class="card post">
-        <div class="img"><svg viewBox="112 112 288 288"><path d="M168 344 V168 L344 344 V260" fill="none" stroke="#fff" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/><circle cx="344" cy="164" r="38" fill="#0B1220"/></svg></div>
+        <div class="img" data-mark="bare" data-dot="dark"></div>
         <div class="meta"><span>♥ <b>2.4k</b></span><span>↗ <b>318</b></span></div>
         <div class="line"></div>
       </div>
@@ -65,6 +65,8 @@
     </div>
   </div>
 </div>
+<script src="brand.js"></script>
+<script>Brand.apply(window.BRAND);</script>
 <script>
   const p = new URLSearchParams(location.search);
   const W = +p.get('w') || 1500, H = +p.get('h') || 500;
@@ -76,5 +78,10 @@
   s.style.left = (sx + (sw - 1200 * k) / 2) + 'px';
   s.style.top = (sy + (sh - 400 * k) / 2) + 'px';
   s.style.transform = `scale(${k})`;
+  // Shrink the headline until its longest line fits the copy column.
+  const h1 = document.querySelector('.copy h1');
+  const fit = () => { let f = 76; h1.style.fontSize = f + 'px'; while (h1.scrollWidth > 640 && f > 40) h1.style.fontSize = --f + 'px'; };
+  fit();
+  document.fonts.ready.then(fit);
 </script>
 </body></html>

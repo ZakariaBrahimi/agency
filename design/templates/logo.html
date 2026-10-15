@@ -1,16 +1,22 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Logo export</title>
+<link rel="stylesheet" href="brand.css">
 <style>
-  /* Wraps an SVG from brand/logo so it renders with the locally installed Inter font. ?file=&w=&h=&bg= */
-  html, body { margin: 0; overflow: hidden; background: transparent; }
-  img { display: block; }
+  /* ?kind=mark | horizontal | horizontal-dark. Transparent background for PNG export. */
+  html, body { background: transparent; }
+  #logo { display: inline-flex; align-items: center; gap: 72px; }
+  #logo [data-mark], #logo svg { width: 512px; height: 512px; display: block; }
+  #word { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 270px;
+    letter-spacing: -.03em; line-height: 1; color: var(--ink); padding-right: 24px; white-space: nowrap; }
+  .dark #word { color: #fff; }
 </style></head>
-<body><img id="i">
+<body>
+<div id="logo"><span data-mark="badge"></span><span id="word" data-brand="wordmark">nawa</span></div>
+<script src="brand.js"></script>
+<script>Brand.apply(window.BRAND);</script>
 <script>
-  const p = new URLSearchParams(location.search);
-  const i = document.getElementById('i');
-  i.src = '../../brand/logo/' + p.get('file') + '.svg';
-  i.width = +p.get('w'); i.height = +p.get('h');
-  if (p.get('bg')) document.body.style.background = p.get('bg');
+  const kind = new URLSearchParams(location.search).get('kind') || 'horizontal';
+  if (kind === 'mark') document.getElementById('word').remove();
+  if (kind === 'horizontal-dark') document.body.classList.add('dark');
 </script>
 </body></html>

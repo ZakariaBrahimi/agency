@@ -43,14 +43,16 @@ Tagline options:
 
 ## 3. Logo
 
-Files: [`brand/logo/`](logo/)
+Files: [`brand/logo/`](logo/) (SVG marks) and `exports/logo/` (transparent PNGs). All of them are generated from
+`brand/brand.json` by `npm run render`. To try other names, logo styles, colors and fonts, use the Brand Picker
+(`design/templates/brand-picker.html`).
 
 | File | Use |
 |------|-----|
-| `nawa-mark.svg` | App icon / favicon / small spaces |
-| `nawa-mark-mono.svg` | One-color (white on dark, or set `fill`) |
-| `nawa-logo-horizontal.svg` | Mark + wordmark, on light backgrounds |
-| `nawa-logo-horizontal-dark.svg` | Mark + wordmark, on dark backgrounds |
+| `brand/logo/mark.svg` | App icon / favicon / small spaces |
+| `brand/logo/mark-mono-white.svg`, `mark-mono-dark.svg` | One-color versions |
+| `exports/logo/logo-horizontal.png` | Mark + wordmark, on light backgrounds |
+| `exports/logo/logo-horizontal-dark.png` | Mark + wordmark, on dark backgrounds |
 
 **Concept:** a single-stroke **N** whose last stroke stops short. In its place is a lime dot,
 the *nawa* (the core or seed). The idea is that the line is the product being built and the dot
