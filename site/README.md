@@ -19,8 +19,9 @@ All page text lives in the `T` object (`ar`, `en`, `fr`), so wording changes hap
 The page asks for Thmanyah Sans first. It works for any visitor who has the font installed, and
 for everyone once you self-host the font with the site:
 
-1. Convert or copy your Thmanyah Sans files to `site/fonts/` as `thmanyahsans-Regular.woff2`,
-   `thmanyahsans-Medium.woff2` and `thmanyahsans-Bold.woff2`, or adjust the `@font-face` URLs.
+1. Copy your Thmanyah Sans files, unchanged, into `site/fonts/`, and set the three `@font-face`
+   `url(...)` values in `index.html` to their exact file names. Don't convert or rename the font
+   itself, because the license forbids modifying it.
 2. Deploy them with the site. Using the font on your own website is allowed. Don't commit the files
    to a public repo, and don't offer them for download. `site/fonts/` is git-ignored for that reason.
 
