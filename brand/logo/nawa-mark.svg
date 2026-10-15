@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nawa">
+  <rect width="512" height="512" rx="120" fill="#5B4BFF"/>
+  <path d="M168 344 V168 L344 344 V260" fill="none" stroke="#FFFFFF" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="344" cy="164" r="38" fill="#C6F432"/>
+</svg>

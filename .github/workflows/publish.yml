@@ -1,0 +1,55 @@
+name: Publish social posts
+
+on:
+  schedule:
+    - cron: '7 * * * *' # hourly; posts go out at the first run after their publish_at
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: 'Publish this post id now (leave empty for normal schedule)'
+        required: false
+      dry_run:
+        description: 'Dry run (no API calls)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # to commit publish results back to content/queue.json
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Publish due posts
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          PUBLIC_ASSET_BASE_URL: ${{ vars.PUBLIC_ASSET_BASE_URL }}
+          FB_PAGE_ID: ${{ vars.FB_PAGE_ID }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+          LINKEDIN_ORG_ID: ${{ vars.LINKEDIN_ORG_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+        run: |
+          if [ -n "${{ inputs.post_id }}" ]; then
+            node publisher/publish.mjs --now "${{ inputs.post_id }}"
+          else
+            node publisher/publish.mjs
+          fi
+
+      - name: Save results
+        if: always()
+        run: |
+          git config user.name "nawa-publisher"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/queue.json
+          git diff --cached --quiet || (git commit -m "chore(social): record publish results" && git push)

@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Product post</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* Instagram portrait 1080x1350. Params: product, tagline, handle, kicker, accent */
+  .canvas { width: 1080px; height: 1350px; padding: 84px; display: flex; flex-direction: column; }
+  .top { display: flex; align-items: center; justify-content: space-between; }
+  .badge { display: inline-flex; align-items: center; gap: 12px; padding: 12px 20px 12px 12px;
+    border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16);
+    font-size: 24px; font-weight: 600; }
+  .badge svg { width: 40px; height: 40px; }
+  .kicker { font-size: 24px; font-weight: 600; color: var(--ink); background: var(--lime);
+    padding: 12px 22px; border-radius: 999px; }
+  h1 { font-family: var(--font-display); font-size: 148px; font-weight: 800; letter-spacing: -.045em;
+    line-height: .9; margin-top: 90px; }
+  h1 .dot { color: var(--accent, var(--lime)); }
+  .tag { font-size: 44px; line-height: 1.2; color: rgba(255,255,255,.78); margin-top: 28px; max-width: 820px;
+    font-weight: 500; letter-spacing: -.01em; }
+  .ui { margin-top: 72px; border-radius: 32px; background: rgba(19,28,46,.95);
+    border: 1px solid rgba(255,255,255,.12); padding: 36px; box-shadow: 0 40px 80px -30px rgba(0,0,0,.7); }
+  .ui .row { display: flex; gap: 22px; }
+  .ui .k { flex: 1; border-radius: 20px; background: rgba(255,255,255,.05); padding: 22px; }
+  .ui .k small { font-size: 20px; color: rgba(255,255,255,.55); }
+  .ui .k div { font-family: var(--font-display); font-size: 48px; font-weight: 800; margin-top: 6px; letter-spacing: -.02em; }
+  .ui .k div em { font-style: normal; color: var(--lime); font-size: 22px; margin-left: 8px; }
+  .bars { display: flex; align-items: flex-end; gap: 14px; height: 300px; margin-top: 32px; }
+  .bars b { flex: 1; border-radius: 10px 10px 4px 4px; background: rgba(122,108,255,.5); }
+  .bars b:last-child { background: var(--lime); }
+  .foot { display: flex; justify-content: space-between; margin-top: auto; font-size: 26px; color: rgba(255,255,255,.7); }
+  .foot b { color: #fff; }
+</style></head>
+<body>
+<div class="canvas bg-ink grid">
+  <div class="top">
+    <span class="badge">
+      <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M168 344 V168 L344 344 V260" fill="none" stroke="#fff" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/><circle cx="344" cy="164" r="38" fill="#C6F432"/></svg>
+      Built by Nawa
+    </span>
+    <span class="kicker" id="kicker">Our product</span>
+  </div>
+  <h1><span id="product">Mizan</span><span class="dot">.</span></h1>
+  <p class="tag" id="tagline">Your business, in balance. Sales, stock and cash — one clear view.</p>
+  <div class="ui">
+    <div class="row">
+      <div class="k"><small>Revenue</small><div>248k<em>▲ 18%</em></div></div>
+      <div class="k"><small>Expenses</small><div>131k<em>▼ 6%</em></div></div>
+      <div class="k"><small>Balance</small><div>117k</div></div>
+    </div>
+    <div class="bars"><b style="height:40%"></b><b style="height:55%"></b><b style="height:48%"></b><b style="height:66%"></b><b style="height:60%"></b><b style="height:74%"></b><b style="height:70%"></b><b style="height:88%"></b><b style="height:100%"></b></div>
+  </div>
+  <div class="foot"><span>Follow <b id="handle">@mizan</b></span><span>A <b>Nawa</b> product · nawa.studio</span></div>
+</div>
+<script>
+  const p = new URLSearchParams(location.search);
+  for (const id of ['product', 'tagline', 'handle', 'kicker']) if (p.get(id)) document.getElementById(id).textContent = p.get(id);
+  if (p.get('accent')) document.documentElement.style.setProperty('--accent', p.get('accent'));
+</script>
+</body></html>
