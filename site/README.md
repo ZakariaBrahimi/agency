@@ -3,7 +3,7 @@
 A static site with no build step, deployed on Vercel (project `nawa-studio`, root directory `site/`).
 Every push to the production branch redeploys it automatically.
 
-Live: https://nawa-studio.vercel.app (Arabic) · `/en` · `/fr`
+Live: https://nawa-studio-six.vercel.app (Arabic) · `/en` · `/fr`
 
 ```
 site/
@@ -40,7 +40,7 @@ To change any wording, edit `assets/js/i18n.js`. Each key exists in `ar`, `en` a
 - `assets/js/main.js` → `SITE`: the real contact email (currently `hello@nawa.studio`) and the
   social profile links.
 - **Custom domain:** add `nawa.studio` in Vercel (Project → Settings → Domains), then replace
-  `https://nawa-studio.vercel.app` in `index.html`, `robots.txt` and `sitemap.xml`.
+  `https://nawa-studio-six.vercel.app` in `index.html`, `robots.txt` and `sitemap.xml`.
 - **Share image:** `assets/img/og.png` is rendered from the brand with
   `node scripts/render.cjs og` from the repo root.
 

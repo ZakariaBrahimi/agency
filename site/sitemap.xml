@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://nawa-studio.vercel.app/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://nawa-studio.vercel.app/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://nawa-studio.vercel.app/en"/>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://nawa-studio.vercel.app/fr"/>
+  <url><loc>https://nawa-studio-six.vercel.app/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://nawa-studio-six.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nawa-studio-six.vercel.app/en"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://nawa-studio-six.vercel.app/fr"/>
   </url>
 </urlset>
