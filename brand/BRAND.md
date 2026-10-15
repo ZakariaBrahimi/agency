@@ -12,10 +12,20 @@ The brand has to work as a **parent brand**. When we post about our own product 
 
 ---
 
-## Arabic-only direction (current)
+## ✅ Final brand: نواة (Arabic)
 
-The brand is now Arabic-only: the name is **نواة**, every design is right-to-left, and the font is
-**Thmanyah** (Thmanyah Sans for everything, Thmanyah Serif Display as an alternative for headlines).
+Decided: the recommended Arabic brand.
+
+| | |
+|---|---|
+| Name | **نواة** (Nawa), handle and domain `nawa.studio` |
+| Logo | Signature **ن** (white), with its dot in Lime as the "core" |
+| Colors | Ink `#0B1220` · Indigo `#5B4BFF` · Lime `#C6F432` · Paper `#F6F5F2` |
+| Font | **Thmanyah Sans** |
+| Tagline | «نبني المنتجات. ونصمّم العلامات.» |
+| Profile photo | Indigo background |
+
+These values live in `brand/brand.json`. The brand is Arabic-only, and every design is right-to-left.
 
 - **Logo:** the signature mark is the letter **ن**. Its dot is drawn in Lime and *is* the "core" (النواة).
 - **Default tagline:** «نبني المنتجات. ونصمّم العلامات.»
