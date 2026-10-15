@@ -39,6 +39,7 @@
     document.querySelectorAll('[data-i-html]').forEach((el) => { if (t[el.dataset.iHtml] != null) el.innerHTML = t[el.dataset.iHtml]; });
     document.querySelectorAll('[data-step]').forEach((el) => { el.innerHTML = `<b dir="ltr">${el.dataset.step}</b>${t['step.of']}`; });
     document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    document.querySelectorAll('a[data-start]').forEach((a) => { a.href = '/start' + (lang === 'ar' ? '' : '#' + lang); });
     $('copied').textContent = '';
     renderContact();
     if (save) {

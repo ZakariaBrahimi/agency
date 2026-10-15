@@ -18,6 +18,46 @@ site/
   variant-a.html        the earlier "two sides" version, kept for reference
 ```
 
+## Project brief form (`/start`) and requests dashboard (`/admin`)
+
+```
+start.html, assets/js/start.js, assets/css/start.css   the form clients fill in
+assets/js/brief-schema.js     every service, question and option (ar/en/fr): edit this to change the form
+api/brief.js                  saves a brief to Supabase and sends a Telegram notification
+admin.html, assets/js/admin.js, assets/css/admin.css   your private dashboard
+api/admin/*.js                sign-in, list/update briefs, Telegram setup (admin only)
+```
+
+**How it works:**
+1. The client picks services. Follow-up questions appear only for those services.
+2. They fill in the project and contact details, watching the "your request" preview update as they go.
+3. When they submit, `/api/brief` validates the brief with the same rules as the form and saves it to the
+   Supabase project **nawa** (table `briefs`). It then sends you a Telegram message with a summary and a link.
+4. On `/admin` you sign in with your password, read each brief, change its status, add private notes, and
+   reply on WhatsApp or by email in one tap.
+
+**Spam protection:** a hidden honeypot field, a minimum time on the form, a per-IP rate limit, and
+server-side validation of every field.
+
+**Database security:** the website's public key can only insert new briefs. Reading and updating
+requires the service key, which is used only by the `/api/admin/*` functions after you sign in.
+
+### Settings (Vercel → nawa-studio → Settings → Environment Variables)
+
+| Variable | Set by | What it is |
+|---|---|---|
+| `SUPABASE_URL` | already set | The Supabase project address |
+| `SUPABASE_PUBLISHABLE_KEY` | already set | Public key that can only add new briefs |
+| `SITE_URL` | already set | Used for the link in Telegram messages |
+| `ADMIN_PASSWORD` | **you** | Password for `/admin` (long and unique) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **you** | Supabase → nawa → Project Settings → API Keys → `service_role` / secret key. Lets `/admin` read briefs |
+| `TELEGRAM_BOT_TOKEN` | **you** | From @BotFather (`/newbot`) |
+| `TELEGRAM_CHAT_ID` | **you** | Your chat with the bot. `/admin` → "إشعارات تيليغرام" shows it after you message the bot |
+
+Mark the last four as **Sensitive**. Redeploy after changing any of them (Deployments → ⋯ → Redeploy).
+
+To test locally with a fake database: `node scripts/dev-site.mjs` from the repo root, with the variables above exported.
+
 ## Languages
 
 Arabic is the default at `/`. Visitors switch with the ع / EN / FR control, and the address

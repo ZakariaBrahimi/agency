@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ابدأ مشروعك | نواة</title>
+<meta name="description" content="أخبرنا بما تحتاجه: تطوير منتج، هوية وحضور، تصاميم سوشيال ميديا، إعلانات، أو دراسة النتائج. نردّ خلال يومي عمل.">
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="canonical" href="https://nawa-studio-six.vercel.app/start">
+<meta property="og:title" content="ابدأ مشروعك مع نواة">
+<meta property="og:description" content="اختر ما تحتاجه، وشاهد ملخّص طلبك قبل الإرسال.">
+<meta property="og:image" content="https://nawa-studio-six.vercel.app/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/start.css">
+<script type="module" src="assets/js/start.js"></script>
+</head>
+<body class="start-page">
+
+<header class="top">
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Nawa">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
+      <span data-ui="brand">نواة</span>
+    </a>
+    <div class="nav-end">
+      <div class="langs" role="group" aria-label="Language">
+        <button type="button" lang="ar" data-lang="ar">ع</button>
+        <button type="button" lang="en" data-lang="en">EN</button>
+        <button type="button" lang="fr" data-lang="fr">FR</button>
+      </div>
+      <a class="back-link" href="/" data-ui="back"></a>
+    </div>
+  </div>
+</header>
+
+<main class="brief wrap">
+  <div class="brief-grid">
+    <section class="form-card" aria-labelledby="formTitle">
+      <ol class="progress" aria-label="Steps">
+        <li data-step="1"><b dir="ltr">1</b><span data-ui="s1"></span></li>
+        <li data-step="2"><b dir="ltr">2</b><span data-ui="s2"></span></li>
+        <li data-step="3"><b dir="ltr">3</b><span data-ui="s3"></span></li>
+        <li data-step="4"><b dir="ltr">4</b><span data-ui="s4"></span></li>
+      </ol>
+      <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+
+      <form id="briefForm" novalidate>
+        <div class="step" data-step="1">
+          <h1 id="formTitle" data-ui="t1"></h1>
+          <p class="lead" data-ui="l1"></p>
+          <div class="services" id="services" role="group" aria-labelledby="formTitle"></div>
+          <button type="button" class="full-btn" id="fullJourney"><span class="sparkle" aria-hidden="true">✦</span><span data-ui="full"></span></button>
+        </div>
+
+        <div class="step" data-step="2" hidden>
+          <h2 data-ui="t2"></h2>
+          <p class="lead" data-ui="l2"></p>
+          <div id="details"></div>
+        </div>
+
+        <div class="step" data-step="3" hidden>
+          <h2 data-ui="t3"></h2>
+          <p class="lead" data-ui="l3"></p>
+          <div id="project" class="fields"></div>
+        </div>
+
+        <div class="step" data-step="4" hidden>
+          <h2 data-ui="t4"></h2>
+          <p class="lead" data-ui="l4"></p>
+          <div id="contact" class="fields"></div>
+          <!-- Honeypot: people never see or fill this -->
+          <div class="hp" aria-hidden="true"><label>Website <input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
+        </div>
+
+        <p class="form-error" id="formError" role="alert" hidden></p>
+
+        <div class="form-nav">
+          <button type="button" class="btn btn-ghost-dark" id="backBtn" hidden><span class="arr" aria-hidden="true">←</span><span data-ui="prev"></span></button>
+          <button type="submit" class="btn btn-lime" id="nextBtn"><span id="nextLabel"></span><span class="arr" aria-hidden="true">→</span></button>
+        </div>
+      </form>
+
+      <div class="done" id="done" hidden tabindex="-1">
+        <svg class="check" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52"/><path d="M38 62 l15 15 l30 -32"/></svg>
+        <h2 data-ui="doneT"></h2>
+        <p data-ui="doneL"></p>
+        <p class="ref"><span data-ui="ref"></span> <b id="refNo" dir="ltr"></b></p>
+        <div class="done-actions">
+          <a class="btn btn-lime" href="/" data-ui="home"></a>
+          <button type="button" class="btn btn-ghost-dark" id="again" data-ui="again"></button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="preview" id="preview" aria-labelledby="pvTitle">
+      <div class="pv-card">
+        <div class="pv-head">
+          <span class="pv-badge"><svg viewBox="72 72 368 368" aria-hidden="true"><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg></span>
+          <div>
+            <h2 id="pvTitle" data-ui="pvTitle"></h2>
+            <p data-ui="pvSub"></p>
+          </div>
+        </div>
+        <div id="pvBody" class="pv-body"></div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<button type="button" class="pv-toggle" id="pvToggle" aria-controls="preview" aria-expanded="false"><span data-ui="pvShow"></span> <b id="pvCount" dir="ltr"></b></button>
+
+</body>
+</html>

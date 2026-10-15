@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الطلبات | نواة</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+<script type="module" src="assets/js/admin.js"></script>
+</head>
+<body class="admin-page">
+
+<header class="top">
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="Nawa">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
+      <span>نواة</span>
+    </a>
+    <span class="admin-tag">لوحة الطلبات</span>
+    <div class="nav-end">
+      <button type="button" class="link-btn" id="logout" hidden>تسجيل الخروج</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap admin">
+  <!-- Sign in -->
+  <section class="login" id="login" hidden>
+    <form id="loginForm" class="login-card">
+      <h1>تسجيل الدخول</h1>
+      <p>أدخل كلمة مرور لوحة الطلبات.</p>
+      <label for="pw">كلمة المرور</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <button class="btn btn-lime" type="submit">دخول</button>
+      <p class="login-msg" id="loginMsg" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- Setup notice (missing server settings) -->
+  <section class="setup" id="setup" hidden></section>
+
+  <!-- Dashboard -->
+  <section id="dash" hidden>
+    <div class="dash-head">
+      <div>
+        <h1>الطلبات</h1>
+        <p class="muted" id="updated"></p>
+      </div>
+      <button type="button" class="btn btn-ghost-dark" id="refresh">تحديث</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="تصفية حسب الحالة"></div>
+
+    <div class="ad-board">
+      <div class="list" id="list" aria-live="polite"></div>
+      <article class="detail" id="detail" aria-live="polite">
+        <p class="empty">اختر طلبًا لعرض تفاصيله.</p>
+      </article>
+    </div>
+
+    <details class="tg" id="tg">
+      <summary>إشعارات تيليغرام</summary>
+      <div id="tgBody" class="tg-body">…</div>
+    </details>
+  </section>
+</main>
+
+</body>
+</html>
