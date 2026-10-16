@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "preferences": {
+    "flow": {
+      "value": "automation",
+      "confirmed_in": [
+        "nawa-services-reel"
+      ],
+      "updated_at": "2026-10-16T22:08:16.620Z"
+    },
+    "storyboard": {
+      "value": "no",
+      "confirmed_in": [
+        "nawa-services-reel"
+      ],
+      "updated_at": "2026-10-16T22:08:16.690Z"
+    },
+    "aspect": {
+      "value": "1080x1920",
+      "confirmed_in": [
+        "nawa-services-reel"
+      ],
+      "updated_at": "2026-10-16T22:08:16.758Z"
+    },
+    "language": {
+      "value": "ar",
+      "confirmed_in": [
+        "nawa-services-reel"
+      ],
+      "updated_at": "2026-10-16T22:08:16.854Z"
+    },
+    "destination": {
+      "value": "tiktok-reels",
+      "confirmed_in": [
+        "nawa-services-reel"
+      ],
+      "updated_at": "2026-10-16T22:08:16.938Z"
+    }
+  },
+  "sightings": {}
+}

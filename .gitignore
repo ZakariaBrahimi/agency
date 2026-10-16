@@ -6,3 +6,6 @@ fonts/thmanyah/*
 !fonts/thmanyah/README.md
 design/templates/fonts.local.css
 site/assets/fonts/
+videos/*/.hyperframes/
+videos/*/renders/
+videos/*/node_modules/

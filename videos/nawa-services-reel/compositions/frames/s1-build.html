@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ar">
+  <head><meta charset="UTF-8" /><title>s1-build</title></head>
+  <body>
+    <template>
+      <div id="s1-build" data-composition-id="s1-build" data-duration="3.6" data-fps="30">
+        <style>
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; src: url('assets/fonts/IBMPlexSansArabic-500-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 500; src: url('assets/fonts/IBMPlexSansArabic-500-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; src: url('assets/fonts/IBMPlexSansArabic-700-arabic.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: 'IBM Plex Sans Arabic'; font-weight: 700; src: url('assets/fonts/IBMPlexSansArabic-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215; }
+@font-face { font-family: 'Bricolage Grotesque'; font-weight: 800; src: url('assets/fonts/BricolageGrotesque-800-latin.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 600; src: url('assets/fonts/JetBrainsMono-600-latin.woff2') format('woff2'); }
+
+.sc { position: absolute; inset: 0; direction: rtl; color: #F1F2F6; font-family: 'IBM Plex Sans Arabic', sans-serif; font-weight: 500; }
+.sc .in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 250px 90px 0; gap: 34px; box-sizing: border-box; }
+.sc .chip { display: flex; align-items: center; gap: 16px; padding: 14px 30px; border-radius: 999px; border: 3px solid #2A3553; background: #151D31; font-size: 34px; color: #A3ABC2; }
+.sc .chip b { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 28px; letter-spacing: 3px; color: #C6F432; direction: ltr; }
+.sc .hl { margin: 0; text-align: center; font-weight: 700; font-size: 108px; line-height: 1.22; }
+.sc .hl .w { display: inline-block; }
+.sc .lime { color: #C6F432; }
+.sc .mono { font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: 3px; direction: ltr; color: #A3ABC2; }
+.sc .card { background: #151D31; border: 3px solid #2A3553; border-radius: 40px; box-shadow: 0 40px 90px rgba(3,6,15,.55); }
+.sc .num { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; direction: ltr; font-variant-numeric: tabular-nums; }
+
+.hf-transition-success-check { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 999px; background: #DCFCE7; color: #16A34A; flex: none; }
+.hf-transition-success-check svg { width: 74px; height: 74px; fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+  filter: blur(var(--hf-check-blur, 0px)); transform: rotate(var(--hf-check-rotate, 0deg)) scale(var(--hf-check-scale, 1)); }
+.hf-transition-success-check circle { opacity: 0.28; }
+.hf-transition-success-check path { stroke-dasharray: 36; stroke-dashoffset: var(--hf-check-dash, 0); }
+
+.s1-build .win { width: 900px; height: 620px; overflow: hidden; display: flex; flex-direction: column; }
+.s1-build .bar { height: 80px; display: flex; align-items: center; gap: 14px; padding: 0 34px; border-bottom: 3px solid #2A3553; direction: ltr; }
+.s1-build .dot { width: 22px; height: 22px; border-radius: 50%; }
+.s1-build .url { margin-left: auto; font-size: 26px; }
+.s1-build .body { flex: 1; display: flex; direction: ltr; }
+.s1-build .side { width: 190px; border-right: 3px solid #2A3553; padding: 34px 26px; display: flex; flex-direction: column; gap: 22px; }
+.s1-build .side i { display: block; height: 44px; border-radius: 14px; background: #1D2741; }
+.s1-build .side i:first-child { background: #5B4BFF; }
+.s1-build .main { flex: 1; padding: 44px 40px; display: flex; flex-direction: column; gap: 28px; }
+.s1-build .ln { display: block; height: 28px; border-radius: 14px; transform-origin: left center; }
+.s1-build .prog { margin-top: auto; display: flex; flex-direction: column; gap: 16px; }
+.s1-build .prog-top { display: flex; justify-content: space-between; font-size: 34px; color: #A3ABC2; }
+.s1-build .prog-top span:first-child { direction: rtl; font-family: 'IBM Plex Sans Arabic', sans-serif; font-weight: 500; }
+.s1-build .track { height: 26px; border-radius: 13px; background: #1D2741; overflow: hidden; }
+.s1-build .fill { display: block; width: 100%; height: 100%; background: #C6F432; transform-origin: left center; }
+.s1-build .toast { display: flex; align-items: center; gap: 28px; padding: 22px 40px 22px 26px; border-radius: 999px; background: #10261F; border: 3px solid #1E5C46; margin-top: -10px; }
+.s1-build .toast b { font-size: 48px; font-weight: 700; }
+.s1-build .toast .mono { font-size: 28px; }
+</style>
+        <div id="s1-build-scene" class="clip sc s1-build" data-start="0" data-duration="3.6" data-track-index="0">
+          <div class="in">
+<div class="chip"><b>01 · BUILD</b><span>نطوّر المنتج</span></div>
+<h1 class="hl"><span class="w">نطوّر</span> <span class="w">لك</span> <span class="w lime">المنتج</span></h1>
+<div class="card win">
+  <div class="bar"><i class="dot" style="background:#FF6B6B"></i><i class="dot" style="background:#FFD166"></i><i class="dot" style="background:#3DDC97"></i><span class="mono url">your-product.app</span></div>
+  <div class="body">
+    <div class="side"><i></i><i></i><i></i><i></i></div>
+    <div class="main">
+      <span class="ln" style="width:78%;background:#8A7DFF"></span>
+      <span class="ln" style="width:52%;background:#C6F432"></span>
+      <span class="ln" style="width:90%;background:#4A5578"></span>
+      <span class="ln" style="width:40%;background:#8A7DFF"></span>
+      <span class="ln" style="width:66%;background:#4A5578"></span>
+      <div class="prog"><div class="prog-top"><span>جاري البناء</span><span class="num s1-pct">0%</span></div><div class="track"><span class="fill"></span></div></div>
+    </div>
+  </div>
+</div>
+<div class="toast"><div class="hf-transition-success-check" aria-label="Success"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="27" /><path d="M20 33.5l8 8L45 23" /></svg></div><b>تم الإطلاق</b><span class="mono">v1.0</span></div>
+</div>
+        </div>
+        <script src="assets/vendor/gsap.min.js"></script>
+        <script>
+          (function () {
+            
+function enter(tl, sel, at) {
+  tl.fromTo(sel + ' .chip', { opacity: 0, y: -40, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'back.out(2)' }, at);
+  tl.fromTo(sel + ' .hl .w', { opacity: 0, y: 70, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'expo.out', stagger: 0.08 }, at + 0.08);
+}
+function exit(tl, sel, at) {
+  tl.fromTo(sel + ' .in', { opacity: 1, scale: 1 }, { opacity: 0, scale: 1.06, duration: 0.3, ease: 'power2.in' }, at);
+}
+
+            const tl = gsap.timeline({ paused: true });
+            const S = '.s1-build';
+            
+enter(tl, S, 0.05);
+tl.fromTo(S + ' .win', { opacity: 0, y: 240, rotationX: 18, transformPerspective: 1400 }, { opacity: 1, y: 0, rotationX: 0, duration: 0.7, ease: 'expo.out' }, 0.35);
+tl.fromTo(S + ' .ln', { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'power3.out', stagger: 0.1 }, 0.7);
+tl.fromTo(S + ' .fill', { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: 'power2.inOut' }, 1.0);
+const pct = document.querySelector(S + ' .s1-pct'); const p = { v: 0 };
+tl.fromTo(p, { v: 0 }, { v: 100, duration: 1.2, ease: 'power2.inOut', onUpdate: () => { pct.textContent = Math.round(p.v) + '%'; } }, 1.0);
+tl.fromTo(S + ' .toast', { opacity: 0, y: 60, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(2)' }, 2.25);
+// registry success-check timeline integration
+tl.fromTo(S + ' .hf-transition-success-check svg', { opacity: 0, '--hf-check-scale': 0.72, '--hf-check-rotate': '-18deg', '--hf-check-blur': '7px' }, { opacity: 1, '--hf-check-scale': 1, '--hf-check-rotate': '0deg', '--hf-check-blur': '0px', duration: 0.34, ease: 'back.out(1.8)' }, 2.35);
+tl.fromTo(S + ' .hf-transition-success-check path', { '--hf-check-dash': 36 }, { '--hf-check-dash': 0, duration: 0.42, ease: 'power2.out' }, 2.47);
+exit(tl, S, 3.3);
+
+            window.__timelines["s1-build"] = tl;
+          })();
+        </script>
+      </div>
+    </template>
+  </body>
+</html>
