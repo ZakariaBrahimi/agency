@@ -28,21 +28,38 @@ async function api(path, opts = {}) {
 // ---------- auth ----------
 
 function showLogin(msg = '') {
+  $('booting').hidden = true;
   $('login').hidden = false; $('dash').hidden = true; $('logout').hidden = true; $('setup').hidden = true;
   $('sections').hidden = true; $('content').hidden = true;
   $('loginMsg').textContent = msg;
   setTimeout(() => $('pw').focus(), 50);
 }
 
+function setBusy(on) {
+  const btn = $('loginBtn');
+  btn.disabled = on;
+  btn.setAttribute('aria-busy', String(on));
+  btn.querySelector('.btn-label').textContent = on ? 'جارٍ الدخول…' : 'دخول';
+  $('pw').readOnly = on;
+}
+
 $('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  if ($('loginBtn').disabled) return;
   $('loginMsg').textContent = '';
-  const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('pw').value }) });
-  const data = await r.json().catch(() => ({}));
-  if (r.ok) { $('pw').value = ''; return boot(); }
-  $('loginMsg').textContent = data.error === 'not_configured'
-    ? 'لم تُضبط كلمة المرور بعد: أضف ADMIN_PASSWORD في إعدادات Vercel ثم أعد النشر.'
-    : 'كلمة المرور غير صحيحة.';
+  setBusy(true);
+  try {
+    const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: $('pw').value }) });
+    const data = await r.json().catch(() => ({}));
+    if (r.ok) { await boot(); $('pw').value = ''; return; }
+    $('loginMsg').textContent = data.error === 'not_configured'
+      ? 'لم تُضبط كلمة المرور بعد: أضف ADMIN_PASSWORD في إعدادات Vercel ثم أعد النشر.'
+      : r.status === 429 ? 'محاولات كثيرة. انتظر دقيقة ثم حاول مجددًا.' : 'كلمة المرور غير صحيحة.';
+  } catch {
+    $('loginMsg').textContent = 'تعذّر الاتصال. تحقّق من الإنترنت وحاول مرة أخرى.';
+  } finally {
+    setBusy(false);
+  }
 });
 
 $('logout').addEventListener('click', async () => {
@@ -93,6 +110,7 @@ async function boot() {
       <li>في Vercel ← nawa-studio ← Settings ← Environment Variables أضف <code dir="ltr">SUPABASE_SERVICE_ROLE_KEY</code> بهذه القيمة.</li>
       <li>أعد النشر، ثم حدّث هذه الصفحة.</li></ol>`;
   }
+  $('booting').hidden = true;
   $('login').hidden = true; $('logout').hidden = false; $('sections').hidden = false;
   showSection(location.hash.startsWith('#content') ? 'content' : 'requests');
   if (!setupNeeded) loadTelegram();

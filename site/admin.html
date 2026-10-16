@@ -31,14 +31,17 @@
 </header>
 
 <main class="wrap admin">
+  <!-- First load: shown while we check whether you're already signed in -->
+  <div class="booting" id="booting" role="status"><span class="spin"></span><span>جارٍ التحميل…</span></div>
+
   <!-- Sign in -->
   <section class="login" id="login" hidden>
     <form id="loginForm" class="login-card">
       <h1>تسجيل الدخول</h1>
-      <p>أدخل كلمة مرور لوحة الطلبات.</p>
+      <p>أدخل كلمة مرور لوحة الإدارة.</p>
       <label for="pw">كلمة المرور</label>
       <input id="pw" type="password" autocomplete="current-password" required>
-      <button class="btn btn-lime" type="submit">دخول</button>
+      <button class="btn btn-lime login-btn" type="submit" id="loginBtn"><span class="spin" aria-hidden="true"></span><span class="btn-label">دخول</span></button>
       <p class="login-msg" id="loginMsg" role="alert"></p>
     </form>
   </section>

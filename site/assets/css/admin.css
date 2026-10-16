@@ -207,3 +207,13 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .ct-toast { position: fixed; inset-inline: 0; bottom: max(20px, env(safe-area-inset-bottom)); margin-inline: auto; width: max-content; max-width: calc(100vw - 32px); background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 600; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; }
 .ct-toast.on { opacity: 1; transform: none; }
 .ct-toast.bad { background: #B42318; }
+
+/* Loading states: sign-in button and first load */
+.spin { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid currentColor; border-inline-end-color: transparent; display: none; flex: none; }
+.login-btn { justify-content: center; }
+.login-btn[aria-busy="true"] { opacity: .85; cursor: progress; transform: none; }
+.login-btn[aria-busy="true"] .spin, .booting .spin { display: inline-block; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .login-btn[aria-busy="true"] .spin, .booting .spin { animation-duration: 1.6s; } }
+.booting { display: flex; gap: 10px; align-items: center; justify-content: center; min-height: 50vh; color: var(--muted); font-weight: 600; }
+.booting[hidden] { display: none; }
