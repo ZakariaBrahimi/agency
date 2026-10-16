@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ar"><head><meta charset="utf-8"><title>نواة · Showreel</title>
+<link rel="stylesheet" href="fonts.local.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { display: block; }</style>
+</head>
+<body>
+<!-- SHOWREEL:START -->
+<canvas id="reel" width="1080" height="1920" aria-label="نواة showreel"></canvas>
+<script>
+(() => {
+  // A vertical showreel drawn on one canvas. render(t) paints any instant, so it plays live
+  // and renders frame-exact video. Scenes are cut on a 128 BPM beat; CUES drive the sound.
+  const W = 1080, H = 1920, CX = W / 2, CY = H / 2;
+  const C = { ink: '#0B1220', ink2: '#151D31', line: '#2A3553', indigo: '#5B4BFF', indigo2: '#8A7DFF', lime: '#C6F432', paper: '#F6F5F2', muted: '#9AA3B8' };
+  const AR = '"Thmanyah Sans", "IBM Plex Sans Arabic", sans-serif';
+  const LAT = '"Bricolage Grotesque", sans-serif';
+  const MONO = '"JetBrains Mono", monospace';
+  const BEAT = 60 / 128, SCENE = BEAT * 3;
+  const cv = document.getElementById('reel');
+  const ctx = cv.getContext('2d');
+
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const E = {
+    out: (k) => 1 - Math.pow(1 - k, 3),
+    in: (k) => k * k * k,
+    io: (k) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+    expo: (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k)),
+    spring: (k) => (k >= 1 ? 1 : 1 - Math.exp(-6 * k) * Math.cos(10 * k)),
+  };
+  const rand = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  function txt(s, x, y, o = {}) {
+    const { size = 60, font = LAT, weight = 800, color = '#fff', align = 'center', base = 'middle', dir = 'ltr', ls = 0, alpha = 1 } = o;
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+    ctx.font = `${weight} ${size}px ${font}`;
+    ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = base; ctx.direction = dir;
+    ctx.letterSpacing = ls + 'px';
+    ctx.fillText(s, x, y);
+    ctx.restore();
+  }
+  const ar = (s, x, y, o = {}) => txt(s, x, y, { font: AR, weight: 700, dir: 'rtl', ...o });
+  const mono = (s, x, y, o = {}) => txt(s, x, y, { font: MONO, weight: 500, size: 26, ls: 4, color: C.muted, ...o });
+  function rr(x, y, w, h, r, fill, stroke, lw = 3) {
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+  }
+  function circle(x, y, r, fill) { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+  function bg(color = C.ink) { ctx.fillStyle = color; ctx.fillRect(0, 0, W, H); }
+  function mark(x, y, size, badge = true) { // the ن mark, centred on (x, y)
+    ctx.save(); ctx.translate(x - size / 2, y - size / 2); ctx.scale(size / 512, size / 512);
+    if (badge) rr(0, 0, 512, 512, 120, C.indigo);
+    ctx.beginPath(); ctx.arc(256, 236, 110, Math.PI, 0, true); ctx.strokeStyle = '#fff'; ctx.lineWidth = 62; ctx.lineCap = 'round'; ctx.stroke();
+    circle(256, 148, 40, C.lime);
+    ctx.restore();
+  }
+
+  // ---- Scenes: each draws itself at local time u (seconds since its cut)
+  const SC = [];
+  const scene = (name, f, cues = [], d = SCENE) => SC.push({ name, f, cues, d });
+
+  // 1 · Boot
+  const BOOT = '> nawa.studio';
+  scene('boot', (u) => {
+    bg();
+    const n = Math.floor(seg(u, .05, .8) * BOOT.length);
+    ctx.font = `700 64px ${MONO}`; ctx.letterSpacing = '2px';
+    const w = ctx.measureText(BOOT).width, x0 = CX - w / 2;
+    txt(BOOT.slice(0, n), x0, CY, { font: MONO, weight: 700, size: 64, ls: 2, align: 'left', color: '#fff' });
+    const cw = ctx.measureText(BOOT.slice(0, n)).width;
+    if (u < .9 && Math.floor(u * 6) % 2 === 0) { ctx.fillStyle = C.lime; ctx.fillRect(x0 + cw + 8, CY - 36, 30, 72); }
+    const lk = E.expo(seg(u, .9, 1.25));
+    if (lk > 0) { ctx.fillStyle = C.lime; ctx.fillRect(CX - CX * lk, CY + 70, W * lk, 6); }
+  }, [...BOOT.split('').map((_, i) => [.05 + (i + 1) * (.75 / BOOT.length), 'tick']), [.9, 'whoosh']]);
+
+  // 2 · Six cores
+  const SIX = ['BUILD', 'BRAND', 'DESIGN', 'ADS', 'DATA', 'GROW'];
+  scene('six', (u) => {
+    bg();
+    const sk = E.spring(seg(u, .35, .95)), rot = u * .6;
+    const pts = SIX.map((_, i) => { const a = rot + i * Math.PI / 3 - Math.PI / 2; return [CX + Math.cos(a) * 300 * sk, CY + Math.sin(a) * 300 * sk]; });
+    const lk = seg(u, .65, 1.1);
+    if (lk > 0) { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.strokeStyle = C.indigo; ctx.lineWidth = 4; ctx.setLineDash([1200 * lk, 3000]); ctx.stroke(); ctx.setLineDash([]); }
+    const r0 = 60 * E.spring(seg(u, 0, .3));
+    pts.forEach(([x, y], i) => {
+      circle(x, y, u < .35 ? r0 : lerp(60, 34, sk), i === 5 ? C.lime : (u < .35 ? C.lime : C.indigo2));
+      const la = seg(u, .8 + i * .04, 1.0 + i * .04);
+      mono(SIX[i], x, y + 80, { alpha: la, color: '#fff', weight: 700, size: 28 });
+    });
+    circle(CX, CY, 22 * sk, C.lime);
+  }, [[0, 'pop', 0], ...SIX.map((_, i) => [.4 + i * .06, 'pluck', i])]);
+
+  // 3 · BUILD → نطوّر
+  scene('build', (u) => {
+    bg(C.indigo);
+    const k = E.expo(seg(u, 0, .3));
+    for (let g = 3; g >= 0; g--) txt('BUILD', CX + (1 - k) * 900 + g * 26 * (1 - k), CY, { size: 330, alpha: g ? .18 * (1 - k) : 1, ls: -6 });
+    const wk = E.io(seg(u, .55, .95));
+    if (wk > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(0, H * (1 - wk), W, H * wk); ctx.clip();
+      bg(C.lime); ar('نطوّر', CX, CY + 10, { size: 330, color: C.ink });
+      mono('WE BUILD THE PRODUCT', CX, CY + 300, { color: C.ink, weight: 700 });
+      ctx.restore();
+    }
+  }, [[0, 'impact'], [.55, 'swish']]);
+
+  // 4 · Ripple field
+  scene('ripple', (u) => {
+    bg();
+    const S = 54;
+    for (let y = S / 2; y < H; y += S) for (let x = S / 2; x < W; x += S) {
+      const d = Math.hypot(x - CX, y - CY);
+      const wave = Math.sin(d / 70 - u * 9);
+      const v = Math.max(0, wave) * Math.exp(-d / 900);
+      circle(x, y, 3 + 20 * v, v > .55 ? C.lime : (v > .15 ? C.indigo : C.line));
+    }
+    txt('ONE IDEA.', CX, 520, { size: 130, alpha: seg(u, .1, .25) });
+    txt('MANY WAVES.', CX, 1400, { size: 130, color: C.lime, alpha: seg(u, .55, .7) });
+    ar('فكرة واحدة، أثر واسع', CX, 1530, { size: 52, alpha: seg(u, .75, .9), color: '#fff' });
+  }, [[0, 'pulse'], [BEAT, 'pulse'], [BEAT * 2, 'pulse']]);
+
+  // 5 · Slot reel
+  const REEL = [['PRODUCT', 'منتج'], ['BRAND', 'هوية'], ['CONTENT', 'محتوى'], ['ADS', 'إعلانات'], ['DATA', 'بيانات'], ['GROWTH', 'نمو']];
+  const ROW = 190;
+  scene('slot', (u) => {
+    bg();
+    const k = E.out(seg(u, 0, 1.05));
+    const pos = lerp(-6, REEL.length * 2 - 1, k); // which row is centred (scrolls through the list twice)
+    ctx.save(); ctx.beginPath(); ctx.rect(0, CY - ROW * 2.6, W, ROW * 5.2); ctx.clip();
+    for (let i = -8; i < 20; i++) {
+      const y = CY + (i - pos) * ROW;
+      if (y < CY - ROW * 3 || y > CY + ROW * 3) continue;
+      const [en, a] = REEL[((i % REEL.length) + REEL.length) % REEL.length];
+      const c = Math.abs(y - CY) < ROW / 2;
+      const al = 1 - Math.min(1, Math.abs(y - CY) / (ROW * 2.6));
+      const landed = c && u > 1.05;
+      txt(en, 80, y, { size: 120, align: 'left', alpha: al, color: landed ? C.lime : '#fff' });
+      ar(a, W - 80, y + 8, { size: 100, align: 'right', alpha: al, color: landed ? C.lime : C.muted });
+    }
+    ctx.restore();
+    ctx.fillStyle = C.lime; ctx.fillRect(60, CY - ROW / 2, 8, ROW); ctx.fillRect(W - 68, CY - ROW / 2, 8, ROW);
+  }, [...Array.from({ length: 12 }, (_, i) => [E.out(seg(i / 12, 0, 1)) * 1.0, 'click']), [1.08, 'ding']]);
+
+  // 6 · Flow field
+  scene('flow', (u) => {
+    bg();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 300; i++) {
+      const x0 = rand(i) * W, y0 = rand(i + 900) * (H + 400), sp = .8 + rand(i + 50) * 1.2;
+      const P = (s) => { const y = ((y0 - s * 380 * sp) % (H + 400) + H + 400) % (H + 400) - 200; return [x0 + 110 * Math.sin(s * 1.6 + i) + 50 * Math.sin(y / 160 + i * .3), y]; };
+      const s = u * 1.6 + rand(i + 7) * 4;
+      let prev = P(s - .5);
+      for (let j = 1; j <= 10; j++) {
+        const p = P(s - .5 + j * .05);
+        if (Math.abs(p[1] - prev[1]) < 300) {
+          ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]);
+          ctx.strokeStyle = j > 8 ? C.lime : C.indigo; ctx.globalAlpha = j / 10 * .9; ctx.lineWidth = 2 + j * .35; ctx.stroke();
+        }
+        prev = p;
+      }
+    }
+    ctx.globalAlpha = 1;
+    const a = E.out(seg(u, .2, .45)), b = E.out(seg(u, .55, .8));
+    ar('من فكرة', CX, 820 + 40 * (1 - a), { size: 150, alpha: a });
+    txt('TO PRODUCT', CX, 1060 + 40 * (1 - b), { size: 130, color: C.lime, alpha: b });
+  }, [[0, 'whoosh'], [.2, 'hit'], [.55, 'hit']]);
+
+  // 7 · UI burst: cards fly in from depth and snap into a grid
+  const CARDS = [
+    (x, y, w, h) => { rr(x, y, w, h, 36, C.lime); ar('ابدأ', x + w / 2, y + h / 2, { size: 64, color: C.ink }); },
+    (x, y, w, h) => { rr(x, y, w, h, 36, C.ink2, C.line); rr(x + w / 2 - 90, y + h / 2 - 48, 180, 96, 48, C.lime); circle(x + w / 2 + 42, y + h / 2, 38, '#fff'); },
+    (x, y, w, h) => { rr(x, y, w, h, 36, C.ink2, C.line); [.35, .55, .45, .8, 1].forEach((v, i) => rr(x + 40 + i * 62, y + h - 40 - (h - 100) * v, 44, (h - 100) * v, 10, i === 4 ? C.lime : C.indigo)); },
+    (x, y, w, h) => { rr(x, y, w, h, 36, C.ink2, C.line); rr(x + 30, y + 30, w - 60, h - 120, 22, C.indigo); ar('نواة', x + w / 2, y + (h - 90) / 2 + 15, { size: 60 }); rr(x + 30, y + h - 66, 150, 22, 11, C.line); },
+    (x, y, w, h) => { rr(x, y, w, h, 36, '#10261F', '#1E5C46'); circle(x + 80, y + h / 2, 40, '#3DDC97'); txt('LIVE', x + w / 2 + 50, y + h / 2, { size: 64, color: '#3DDC97' }); },
+    (x, y, w, h) => { rr(x, y, w, h, 36, C.ink2, C.line); rr(x + 40, y + h / 2 - 10, w - 80, 20, 10, C.line); rr(x + 40, y + h / 2 - 10, (w - 80) * .7, 20, 10, C.lime); circle(x + 40 + (w - 80) * .7, y + h / 2, 30, '#fff'); },
+  ];
+  scene('burst', (u) => {
+    bg();
+    const cw = 420, ch = 300, gx = 80, gy = 60, x0 = CX - cw - gx / 2, y0 = CY - (ch * 3 + gy * 2) / 2;
+    CARDS.forEach((draw, i) => {
+      const k = E.spring(seg(u, .05 + i * .1, .55 + i * .1));
+      if (k <= 0) return;
+      const tx = x0 + (i % 2) * (cw + gx), ty = y0 + Math.floor(i / 2) * (ch + gy);
+      const z = lerp(3.5, 1, k), ang = (1 - k) * (i % 2 ? .5 : -.5);
+      ctx.save();
+      ctx.globalAlpha = clamp(k * 1.5);
+      ctx.translate(CX + (tx + cw / 2 - CX) / z * (1 + (z - 1) * .3), CY + (ty + ch / 2 - CY) / z); ctx.rotate(ang); ctx.scale(1 / z * (z > 1 ? 1.4 : 1), 1 / z * (z > 1 ? 1.4 : 1));
+      draw(-cw / 2, -ch / 2, cw, ch);
+      ctx.restore();
+    });
+    mono('UI · UX · PRODUCT DESIGN', CX, y0 - 90, { color: '#fff', alpha: seg(u, .3, .5) });
+  }, CARDS.map((_, i) => [.1 + i * .1, 'pop', i]));
+
+  // 8 · Palette stripes
+  const PAL = [[C.ink, '#0B1220', '#fff'], [C.indigo, '#5B4BFF', '#fff'], [C.lime, '#C6F432', C.ink], [C.paper, '#F6F5F2', C.ink]];
+  scene('palette', (u) => {
+    bg();
+    PAL.forEach(([fill, hex, fg], i) => {
+      const k = E.expo(seg(u, i * .12, .35 + i * .12));
+      const x = i * W / 4, y = H * (1 - k);
+      ctx.fillStyle = fill; ctx.fillRect(x, y, W / 4 + 1, H);
+      if (i === 0) { ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, W / 4 - 2, H); }
+      ctx.save(); ctx.translate(x + W / 8, y + 1500); ctx.rotate(-Math.PI / 2);
+      mono(hex, 0, 0, { color: fg, size: 34, weight: 700, alpha: seg(u, .5 + i * .08, .7 + i * .08) }); ctx.restore();
+    });
+    const k = E.out(seg(u, .8, 1.05));
+    // 'difference' inverts the text against each stripe, so it reads on all four colours
+    ctx.save(); ctx.globalCompositeOperation = 'difference';
+    txt('BRAND', CX, 640, { size: 190, alpha: k, color: '#fff' });
+    ar('هوية', CX, 830, { size: 140, alpha: k, color: '#fff' });
+    ctx.restore();
+  }, [0, 1, 2, 3].map((i) => [i * .12, 'swish']).concat([[.8, 'hit']]));
+
+  // 9 · Manifesto
+  const MAN = ['EVERY', 'IDEA', 'HAS A', 'CORE.'];
+  scene('manifesto', (u) => {
+    bg();
+    MAN.forEach((w, i) => {
+      const at = i * BEAT * .5, k = E.expo(seg(u, at, at + .15));
+      if (k <= 0) return;
+      const last = i === 3;
+      txt(w, 90, 520 + i * 200, { size: 190, align: 'left', alpha: k, color: last ? C.lime : '#fff', ls: -4 });
+    });
+    ar('لكل فكرة نواة.', W - 90, 1420, { size: 92, align: 'right', alpha: E.out(seg(u, .95, 1.15)) });
+  }, MAN.map((_, i) => [i * BEAT * .5, 'hit']).concat([[.95, 'swish']]));
+
+  // 10 · Radial visualizer
+  scene('viz', (u) => {
+    bg();
+    const beat = Math.exp(-((u % BEAT) / .12));
+    const N = 90;
+    for (let i = 0; i < N; i++) {
+      const a = i / N * Math.PI * 2 - Math.PI / 2;
+      const len = 40 + (90 + 170 * beat) * Math.abs(Math.sin(i * .9 + u * 7)) * (.5 + .5 * Math.abs(Math.sin(i * .23)));
+      const r0 = 250;
+      ctx.beginPath(); ctx.moveTo(CX + Math.cos(a) * r0, CY + Math.sin(a) * r0); ctx.lineTo(CX + Math.cos(a) * (r0 + len), CY + Math.sin(a) * (r0 + len));
+      ctx.strokeStyle = i % 3 === 0 ? C.lime : C.indigo; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.stroke();
+    }
+    mark(CX, CY, 300 * (1 + .06 * beat));
+    mono('SOUND · MOTION · STORY', CX, 1500, { color: '#fff' });
+    ar('نروي القصص', CX, 1590, { size: 64, alpha: seg(u, .2, .4) });
+  }, [[0, 'bass'], [BEAT, 'bass'], [BEAT * 2, 'bass']]);
+
+  // 11 · Stats
+  const STATS = [['1', 'TEAM', 'فريق واحد'], ['6', 'STEPS', 'ست خطوات'], ['∞', 'IDEAS', 'أفكار بلا حدود']];
+  scene('stats', (u) => {
+    bg();
+    const i = Math.min(2, Math.floor(u / BEAT));
+    const k = E.expo(seg(u, i * BEAT, i * BEAT + .14));
+    const [n, en, a] = STATS[i];
+    txt(n, CX, 820, { size: 520 * lerp(1.4, 1, k), color: C.lime, alpha: k });
+    txt(en, CX, 1160, { size: 150, alpha: k, ls: 8 });
+    ar(a, CX, 1320, { size: 72, alpha: k, color: C.muted });
+    STATS.forEach((_, j) => rr(CX - 70 + j * 50, 1500, 30, 10, 5, j <= i ? C.lime : C.line));
+  }, [0, 1, 2].map((i) => [i * BEAT, 'impact']));
+
+  // 12 · Tunnel
+  scene('tunnel', (u) => {
+    bg();
+    for (let k = 14; k >= 0; k--) {
+      let z = ((k * .16 - u * 1.3) % 2.4 + 2.4) % 2.4 + .08;
+      const s = 520 / z;
+      ctx.globalAlpha = clamp(1.6 - z * .6);
+      rr(CX - s / 2, CY - s / 2, s, s, s * .23, null, k % 3 === 0 ? C.lime : C.indigo, Math.max(2, 14 / z));
+    }
+    ctx.globalAlpha = 1;
+    mark(CX, CY, 140 * (1 + 2 * E.in(seg(u, .9, 1.4))), true);
+    const fl = seg(u, 1.25, 1.4);
+    if (fl > 0) { ctx.fillStyle = C.lime; ctx.globalAlpha = fl; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  }, [[0, 'riser']]);
+
+  // 13 · End card
+  scene('end', (u) => {
+    bg();
+    const f = 1 - seg(u, 0, .25);
+    const mk = E.spring(seg(u, .05, .6));
+    mark(CX, 640 - (1 - mk) * 300, 360 * mk);
+    ar('نواة', CX, 1010, { size: 190, alpha: E.out(seg(u, .3, .55)) });
+    mono('N A W A   S T U D I O', CX, 1150, { color: C.lime, weight: 700, size: 34, ls: 6, alpha: seg(u, .45, .65) });
+    ar('نطلق المنتجات الرقمية. ونروي القصص.', CX, 1260, { size: 54, weight: 500, alpha: seg(u, .6, .8) });
+    const ck = E.spring(seg(u, .85, 1.3));
+    if (ck > 0) {
+      ctx.save(); ctx.translate(CX, 1450); ctx.scale(ck, ck);
+      rr(-300, -70, 600, 140, 70, C.lime); ar('ابدأ مشروعك', 0, 4, { size: 58, color: C.ink });
+      ctx.restore();
+    }
+    mono('LINK IN BIO', CX, 1580, { alpha: seg(u, 1.2, 1.4) });
+    if (f > 0) { ctx.fillStyle = C.lime; ctx.globalAlpha = f; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+  }, [[0, 'boom'], [.1, 'chime'], [.85, 'pop', 5]], 2.6);
+
+  // ---- Timeline
+  let acc = 0;
+  SC.forEach((s) => { s.start = acc; acc += s.d; });
+  const DURATION = acc;
+  const CUES = [];
+  SC.forEach((s) => s.cues.forEach(([u, name, p = 0]) => CUES.push([+(s.start + u).toFixed(3), name, p])));
+  CUES.sort((a, b) => a[0] - b[0]);
+  const MUSIC = { start: SC[1].start, end: SC[SC.length - 1].start, bpm: 128 };
+
+  function hud(t, i) {
+    mono('NAWA STUDIO', 60, 90, { align: 'left', size: 24 });
+    mono('SHOWREEL ’26', W - 60, 90, { align: 'right', size: 24 });
+    mono(`${String(i + 1).padStart(2, '0')} / ${String(SC.length - 1).padStart(2, '0')}`, 60, H - 90, { align: 'left', size: 24, color: '#fff' });
+    mono(SC[i].name.toUpperCase(), W - 60, H - 90, { align: 'right', size: 24 });
+    ctx.fillStyle = C.line; ctx.fillRect(60, H - 140, W - 120, 3);
+    ctx.fillStyle = C.lime; ctx.fillRect(60, H - 140, (W - 120) * clamp(t / SC[SC.length - 1].start), 3);
+  }
+
+  function render(t) {
+    t = Math.max(0, Math.min(t, DURATION - 1e-4));
+    const i = SC.findIndex((s) => t >= s.start && t < s.start + s.d);
+    const s = SC[i], u = t - s.start;
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    // a small punch-in on every cut
+    const p = 1 + .05 * (1 - E.out(seg(u, 0, .22)));
+    ctx.translate(CX, CY); ctx.scale(p, p); ctx.translate(-CX, -CY);
+    s.f(u);
+    ctx.restore();
+    if (s.name !== 'end') hud(t, i);
+  }
+
+  window.SHOWREEL = { render, DURATION, CUES, MUSIC };
+  const q = new URLSearchParams(location.search);
+  document.fonts.ready.then(() => render(q.has('t') ? +q.get('t') : DURATION - .2));
+})();
+</script>
+<!-- SHOWREEL:END -->
+</body></html>

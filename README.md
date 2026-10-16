@@ -120,3 +120,9 @@ connect platforms one at a time.
 services with animated UI components. `scripts/services-sound.py` builds its soundtrack (a 120 BPM beat plus
 one effect per animation cue). Output: `exports/motion/services-vertical.mp4`.
 To change wording, numbers or timing, edit the HTML; the sound cues live next to the keyframes, so they follow.
+
+## Showreel
+
+`design/templates/showreel.html` draws a 19-second vertical showreel on one canvas (13 scenes cut on a
+128 BPM beat, English and Arabic). `scripts/showreel-sound.py` builds the beat and the sound effects from
+the cues the page exports. Output: `exports/motion/showreel-vertical.mp4`.
