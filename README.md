@@ -113,3 +113,10 @@ connect platforms one at a time.
 `design/templates/logo-motion.html` animates the mark on one seekable timeline, and
 `scripts/logo-sound.py` synthesizes the matching sound effects. The rendered videos (with sound) are in
 `exports/motion/`: `logo-square.mp4` (1080×1080) and `logo-vertical.mp4` (1080×1920, stories and reels).
+
+## Services video
+
+`design/templates/services-motion.html` is a 28-second vertical reel (1080×1920) that walks through the six
+services with animated UI components. `scripts/services-sound.py` builds its soundtrack (a 120 BPM beat plus
+one effect per animation cue). Output: `exports/motion/services-vertical.mp4`.
+To change wording, numbers or timing, edit the HTML; the sound cues live next to the keyframes, so they follow.

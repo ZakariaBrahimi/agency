@@ -170,7 +170,7 @@
     <div class="abs card" id="s5-card" style="left:110px;top:640px;width:860px;height:620px;padding:46px">
       <div class="row" style="font-size:34px;margin-bottom:30px"><span style="font-weight:700">المبيعات الشهرية</span><span class="muted num" style="font-size:28px">2026</span></div>
       <div style="position:relative;height:420px">
-        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;gap:22px;padding:0 6px">
+        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;gap:22px;padding:0 6px;direction:ltr">
           <div class="bar" id="s5-b0" style="flex:1;height:30%;border-radius:16px;background:var(--panel-2);transform-origin:bottom"></div>
           <div class="bar" id="s5-b1" style="flex:1;height:42%;border-radius:16px;background:var(--panel-2);transform-origin:bottom"></div>
           <div class="bar" id="s5-b2" style="flex:1;height:38%;border-radius:16px;background:var(--panel-2);transform-origin:bottom"></div>
@@ -179,7 +179,7 @@
           <div class="bar" id="s5-b5" style="flex:1;height:78%;border-radius:16px;background:var(--indigo-2);transform-origin:bottom"></div>
           <div class="bar" id="s5-b6" style="flex:1;height:96%;border-radius:16px;background:var(--lime);transform-origin:bottom"></div>
         </div>
-        <svg style="position:absolute;inset:0" width="768" height="420" viewBox="0 0 768 420"><path id="s5-line" d="M712 300 L600 250 L490 270 L380 190 L270 150 L160 95 L52 20" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/></svg>
+        <svg style="position:absolute;inset:0" width="768" height="420" viewBox="0 0 768 420"><path id="s5-line" d="M52 300 L160 250 L270 270 L380 190 L490 150 L600 95 L712 20" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"/></svg>
       </div>
     </div>
     <div class="abs card" id="s5-k1" style="left:550px;top:1300px;width:420px;height:210px;padding:34px;display:grid;align-content:space-between">
@@ -198,6 +198,7 @@
       <circle cx="350" cy="350" r="290" fill="none" stroke="#2A3553" stroke-width="10"/>
       <circle id="s6-arc" cx="350" cy="350" r="290" fill="none" stroke="#C6F432" stroke-width="12" stroke-linecap="round" pathLength="1000" stroke-dasharray="160 840" transform="rotate(-90 350 350)"/>
     </svg>
+    <div id="s6-labels"></div>
     <div class="abs card" id="s6-core" style="left:440px;top:970px;width:200px;height:200px;border-radius:56px;background:var(--indigo);border:0;display:grid;place-items:center">
       <svg width="140" height="140" viewBox="72 72 368 368"><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
     </div>
@@ -286,6 +287,13 @@
   }
   const headCue = (at) => cue(at, 'whoosh');
 
+  // Cycle labels around the ring (center 540,1070, radius 290), clockwise from the top
+  const RING = ['نطوّر', 'هوية', 'تصاميم', 'إعلانات', 'نتائج', 'تحسين'];
+  $('s6-labels').innerHTML = RING.map((w, i) => {
+    const a = (-90 + i * 60) * Math.PI / 180, x = 540 + 290 * Math.cos(a), y = 1070 + 290 * Math.sin(a);
+    return `<div class="abs pill" id="s6-n${i}" style="left:${x - 110}px;top:${y - 40}px;width:220px;height:80px;background:#151D31;border:3px solid #2A3553;display:grid;place-items:center;font-size:34px;font-weight:700">${w}</div>`;
+  }).join('');
+
   // Step dots
   $('steps').innerHTML = Array.from({ length: 6 }, () => '<span class="pill" style="width:18px;height:18px;background:#2A3553;display:block"></span>').join('');
   const dots = [...$('steps').children];
@@ -302,7 +310,7 @@
   headCue(13.6); cue(13.95, 'thump'); cue(14.5, 'toggle'); cue(14.9, 'toggle'); cue(15.25, 'slide'); cue(16.15, 'ding');
   headCue(17.2); cue(17.45, 'thump'); [17.9, 18.05, 18.2, 18.35, 18.5, 18.65, 18.8].forEach((t, i) => cue(t, 'rise', i)); cue(18.7, 'swish');
   cue(19.3, 'pop', 6); cue(19.5, 'pop', 7);
-  headCue(20.8); cue(21.05, 'thump'); cue(21.6, 'swoosh'); cue(22.9, 'ding');
+  headCue(20.8); cue(21.05, 'thump'); [21.3, 21.4, 21.5, 21.6, 21.7, 21.8].forEach((t, i) => cue(t, 'pop', i)); cue(21.6, 'swoosh'); cue(22.9, 'ding');
   cue(23.55, 'swoosh'); cue(23.8, 'thump'); cue(24.25, 'chime'); cue(24.5, 'pop', 3); cue(25.0, 'pop', 5); cue(25.85, 'click');
 
   function scene(i, t) {
@@ -396,6 +404,14 @@
       kf('s6-core', t, pop(21.25, { o: 0, s: .2 }, .6));
       const ak = E.io(seg(t, 21.6, 23.3));
       $('s6-arc').setAttribute('stroke-dashoffset', -1000 * 1.5 * ak);
+      const head = (1.5 * ak + .16) % 1; // where the lime arc's head is, as a fraction of the circle
+      RING.forEach((_, i) => {
+        kf('s6-n' + i, t, pop(21.3 + i * .1, { o: 0, s: .4 }, .5));
+        const d = Math.min(Math.abs(head - i / 6), 1 - Math.abs(head - i / 6));
+        const lit = ak > 0 && d < .07;
+        $('s6-n' + i).style.borderColor = lit ? '#C6F432' : '#2A3553';
+        $('s6-n' + i).style.color = lit ? '#C6F432' : '#F4F5F8';
+      });
     }
     // Outro
     if (scene(7, t)) {
