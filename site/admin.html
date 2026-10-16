@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>الطلبات | نواة</title>
+<title>لوحة الإدارة | نواة</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0B1220">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="assets/css/styles.css">
 <link rel="stylesheet" href="assets/css/admin.css">
 <script type="module" src="assets/js/admin.js"></script>
+<script type="module" src="assets/js/admin-content.js"></script>
 </head>
 <body class="admin-page">
 
@@ -22,7 +23,7 @@
       <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>
       <span>نواة</span>
     </a>
-    <span class="admin-tag">لوحة الطلبات</span>
+    <span class="admin-tag">لوحة الإدارة</span>
     <div class="nav-end">
       <button type="button" class="link-btn" id="logout" hidden>تسجيل الخروج</button>
     </div>
@@ -41,6 +42,12 @@
       <p class="login-msg" id="loginMsg" role="alert"></p>
     </form>
   </section>
+
+  <!-- Section switch (shown once signed in) -->
+  <nav class="sections" id="sections" hidden aria-label="أقسام اللوحة">
+    <button type="button" data-section="requests" aria-pressed="true">الطلبات</button>
+    <button type="button" data-section="content" aria-pressed="false">المحتوى</button>
+  </nav>
 
   <!-- Setup notice (missing server settings) -->
   <section class="setup" id="setup" hidden></section>
@@ -70,7 +77,30 @@
       <div id="tgBody" class="tg-body">…</div>
     </details>
   </section>
+
+  <!-- Content: posts stored in Google Drive, approved posts in Google Calendar -->
+  <section id="content" class="ct" hidden>
+    <div class="dash-head">
+      <div>
+        <h1>المحتوى</h1>
+        <p class="muted" id="ctAccount"></p>
+      </div>
+      <div class="ct-head-actions" id="ctHeadActions" hidden>
+        <div class="ct-views" role="group" aria-label="طريقة العرض">
+          <button type="button" data-view="calendar" aria-pressed="true">التقويم</button>
+          <button type="button" data-view="list" aria-pressed="false">القائمة</button>
+        </div>
+        <button type="button" class="btn btn-lime" id="ctNew">+ منشور جديد</button>
+      </div>
+    </div>
+    <div id="ctBody"><p class="empty">…</p></div>
+  </section>
 </main>
+
+<dialog class="ct-dialog" id="ctDialog" aria-labelledby="ctDlgTitle">
+  <form method="dialog" class="ct-dlg" id="ctForm"></form>
+</dialog>
+<div class="ct-toast" id="ctToast" role="status" aria-live="polite"></div>
 
 </body>
 </html>

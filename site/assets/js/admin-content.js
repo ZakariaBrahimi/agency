@@ -1,0 +1,479 @@
+// /admin → «المحتوى»: plan, draft, edit and schedule posts. Data lives in the Nawa Google Drive;
+// scheduling (your approval) adds events to the "Nawa · Content" Google Calendar.
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, captionFor, platformStatus, postStatus } from './content-schema.js';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const API = '/api/admin/content';
+const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const MONTHS = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const ERR = {
+  google_error: 'تعذّر الاتصال بـ Google. حاول مرة أخرى.',
+  google_scope: 'صلاحيات Google ناقصة. افصل الحساب ثم اربطه من جديد ووافق على كل الصلاحيات.',
+  title_required: 'اكتب عنوانًا للمنشور.',
+  bad_date: 'اختر تاريخًا ووقتًا صحيحين.',
+  no_platforms: 'اختر منصة واحدة على الأقل.',
+  bad_file: 'هذا الملف غير مدعوم. استخدم صورة أو فيديو.',
+};
+const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
+
+const state = { loaded: false, status: null, posts: [], settings: {}, rootUrl: '', email: '', view: 'calendar', filter: 'all', month: null, open: null, dirty: false };
+try { state.view = localStorage.getItem('nawa.ct.view') || 'calendar'; } catch {}
+
+// ---------- API ----------
+async function call(path, { method = 'GET', body } = {}) {
+  const r = await fetch(path, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { window.dispatchEvent(new Event('nawa:signed-out')); throw Object.assign(new Error('signed_out'), { code: 'signed_out' }); }
+  if (!r.ok || d.ok === false) throw Object.assign(new Error(d.error || 'error'), { code: d.error || 'error' });
+  return d;
+}
+const act = (action, body) => call(`${API}?action=${action}`, { method: 'POST', body });
+function absorb(d) {
+  if (d.posts) state.posts = d.posts;
+  if (d.settings) state.settings = d.settings;
+  if (d.rootUrl) state.rootUrl = d.rootUrl;
+  if (d.email !== undefined) state.email = d.email;
+  if (d.post) state.posts = state.posts.map((p) => (p.id === d.post.id ? d.post : p));
+}
+
+function toast(msg, bad = false) {
+  const t = $('ctToast');
+  const host = $('ctDialog').open ? $('ctDialog') : document.body; // a modal dialog covers anything outside it
+  if (t.parentNode !== host) host.appendChild(t);
+  t.textContent = msg; t.classList.toggle('bad', bad); t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 3200);
+}
+
+// ---------- load ----------
+async function load() {
+  const body = $('ctBody');
+  try {
+    state.status = await call('/api/admin/google');
+  } catch (e) { if (e.code !== 'signed_out') body.innerHTML = `<p class="empty">${esc(errText(e))}</p>`; return; }
+  const s = state.status;
+  $('ctHeadActions').hidden = true;
+  if (!s.configured) {
+    $('ctAccount').textContent = '';
+    body.innerHTML = `<div class="ct-card ct-setup"><h2>اربط Google أولًا</h2>
+      <p>أضف مفتاحي Google في Vercel ← nawa-studio ← Settings ← Environment Variables، ثم أعد النشر:</p>
+      <ul><li><code dir="ltr">GOOGLE_CLIENT_ID</code></li><li><code dir="ltr">GOOGLE_CLIENT_SECRET</code></li></ul>
+      <p class="muted">عنوان الرجوع الذي يجب إضافته في Google Cloud: <code dir="ltr">${esc(s.redirectUri)}</code></p></div>`;
+    return;
+  }
+  if (!s.connected) {
+    $('ctAccount').textContent = '';
+    body.innerHTML = `<div class="ct-card ct-setup"><h2>اربط حساب Google الخاص بنواة</h2>
+      <p>يُحفظ المحتوى في Google Drive، وتُضاف المنشورات المعتمدة إلى تقويم «Nawa · Content». تربط مرة واحدة على كل جهاز.</p>
+      <a class="btn btn-lime" href="/api/admin/google?connect=1">ربط حساب Google</a>
+      <p class="muted">سيظهر تنبيه «Google hasn't verified this app» لأن التطبيق خاص بك: اضغط <b dir="ltr">Advanced</b> ثم <b dir="ltr">Go to Nawa Admin</b> ووافق على الصلاحيات.</p></div>`;
+    return;
+  }
+  body.innerHTML = '<p class="empty">جارٍ تحميل المحتوى من Google Drive…</p>';
+  try {
+    absorb(await call(API));
+    state.loaded = true;
+  } catch (e) {
+    if (e.code === 'google_not_connected') return load();
+    if (e.code !== 'signed_out') body.innerHTML = `<p class="empty">${esc(errText(e))}</p>`;
+    return;
+  }
+  $('ctHeadActions').hidden = false;
+  render();
+  routeHash();
+}
+
+function routeHash() {
+  const h = location.hash.replace(/^#content\/?/, '');
+  if (h === 'google-connected') { toast('تم ربط حساب Google.'); history.replaceState(null, '', '#content'); }
+  else if (h === 'google-denied') { toast('لم تتم الموافقة على الربط.', true); history.replaceState(null, '', '#content'); }
+  else if (h === 'google-failed') { toast('تعذّر الربط. حاول مرة أخرى.', true); history.replaceState(null, '', '#content'); }
+  else if (h.startsWith('p_') && state.posts.some((p) => p.id === h) && state.open !== h) openEditor(h);
+}
+
+// ---------- helpers ----------
+const fmtAt = (at) => {
+  if (!at) return 'بدون تاريخ';
+  const [d, t] = at.split('T');
+  const [y, m, day] = d.split('-').map(Number);
+  const wd = new Date(Date.UTC(y, m - 1, day)).getUTCDay();
+  return `${DAYS[wd]} ${day} ${MONTHS[m - 1]} · ${t}`;
+};
+const thumb = (m, size = 300) => `${API}?action=media&id=${encodeURIComponent(m.id)}&size=${size}`;
+const isVideo = (m) => m.video || /^video\//.test(m.mimeType);
+const todayAt = () => {
+  const d = new Date(Date.now() + 3600e3); // Algeria is UTC+1 all year
+  return d.toISOString().slice(0, 10);
+};
+const filtered = () => state.posts.filter((p) => state.filter === 'all' || postStatus(p) === state.filter);
+const byDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999');
+
+function pfBadges(p) {
+  return (p.platforms || []).map((pf) => `<span class="ct-pf st-${platformStatus(p, pf)}" title="${esc(PLATFORMS[pf].name)} · ${STATUS[platformStatus(p, pf)]}">${PLATFORMS[pf].short}</span>`).join('');
+}
+
+// ---------- render ----------
+function render() {
+  const body = $('ctBody');
+  const s = state.status;
+  $('ctAccount').innerHTML = `متصل بـ <b dir="ltr">${esc(state.email || 'Google')}</b> · <a href="${esc(state.rootUrl)}" target="_blank" rel="noopener">مجلد Drive ↗</a> · <button type="button" class="link-btn" id="ctDisconnect">فصل</button>`;
+  $('ctDisconnect').onclick = async () => { await call('/api/admin/google', { method: 'DELETE' }); state.loaded = false; load(); };
+  document.querySelectorAll('.ct-views button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
+
+  const counts = { draft: 0, scheduled: 0, published: 0 };
+  state.posts.forEach((p) => counts[postStatus(p)]++);
+  const weekEnd = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), today = todayAt();
+  const thisWeek = state.posts.filter((p) => p.date && p.date.slice(0, 10) >= today && p.date.slice(0, 10) <= weekEnd).length;
+
+  const seed = !state.settings.seeded ? `<div class="ct-card ct-seed"><div><b>ابدأ بخطة الشهر الأول</b><p class="muted">16 مسودة بعناوينها وتواريخها (4 منشورات في الأسبوع، الساعة 20:00)، مع نصوص جاهزة لمنشورات الإطلاق.</p></div>
+      <button type="button" class="btn btn-lime" id="ctSeed">إضافة الخطة</button></div>` : '';
+
+  body.innerHTML = `${seed}
+    <div class="stats">
+      <div class="stat"><b dir="ltr">${counts.draft}</b><span>مسودات</span></div>
+      <div class="stat hl"><b dir="ltr">${counts.scheduled}</b><span>مجدولة</span></div>
+      <div class="stat"><b dir="ltr">${counts.published}</b><span>منشورة</span></div>
+      <div class="stat"><b dir="ltr">${thisWeek}</b><span>هذا الأسبوع</span></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="تصفية حسب الحالة">
+      ${[['all', 'الكل', state.posts.length], ['draft', STATUS.draft, counts.draft], ['scheduled', STATUS.scheduled, counts.scheduled], ['published', STATUS.published, counts.published]]
+        .map(([k, l, n]) => `<button type="button" role="tab" data-cf="${k}" aria-selected="${state.filter === k}">${l} <span dir="ltr">${n}</span></button>`).join('')}
+    </div>
+    <div id="ctView"></div>`;
+  body.querySelectorAll('[data-cf]').forEach((b) => b.addEventListener('click', () => { state.filter = b.dataset.cf; render(); }));
+  if ($('ctSeed')) $('ctSeed').onclick = async (e) => {
+    e.target.disabled = true;
+    try { absorb(await act('seed')); toast('أُضيفت خطة الشهر الأول.'); jumpToFirst(); render(); } catch (err) { toast(errText(err), true); e.target.disabled = false; }
+  };
+  if (state.view === 'list') renderList(); else renderCalendar();
+}
+
+function jumpToFirst() {
+  const first = state.posts.filter((p) => p.date).sort(byDate)[0];
+  if (first) state.month = first.date.slice(0, 7);
+}
+
+function renderCalendar() {
+  if (!state.month) {
+    const today = todayAt().slice(0, 7);
+    const upcoming = state.posts.filter((p) => p.date && p.date.slice(0, 10) >= todayAt()).sort(byDate)[0];
+    state.month = state.posts.some((p) => p.date?.startsWith(today)) || !upcoming ? today : upcoming.date.slice(0, 7);
+  }
+  const [y, m] = state.month.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1, 1));
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = first.getUTCDay(); // weeks start on Sunday
+  const posts = filtered();
+  const today = todayAt();
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<div class="ct-day out"></div>';
+  for (let d = 1; d <= days; d++) {
+    const key = `${state.month}-${String(d).padStart(2, '0')}`;
+    const list = posts.filter((p) => p.date?.startsWith(key)).sort(byDate);
+    cells += `<div class="ct-day${key === today ? ' today' : ''}" data-day="${key}">
+      <span class="ct-dnum" dir="ltr">${d}</span>
+      ${list.map((p) => `<button type="button" class="ct-chip st-${postStatus(p)}" data-open="${p.id}"><span class="ct-chip-t">${esc(p.title)}</span><span class="ct-chip-pf">${pfBadges(p)}</span></button>`).join('')}
+      <button type="button" class="ct-add" data-new="${key}" aria-label="منشور جديد يوم ${d}">+</button>
+    </div>`;
+  }
+  const undated = posts.filter((p) => !p.date);
+  $('ctView').innerHTML = `
+    <div class="ct-cal-head">
+      <button type="button" class="btn btn-ghost-dark" id="ctPrev" aria-label="الشهر السابق">→</button>
+      <h2>${MONTHS[m - 1]} <span dir="ltr">${y}</span></h2>
+      <button type="button" class="btn btn-ghost-dark" id="ctNext" aria-label="الشهر التالي">←</button>
+    </div>
+    <div class="ct-cal-scroll"><div class="ct-cal">${DAYS.map((d) => `<div class="ct-dow">${d}</div>`).join('')}${cells}</div></div>
+    ${undated.length ? `<h3 class="ct-sub">بدون تاريخ</h3><div class="ct-grid">${undated.map(card).join('')}</div>` : ''}`;
+  const shift = (n) => { const d = new Date(Date.UTC(y, m - 1 + n, 1)); state.month = d.toISOString().slice(0, 7); renderCalendar(); };
+  $('ctPrev').onclick = () => shift(-1);
+  $('ctNext').onclick = () => shift(1);
+  bindOpen($('ctView'));
+}
+
+function card(p) {
+  const cover = (p.media || [])[0];
+  const st = postStatus(p);
+  return `<button type="button" class="ct-post" data-open="${p.id}">
+    <span class="ct-cover">${cover ? `<img src="${thumb(cover)}" alt="" loading="lazy">${isVideo(cover) ? '<i class="ct-play">▶</i>' : ''}` : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
+      ${(p.media || []).length > 1 ? `<i class="ct-count" dir="ltr">1/${p.media.length}</i>` : ''}</span>
+    <span class="ct-post-body">
+      <span class="pill ct-st st-${st}">${STATUS[st]}</span>
+      <b>${esc(p.title)}</b>
+      <span class="muted">${esc(fmtAt(p.date))} · ${esc(KINDS[p.kind] || '')}</span>
+      <span class="ct-pfs">${pfBadges(p)}</span>
+    </span>
+  </button>`;
+}
+
+function renderList() {
+  const posts = filtered().sort(byDate);
+  $('ctView').innerHTML = posts.length ? `<div class="ct-grid">${posts.map(card).join('')}</div>` : '<p class="empty">لا توجد منشورات بهذه الحالة.</p>';
+  bindOpen($('ctView'));
+}
+
+function bindOpen(root) {
+  root.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => openEditor(b.dataset.open)));
+  root.querySelectorAll('[data-new]').forEach((b) => b.addEventListener('click', () => newPost(b.dataset.new + 'T20:00')));
+}
+
+async function newPost(date = '') {
+  try {
+    const d = await act('create', { title: 'منشور جديد', date, platforms: ['instagram', 'facebook'] });
+    absorb(d); state.posts.some((p) => p.id === d.post.id) || state.posts.push(d.post);
+    render(); openEditor(d.post.id, true);
+  } catch (e) { toast(errText(e), true); }
+}
+
+// ---------- editor ----------
+let capTab = 'all';
+
+function openEditor(id, fresh = false) {
+  const p = state.posts.find((x) => x.id === id);
+  if (!p) return;
+  state.open = id; state.dirty = false; capTab = 'all';
+  if (location.hash !== '#content/' + id) history.replaceState(null, '', '#content/' + id);
+  drawEditor(p);
+  const dlg = $('ctDialog');
+  if (!dlg.open) dlg.showModal();
+  if (fresh) setTimeout(() => { const t = $('ceTitle'); t.focus(); t.select(); }, 30);
+  // pick up files added straight into the post's Drive folder
+  if (p.folderId) call(`${API}?action=files&id=${encodeURIComponent(id)}`).then((d) => { absorb(d); if (state.open === id) drawMedia(); render(); }).catch(() => {});
+}
+
+function current() { return state.posts.find((x) => x.id === state.open); }
+
+/** Reads the form into a patch (unsaved edits live in the form until «حفظ»). */
+function formPatch() {
+  const captions = { ...(current().captions || {}) };
+  captions[capTab] = $('ceCaption').value;
+  return {
+    title: $('ceTitle').value,
+    kind: $('ceKind').value,
+    date: $('ceDate').value,
+    platforms: PLATFORM_IDS.filter((pf) => $('cePf_' + pf).checked),
+    captions,
+    notes: $('ceNotes').value,
+  };
+}
+
+function drawEditor(p) {
+  const f = $('ctForm');
+  const st = postStatus(p);
+  f.innerHTML = `
+    <div class="ct-dlg-head">
+      <div><span class="pill ct-st st-${st}">${STATUS[st]}</span> <span class="muted">${esc(fmtAt(p.date))}</span></div>
+      <button type="button" class="ct-x" id="ceClose" aria-label="إغلاق">✕</button>
+    </div>
+    <label class="ct-field"><span id="ctDlgTitle">العنوان</span><input id="ceTitle" maxlength="200" value="${esc(p.title)}" required></label>
+    <div class="ct-row">
+      <label class="ct-field"><span>النوع</span><select id="ceKind">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}"${p.kind === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label class="ct-field"><span>الموعد المخطط (توقيت الجزائر)</span><input id="ceDate" type="datetime-local" value="${esc(p.date || '')}"></label>
+    </div>
+    <fieldset class="ct-field ct-pfpick"><legend>المنصات</legend>
+      ${PLATFORM_IDS.map((pf) => `<label class="ct-check"><input type="checkbox" id="cePf_${pf}"${(p.platforms || []).includes(pf) ? ' checked' : ''}> ${PLATFORMS[pf].name}</label>`).join('')}
+    </fieldset>
+
+    <section class="ct-sec"><div class="ct-sec-head"><h3>الصور والفيديو</h3>
+      <label class="btn btn-ghost-dark ct-upload">رفع ملفات<input type="file" id="ceFiles" accept="image/*,video/*" multiple hidden></label></div>
+      <div id="ceMedia"></div>
+      <div id="ceUploads"></div>
+      ${p.folderUrl ? `<p class="muted">الملفات في <a href="${esc(p.folderUrl)}" target="_blank" rel="noopener">مجلد المنشور على Drive ↗</a>. أي ملف تضيفه هناك يظهر هنا.</p>` : ''}
+    </section>
+
+    <section class="ct-sec"><div class="ct-sec-head"><h3>النص</h3><button type="button" class="link-btn" id="ceCopy">نسخ النص</button></div>
+      <div class="ct-captabs" role="tablist">
+        <button type="button" role="tab" data-cap="all" aria-selected="true">النص العام</button>
+        ${PLATFORM_IDS.map((pf) => `<button type="button" role="tab" data-cap="${pf}" aria-selected="false">${PLATFORMS[pf].name}${(p.captions?.[pf] || '').trim() ? ' •' : ''}</button>`).join('')}
+      </div>
+      <textarea id="ceCaption" rows="8"></textarea>
+      <div class="ct-capfoot"><span class="muted" id="ceCapHint"></span><span class="ct-counter" id="ceCount" dir="ltr"></span></div>
+    </section>
+
+    <label class="ct-field"><span>ملاحظات داخلية</span><textarea id="ceNotes" rows="2" placeholder="فكرة التصميم، مراجع، ما يجب تذكّره">${esc(p.notes || '')}</textarea></label>
+
+    <div class="ct-save"><button type="button" class="btn btn-dark" id="ceSave">حفظ المسودة</button><span class="muted" id="ceSaved" role="status"></span></div>
+
+    <section class="ct-sec ct-sched" id="ceSched"></section>
+
+    <div class="ct-dlg-foot"><button type="button" class="link-btn ct-danger" id="ceDelete">حذف المنشور</button></div>`;
+
+  drawCaption(p);
+  drawMedia();
+  drawSchedule(p);
+  const mark = () => { state.dirty = true; $('ceSaved').textContent = 'تعديلات غير محفوظة'; };
+  f.querySelectorAll('input, select, textarea').forEach((el) => el.addEventListener('input', mark));
+  f.querySelectorAll('[data-cap]').forEach((b) => b.addEventListener('click', () => {
+    const p2 = current(); p2.captions = { ...(p2.captions || {}), [capTab]: $('ceCaption').value };
+    capTab = b.dataset.cap; drawCaption(p2);
+  }));
+  $('ceCaption').addEventListener('input', countCaption);
+  $('ceCopy').onclick = () => copy(capTab === 'all' ? $('ceCaption').value : ($('ceCaption').value.trim() || current().captions?.all || ''));
+  $('ceSave').onclick = () => save();
+  $('ceClose').onclick = close;
+  $('ceFiles').onchange = (e) => upload([...e.target.files]);
+  $('ceDelete').onclick = (e) => {
+    if (e.target.dataset.armed) return remove();
+    e.target.dataset.armed = '1'; e.target.textContent = 'اضغط مرة أخرى لتأكيد الحذف (والملفات على Drive)';
+    setTimeout(() => { if (e.target.isConnected) { delete e.target.dataset.armed; e.target.textContent = 'حذف المنشور'; } }, 4000);
+  };
+}
+
+function drawCaption(p) {
+  document.querySelectorAll('[data-cap]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.cap === capTab)));
+  const ta = $('ceCaption');
+  ta.value = p.captions?.[capTab] || '';
+  ta.placeholder = capTab === 'all' ? 'النص الذي يُنشر على كل المنصات…' : `اتركه فارغًا ليستخدم النص العام، أو اكتب نصًا خاصًا بـ ${PLATFORMS[capTab].name}.`;
+  $('ceCapHint').textContent = capTab === 'all' ? 'يُستخدم على كل منصة ليس لها نص خاص.' : (ta.value.trim() ? `نص خاص بـ ${PLATFORMS[capTab].name}.` : `يستخدم النص العام حاليًا.`);
+  countCaption();
+}
+
+function countCaption() {
+  const n = [...$('ceCaption').value].length;
+  const limits = capTab === 'all' ? Math.min(...current().platforms.map((pf) => PLATFORMS[pf].limit).concat([63206])) : PLATFORMS[capTab].limit;
+  const c = $('ceCount');
+  c.textContent = `${n.toLocaleString('en-US')} / ${limits.toLocaleString('en-US')}`;
+  c.classList.toggle('over', n > limits);
+}
+
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); toast('نُسخ النص.'); } catch { toast('تعذّر النسخ. حدّد النص وانسخه يدويًا.', true); }
+}
+
+async function save(quiet = false) {
+  const p = current();
+  try {
+    const d = await act('update', { id: p.id, ...formPatch() });
+    absorb(d); state.dirty = false;
+    render();
+    if (!quiet) drawEditor(current());
+    if ($('ceSaved')) $('ceSaved').textContent = 'تم الحفظ' + (Object.keys(d.post.schedule || {}).length ? '، وحُدّثت أحداث التقويم.' : '.');
+    return true;
+  } catch (e) { toast(errText(e), true); return false; }
+}
+
+function close() {
+  if (state.dirty && !$('ceSave').dataset.warned) {
+    $('ceSave').dataset.warned = '1';
+    $('ceSaved').textContent = 'لديك تعديلات غير محفوظة. اضغط ✕ مرة أخرى للإغلاق بدون حفظ.';
+    return;
+  }
+  state.open = null; state.dirty = false;
+  $('ctDialog').close();
+  history.replaceState(null, '', '#content');
+}
+$('ctDialog').addEventListener('cancel', (e) => { e.preventDefault(); close(); });
+
+async function remove() {
+  try { absorb(await act('delete', { id: state.open })); state.dirty = false; close(); render(); toast('حُذف المنشور.'); }
+  catch (e) { toast(errText(e), true); }
+}
+
+// ---------- media ----------
+function drawMedia() {
+  const p = current(); if (!p || !$('ceMedia')) return;
+  const media = p.media || [];
+  $('ceMedia').innerHTML = media.length ? `<ol class="ct-media">${media.map((m, i) => `
+    <li>
+      <a class="ct-mthumb" href="https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view" target="_blank" rel="noopener" title="${esc(m.name)}">
+        <img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">${isVideo(m) ? '<i class="ct-play">▶</i>' : ''}<i class="ct-idx" dir="ltr">${i + 1}</i></a>
+      <span class="ct-mtools">
+        <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="تقديم">→</button>
+        <button type="button" data-mv="${i}" data-d="1" ${i === media.length - 1 ? 'disabled' : ''} aria-label="تأخير">←</button>
+        <a href="https://drive.google.com/uc?id=${encodeURIComponent(m.id)}&export=download" aria-label="تنزيل">⤓</a>
+        <button type="button" data-rm="${m.id}" aria-label="حذف">✕</button>
+      </span>
+    </li>`).join('')}</ol>` : '<p class="muted">لا توجد ملفات بعد. للكاروسيل ارفع عدة صور بالترتيب.</p>';
+  $('ceMedia').querySelectorAll('[data-mv]').forEach((b) => b.addEventListener('click', async () => {
+    const i = Number(b.dataset.mv), j = i + Number(b.dataset.d);
+    const order = media.map((m) => m.id); [order[i], order[j]] = [order[j], order[i]];
+    try { absorb(await act('update', { id: p.id, media: order })); drawMedia(); render(); } catch (e) { toast(errText(e), true); }
+  }));
+  $('ceMedia').querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', async () => {
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'تأكيد'; b.classList.add('armed'); return; }
+    try { absorb(await act('detach', { id: p.id, fileId: b.dataset.rm, trash: true })); drawMedia(); render(); toast('حُذف الملف (في سلة Drive).'); } catch (e) { toast(errText(e), true); }
+  }));
+}
+
+async function upload(files) {
+  const p = current();
+  if (state.dirty) await save(true);
+  for (const file of files) {
+    const row = document.createElement('div');
+    row.className = 'ct-up';
+    row.innerHTML = `<span>${esc(file.name)}</span><progress max="100" value="0"></progress>`;
+    $('ceUploads').appendChild(row);
+    try {
+      const d = await act('upload', { id: p.id, name: file.name, mimeType: file.type || 'application/octet-stream', size: file.size });
+      absorb(d);
+      const uploaded = await new Promise((resolve, reject) => {
+        const x = new XMLHttpRequest();
+        x.open('PUT', d.uploadUrl);
+        x.upload.onprogress = (e) => { if (e.lengthComputable) row.querySelector('progress').value = (e.loaded / e.total) * 100; };
+        x.onload = () => (x.status < 300 ? resolve(JSON.parse(x.responseText || '{}')) : reject(new Error('upload ' + x.status)));
+        x.onerror = () => reject(new Error('network'));
+        x.send(file);
+      });
+      absorb(await act('attach', { id: p.id, file: { id: uploaded.id } }));
+      row.remove();
+    } catch (e) {
+      row.classList.add('bad'); row.querySelector('progress').remove();
+      row.insertAdjacentHTML('beforeend', `<span>${esc(e.code ? errText(e) : 'تعذّر الرفع.')}</span>`);
+    }
+    drawMedia(); render();
+  }
+  if (state.open === p.id) { const cur = current(); $('ceKind').value = cur.kind; drawSchedule(cur); }
+  $('ceFiles').value = '';
+}
+
+// ---------- scheduling (approval) ----------
+function drawSchedule(p) {
+  const box = $('ceSched'); if (!box) return;
+  const pfs = p.platforms || [];
+  const def = p.date || `${todayAt()}T20:00`;
+  box.innerHTML = `<div class="ct-sec-head"><h3>الموافقة والجدولة</h3></div>
+    <p class="muted">الجدولة هي موافقتك: تضيف حدثًا في تقويم «Nawa · Content» مع تذكير قبل ساعة. يُحفظ أي تعديل غير محفوظ أولًا.</p>
+    ${pfs.length ? `<div class="ct-all">
+      <input type="datetime-local" id="ceAllAt" value="${esc(def)}" aria-label="موعد كل المنصات">
+      <button type="button" class="btn btn-lime" id="ceAll">جدولة على كل المنصات (${pfs.length})</button>
+    </div>
+    <ul class="ct-pfrows">${pfs.map((pf) => {
+      const s = p.schedule?.[pf]; const st = platformStatus(p, pf);
+      return `<li class="ct-pfrow">
+        <span class="ct-pfname"><b>${PLATFORMS[pf].name}</b><span class="pill ct-st st-${st}">${STATUS[st]}${s?.at ? ` · <span dir="ltr">${esc(s.at.replace('T', ' '))}</span>` : ''}</span></span>
+        <input type="datetime-local" data-at="${pf}" value="${esc(s?.at || def)}" aria-label="موعد ${PLATFORMS[pf].name}">
+        <span class="ct-pfbtns">
+          <button type="button" class="btn btn-ghost-dark" data-one="${pf}">${s ? 'تحديث الموعد' : 'جدولة هنا فقط'}</button>
+          ${s ? `<button type="button" class="btn btn-ghost-dark" data-pub="${pf}" data-v="${st !== 'published'}">${st === 'published' ? 'إلغاء «منشور»' : 'تم النشر ✓'}</button>
+                 <button type="button" class="link-btn ct-danger" data-un="${pf}">إلغاء الجدولة</button>` : ''}
+          <button type="button" class="link-btn" data-copy="${pf}">نسخ نص ${PLATFORMS[pf].name}</button>
+        </span>
+      </li>`;
+    }).join('')}</ul>` : '<p class="muted">اختر منصة واحدة على الأقل في الأعلى ثم احفظ.</p>'}`;
+
+  const run = async (fn, okMsg) => {
+    box.querySelectorAll('button').forEach((b) => (b.disabled = true));
+    try {
+      if (state.dirty && !(await save(true))) return;
+      absorb(await fn()); render(); drawEditor(current()); toast(okMsg);
+    } catch (e) { toast(errText(e), true); drawSchedule(current()); }
+  };
+  if ($('ceAll')) $('ceAll').onclick = () => run(() => act('schedule', { id: p.id, platforms: current().platforms, at: $('ceAllAt').value }), 'جُدول على كل المنصات وأُضيف إلى التقويم.');
+  box.querySelectorAll('[data-one]').forEach((b) => b.addEventListener('click', () => {
+    const pf = b.dataset.one;
+    run(() => act('schedule', { id: p.id, platforms: [pf], at: box.querySelector(`[data-at="${pf}"]`).value }), `جُدول على ${PLATFORMS[pf].name}.`);
+  }));
+  box.querySelectorAll('[data-un]').forEach((b) => b.addEventListener('click', () => run(() => act('unschedule', { id: p.id, platforms: [b.dataset.un] }), 'أُلغيت الجدولة وحُذف الحدث من التقويم.')));
+  box.querySelectorAll('[data-pub]').forEach((b) => b.addEventListener('click', () => run(() => act('published', { id: p.id, platform: b.dataset.pub, value: b.dataset.v === 'true' }), b.dataset.v === 'true' ? 'سُجّل كمنشور.' : 'أُعيد إلى «مجدول».')));
+  box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(captionFor({ ...current(), captions: formPatch().captions }, b.dataset.copy))));
+}
+
+// ---------- boot ----------
+document.querySelectorAll('.ct-views button').forEach((b) => b.addEventListener('click', () => {
+  state.view = b.dataset.view;
+  try { localStorage.setItem('nawa.ct.view', state.view); } catch {}
+  render();
+}));
+$('ctNew').addEventListener('click', () => newPost(''));
+window.addEventListener('nawa:content', () => { if (!state.loaded) load(); else { render(); routeHash(); } });
+window.addEventListener('hashchange', () => { if (state.loaded && location.hash.startsWith('#content')) routeHash(); });

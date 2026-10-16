@@ -15,7 +15,7 @@ const LANG_NAME = { ar: 'العربية', en: 'English', fr: 'Français' };
 
 let briefs = [];
 let filter = 'all';
-let selected = location.hash.slice(1) || null;
+let selected = (!location.hash.startsWith('#content') && location.hash.slice(1)) || null;
 
 async function api(path, opts = {}) {
   const r = await fetch(path, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -29,6 +29,7 @@ async function api(path, opts = {}) {
 
 function showLogin(msg = '') {
   $('login').hidden = false; $('dash').hidden = true; $('logout').hidden = true; $('setup').hidden = true;
+  $('sections').hidden = true; $('content').hidden = true;
   $('loginMsg').textContent = msg;
   setTimeout(() => $('pw').focus(), 50);
 }
@@ -58,22 +59,43 @@ async function load() {
   render();
 }
 
+// ---------- sections: requests | content ----------
+
+let setupNeeded = false;
+let section = 'requests';
+
+function showSection(name) {
+  section = name;
+  $('sections').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.section === name)));
+  $('dash').hidden = name !== 'requests' || setupNeeded;
+  $('setup').hidden = name !== 'requests' || !setupNeeded;
+  $('content').hidden = name !== 'content';
+  document.title = (name === 'content' ? 'المحتوى' : 'الطلبات') + ' | نواة';
+  if (name === 'content') window.dispatchEvent(new CustomEvent('nawa:content'));
+  else if (location.hash.startsWith('#content')) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
+}
+$('sections').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+  if (b.dataset.section === 'content' && !location.hash.startsWith('#content')) history.replaceState(null, '', '#content');
+  showSection(b.dataset.section);
+}));
+window.addEventListener('hashchange', () => { if (!$('sections').hidden && location.hash.startsWith('#content') && section !== 'content') showSection('content'); });
+
 async function boot() {
+  setupNeeded = false;
   try {
     await load();
-    $('login').hidden = true; $('setup').hidden = true; $('dash').hidden = false; $('logout').hidden = false;
-    loadTelegram();
   } catch (e) {
-    if (e.message === 'service_key_missing') {
-      $('login').hidden = true; $('dash').hidden = true; $('logout').hidden = false; $('setup').hidden = false;
-      $('setup').innerHTML = `<h1>خطوة أخيرة</h1><p>تسجيل الدخول يعمل، لكن قراءة الطلبات تحتاج مفتاح الخدمة من Supabase.</p>
-        <ol><li>افتح مشروع <b>nawa</b> في Supabase ← Project Settings ← API Keys، وانسخ مفتاح <b dir="ltr">service_role</b> (أو secret).</li>
-        <li>في Vercel ← nawa-studio ← Settings ← Environment Variables أضف <code dir="ltr">SUPABASE_SERVICE_ROLE_KEY</code> بهذه القيمة.</li>
-        <li>أعد النشر، ثم حدّث هذه الصفحة.</li></ol>`;
-    } else if (e.message !== 'signed_out') {
-      showLogin('تعذّر تحميل الطلبات. حاول مرة أخرى.');
-    }
+    if (e.message === 'signed_out') return;
+    if (e.message !== 'service_key_missing') return showLogin('تعذّر تحميل الطلبات. حاول مرة أخرى.');
+    setupNeeded = true;
+    $('setup').innerHTML = `<h1>خطوة أخيرة</h1><p>تسجيل الدخول يعمل، لكن قراءة الطلبات تحتاج مفتاح الخدمة من Supabase. قسم «المحتوى» يعمل بدونه.</p>
+      <ol><li>افتح مشروع <b>nawa</b> في Supabase ← Project Settings ← API Keys، وانسخ مفتاح <b dir="ltr">service_role</b> (أو secret).</li>
+      <li>في Vercel ← nawa-studio ← Settings ← Environment Variables أضف <code dir="ltr">SUPABASE_SERVICE_ROLE_KEY</code> بهذه القيمة.</li>
+      <li>أعد النشر، ثم حدّث هذه الصفحة.</li></ol>`;
   }
+  $('login').hidden = true; $('logout').hidden = false; $('sections').hidden = false;
+  showSection(location.hash.startsWith('#content') ? 'content' : 'requests');
+  if (!setupNeeded) loadTelegram();
 }
 
 // ---------- render ----------
@@ -218,4 +240,5 @@ async function loadTelegram() {
 
 $('refresh').addEventListener('click', () => load().catch(() => {}));
 setInterval(() => { if (!$('dash').hidden && !document.hidden) load().catch(() => {}); }, 60000);
+window.addEventListener('nawa:signed-out', () => showLogin());
 boot();

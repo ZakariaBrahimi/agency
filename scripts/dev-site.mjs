@@ -13,7 +13,8 @@ http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   let p = decodeURIComponent(url.pathname);
   if (p.startsWith('/api/')) {
-    const file = path.join(ROOT, p + '.js');
+    let file = path.join(ROOT, p + '.js');
+    if (!fs.existsSync(file)) file = path.join(ROOT, p, 'index.js'); // like Vercel: api/x/index.js serves /api/x
     if (!file.startsWith(ROOT) || !fs.existsSync(file)) { res.statusCode = 404; return res.end('{}'); }
     const mod = await import(pathToFileURL(file).href + '?t=' + Date.now());
     return mod.default(req, res);

@@ -48,6 +48,34 @@ server-side validation of every field.
 **Database security:** the website's public key can only insert new briefs. Reading and updating
 requires the service key, which is used only by the `/api/admin/*` functions after you sign in.
 
+## Content dashboard (`/admin` → «المحتوى»)
+
+Plan, draft, edit and approve social posts. Everything is stored in the Nawa Google account:
+
+```
+api/_lib/google.js            Google sign-in, Drive and Calendar calls (no SDK)
+api/admin/google/index.js     connect / status / disconnect
+api/admin/google/callback.js  Google sends you back here after sign-in
+api/admin/content.js          posts: list, create, edit, upload, schedule, mark published
+assets/js/content-schema.js   platforms, caption limits, the starter plan (16 drafts)
+assets/js/admin-content.js    the calendar, list and editor
+```
+
+- **Drive:** a «Nawa Content» folder holds `nawa-content.json` (every post and its captions) and one
+  folder per post with its images and videos. Files you add to a post's folder directly in Drive show
+  up in the dashboard too.
+- **Captions:** one shared text, plus an optional text per platform (Instagram, Facebook, TikTok, LinkedIn).
+- **Approval = scheduling.** «جدولة على كل المنصات» or «جدولة هنا فقط» per platform, each with its own
+  time. Each scheduled time becomes an event in the separate «Nawa · Content» Google Calendar, with
+  reminders 1 hour and 5 minutes before. Editing, cancelling or deleting a post updates its events.
+- **Publishing** is still done by you (or the publisher in `publisher/`); press «تم النشر ✓» afterwards
+  so the dashboard and calendar show it as published.
+- **Sign-in:** tap «ربط حساب Google» once per device. The Google token is kept encrypted in a secure
+  cookie; nothing is stored on a server.
+- Google Cloud setup: OAuth client of type *Web application*, redirect URI
+  `https://nawa-studio-six.vercel.app/api/admin/google/callback`, Drive and Calendar APIs enabled, app
+  published (In production). Unverified is fine for this private tool.
+
 ### Settings (Vercel → nawa-studio → Settings → Environment Variables)
 
 | Variable | Set by | What it is |
@@ -59,10 +87,13 @@ requires the service key, which is used only by the `/api/admin/*` functions aft
 | `SUPABASE_SERVICE_ROLE_KEY` | **you** | Supabase → nawa → Project Settings → API Keys → `service_role` / secret key. Lets `/admin` read briefs |
 | `TELEGRAM_BOT_TOKEN` | **you** | From @BotFather (`/newbot`) |
 | `TELEGRAM_CHAT_ID` | **you** | Your chat with the bot. `/admin` → "إشعارات تيليغرام" shows it after you message the bot |
+| `GOOGLE_CLIENT_ID` | **you** | Google Cloud → Google Auth Platform → Clients (content dashboard) |
+| `GOOGLE_CLIENT_SECRET` | **you** | Same client (starts with `GOCSPX-`) |
 
-Mark the last four as **Sensitive**. Redeploy after changing any of them (Deployments → ⋯ → Redeploy).
+Mark the ones you set as **Sensitive**. Redeploy after changing any of them (Deployments → ⋯ → Redeploy).
 
 To test locally with a fake database: `node scripts/dev-site.mjs` from the repo root, with the variables above exported.
+`GOOGLE_MOCK_BASE` (tests only) points every Google call at a fake server.
 
 ## Languages
 
