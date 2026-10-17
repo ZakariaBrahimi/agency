@@ -223,7 +223,24 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 /* ---------- «مدار» section (admin-madar.js) ---------- */
 .mdx { --ed: "Noto Naskh Arabic", "IBM Plex Sans Arabic", serif; --ui: "IBM Plex Sans Arabic", Tahoma, sans-serif; --ts: #ECEAFF; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.md-new select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 22px; }
+.md-new { position: relative; }
+.md-new-caret { width: 8px; height: 8px; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform .15s; }
+#mdNew[aria-expanded="true"] .md-new-caret { transform: translateY(1px) rotate(-135deg); }
+.md-new-menu { position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 30; width: min(320px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 6px; box-shadow: 0 24px 50px -20px rgba(11,18,32,.35); display: grid; gap: 2px; }
+.md-new-menu[hidden] { display: none; }
+.md-new-menu button { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; text-align: start; padding: 10px 12px; border: 0; border-radius: 12px; background: none; font: inherit; color: var(--text); cursor: pointer; }
+.md-new-menu button:hover, .md-new-menu button:focus-visible { background: var(--paper); outline: none; }
+.md-new-menu button:focus-visible { box-shadow: inset 0 0 0 2px var(--indigo); }
+.md-new-menu b { display: block; font-size: 15.5px; }
+.md-new-menu small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.md-new-menu .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; position: relative; }
+.ic-article { background: #ECEAFF; }
+.ic-article::before { content: ""; width: 16px; height: 18px; border-radius: 3px; border: 2px solid #5B4BFF; box-shadow: inset 0 4px 0 -2px #fff, inset 0 8px 0 -6px #5B4BFF; }
+.ic-tip { background: #EEF9C9; }
+.ic-tip::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: #C6F432; box-shadow: 0 0 0 4px rgba(198,244,50,.35); }
+.ic-episode { background: #5B4BFF; }
+.ic-episode::before { content: ""; width: 18px; height: 14px; background: linear-gradient(90deg, #fff 0 3px, transparent 3px 5px, #fff 5px 8px, transparent 8px 10px, #fff 10px 13px, transparent 13px 15px, #fff 15px 18px); -webkit-mask: linear-gradient(#000 0 0) center / 100% 100% no-repeat; clip-path: polygon(0 35%, 17% 35%, 17% 0, 44% 0, 44% 20%, 72% 20%, 72% 50%, 100% 50%, 100% 100%, 0 100%); }
+.ic-episode::after { content: ""; position: absolute; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: #C6F432; }
 .md-kinds { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); margin-bottom: 14px; }
 .md-kinds button { border: 0; background: none; font: 600 14px var(--font); padding: 6px 14px; border-radius: 999px; cursor: pointer; color: var(--muted); }
 .md-kinds button[aria-pressed="true"] { background: var(--ink); color: #fff; }

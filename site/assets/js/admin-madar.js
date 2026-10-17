@@ -1,6 +1,6 @@
 // /admin → «مدار»: write and publish articles, tips and podcast episodes; read newsletter sign-ups and
 // "write with us" pitches. Data lives in Supabase (madar_* tables) through /api/admin/madar.
-import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261017c';
+import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261017d';
 
 const $ = (id) => document.getElementById(id);
 const API = '/api/admin/madar';
@@ -249,7 +249,24 @@ async function save(status) {
 }
 
 // ---------- wiring ----------
-$('mdNew').addEventListener('change', (e) => { const k = e.target.value; e.target.value = ''; if (k) openEditor(blank(k)); });
+// «+ جديد»: a menu in Nawa's style (not the browser's dropdown), usable by mouse and keyboard.
+const newBtn = $('mdNew'); const newMenu = $('mdNewMenu');
+const items = () => [...newMenu.querySelectorAll('[role=menuitem]')];
+function toggleNew(open, focusFirst) {
+  newMenu.hidden = !open; newBtn.setAttribute('aria-expanded', String(open));
+  if (open && focusFirst) items()[0].focus();
+}
+newBtn.addEventListener('click', () => toggleNew(newMenu.hidden, false));
+newBtn.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleNew(true, true); } });
+newMenu.addEventListener('click', (e) => { const it = e.target.closest('[data-kind]'); if (!it) return; toggleNew(false); openEditor(blank(it.dataset.kind)); });
+newMenu.addEventListener('keydown', (e) => {
+  const list = items(); const i = list.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); list[(i + 1) % list.length].focus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); list[(i - 1 + list.length) % list.length].focus(); }
+  else if (e.key === 'Tab') toggleNew(false);
+});
+document.addEventListener('click', (e) => { if (!newMenu.hidden && !e.target.closest('.md-new')) toggleNew(false); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !newMenu.hidden) { toggleNew(false); newBtn.focus(); } });
 $('mdRefresh').addEventListener('click', load);
 window.addEventListener('beforeunload', (e) => { if (state.edit && state.dirty) e.preventDefault(); });
 window.addEventListener('nawa:madar', () => { if (!state.loaded) load(); else render(); });
