@@ -31,7 +31,7 @@ const fs = require('fs'); const os = require('os'); const path = require('path')
     const filter = [...lines,
       `${R.VOICE.map((_, i) => `[v${i}]`).join('')}amix=inputs=${R.VOICE.length}:normalize=0,volume=1.6,apad=whole_dur=${R.DURATION},asplit[vo][key]`,
       '[0:a][key]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=350[bed]',
-      '[bed][vo]amix=inputs=2:normalize=0,alimiter=limit=0.89[out]'].join(';');
+      '[bed][vo]amix=inputs=2:normalize=0,alimiter=limit=0.79[out]'].join(';');
     execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', sound, ...files.flatMap((f) => ['-i', f]), '-filter_complex', filter, '-map', '[out]', '-t', String(R.DURATION), path.join(dir, 'mix.wav')], { stdio: 'inherit' });
     sound = path.join(dir, 'mix.wav');
   }
