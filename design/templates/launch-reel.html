@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="ar"><head><meta charset="utf-8"><title>نواة · Launch reel</title>
+<style>
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Bricolage"; font-weight: 800; src: url("fonts/BricolageGrotesque-800-latin.woff2"); }
+@font-face { font-family: "JB Mono"; font-weight: 600; src: url("fonts/JetBrainsMono-600-latin.woff2"); }
+html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="reel" width="1080" height="1920" aria-label="نواة launch reel"></canvas>
+<script>
+(() => {
+  // «نواة» launch reel: problem → solution → how we work → plan → ways to work → founder + CTA.
+  // A vertical explainer in the style of course-promo reels: paper and ink scenes alternate, one lime
+  // highlight per headline, interface pieces tell the story. render(t) paints any instant, so it
+  // plays live and renders frame-exact video; CUES drive the sound effects (scripts/showreel-sound.py).
+  const W = 1080, H = 1920, CX = W / 2;
+  const C = { ink: '#0B1220', ink2: '#141C30', line: '#273250', indigo: '#5B4BFF', lime: '#C6F432', paper: '#F6F5F2', card: '#FFFFFF', muted: '#8B93A8', red: '#E5484D', mutedDark: '#5E6578' };
+  const AR = '"Plex Ar", Tahoma, sans-serif', LAT = '"Bricolage", sans-serif', MONO = '"JB Mono", monospace';
+  const BPM = 120, BEAT = 60 / BPM;
+  const cv = document.getElementById('reel'); const ctx = cv.getContext('2d');
+  const photo = new Image(); photo.src = 'assets/founder.jpg';
+
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const E = {
+    out: (k) => 1 - Math.pow(1 - k, 3), in: (k) => k * k * k,
+    io: (k) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+    back: (k) => { const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); },
+    spring: (k) => (k >= 1 ? 1 : 1 - Math.exp(-6 * k) * Math.cos(9 * k)),
+  };
+
+  // ---------- drawing helpers ----------
+  function font(size, family, weight) { return `${weight} ${size}px ${family}`; }
+  function txt(s, x, y, o = {}) {
+    const { size = 60, family = AR, weight = 700, color = C.ink, align = 'center', dir = 'rtl', alpha = 1, ls = 0, base = 'middle' } = o;
+    ctx.save(); ctx.globalAlpha *= alpha; ctx.font = font(size, family, weight); ctx.fillStyle = color;
+    ctx.textAlign = align; ctx.textBaseline = base; ctx.direction = dir; ctx.letterSpacing = ls + 'px';
+    ctx.fillText(s, x, y); ctx.restore();
+  }
+  function measure(s, size, family = AR, weight = 700) { ctx.save(); ctx.font = font(size, family, weight); ctx.direction = 'rtl'; const w = ctx.measureText(s).width; ctx.restore(); return w; }
+  const mono = (s, x, y, o = {}) => txt(s, x, y, { family: MONO, weight: 600, size: 22, ls: 3, dir: 'ltr', color: C.muted, ...o });
+  function rr(x, y, w, h, r, fill, stroke, lw = 3) {
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+  }
+  function circle(x, y, r, fill, stroke, lw = 3) { ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); } }
+  function shadow(blur, y, a = .25) { ctx.shadowColor = `rgba(11,18,32,${a})`; ctx.shadowBlur = blur; ctx.shadowOffsetY = y; }
+  function noShadow() { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
+  function mark(x, y, size, tile = C.indigo) { // Nawa's ن
+    ctx.save(); ctx.translate(x - size / 2, y - size / 2); ctx.scale(size / 512, size / 512);
+    if (tile) rr(0, 0, 512, 512, 120, tile);
+    ctx.beginPath(); ctx.arc(256, 236, 110, Math.PI, 0, true); ctx.strokeStyle = '#fff'; ctx.lineWidth = 62; ctx.lineCap = 'round'; ctx.stroke();
+    circle(256, 148, 40, C.lime); ctx.restore();
+  }
+  function grid(dark) { // faint graph-paper grid, like the reference
+    ctx.save(); ctx.strokeStyle = dark ? 'rgba(255,255,255,.035)' : 'rgba(11,18,32,.045)'; ctx.lineWidth = 2;
+    for (let x = 0; x <= W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y <= H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.restore();
+  }
+  function bg(dark) {
+    if (dark) {
+      const g = ctx.createRadialGradient(CX, 700, 100, CX, 900, 1300); g.addColorStop(0, '#1A2340'); g.addColorStop(1, C.ink);
+      ctx.fillStyle = g;
+    } else ctx.fillStyle = C.paper;
+    ctx.fillRect(0, 0, W, H); grid(dark);
+  }
+
+  /**
+   * A centred RTL headline line made of parts, e.g. [{ s: 'كم فكرة مشروع' }, { s: 'ماتت في درجك؟', hl: true }].
+   * Parts reveal right-to-left (reading order); highlighted parts get a lime box that grows behind them.
+   */
+  function headline(parts, y, u, { size = 84, dark = false, at = 0, gap = .12 } = {}) {
+    const ws = parts.map((p) => measure(p.s, size)); const sp = size * .5;
+    const total = ws.reduce((a, b) => a + b, 0) + sp * (parts.length - 1);
+    let xr = CX + total / 2;
+    parts.forEach((p, i) => {
+      const k = E.out(seg(u, at + i * gap, at + i * gap + .35));
+      const w = ws[i];
+      if (k > 0) {
+        if (p.hl) {
+          const hk = E.out(seg(u, at + i * gap + .1, at + i * gap + .45));
+          rr(xr - w * hk - 18, y - size * .62, w * hk + 36, size * 1.24, 18, C.lime);
+        }
+        txt(p.s, xr, y + (1 - k) * 30, { size, align: 'right', alpha: k, color: p.hl ? C.ink : p.dim ? (dark ? 'rgba(255,255,255,.45)' : 'rgba(11,18,32,.38)') : dark ? '#fff' : C.ink });
+      }
+      xr -= w + sp;
+    });
+  }
+  function kicker(s, y, u, dark) { mono(s, CX, y, { alpha: E.out(seg(u, 0, .3)), color: dark ? C.lime : C.mutedDark, size: 22 }); }
+
+  // small line icons (24-unit grid), drawn centred at (x, y)
+  function icon(name, x, y, s, color) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(s / 24, s / 24); ctx.translate(-12, -12);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const P = (d) => ctx.stroke(new Path2D(d));
+    ({
+      bulb: () => { P('M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z'); },
+      code: () => { P('M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12'); },
+      star: () => { P('M12 3l2.6 5.6 6 .6-4.5 4 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.5-4 6-.6z'); },
+      layers: () => { P('M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5'); },
+      mega: () => { P('M3 10v4h3l7 4V6L6 10H3zM17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11'); },
+      chart: () => { P('M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6'); },
+      loop: () => { P('M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5'); },
+      phone: () => { P('M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2'); },
+      check: () => { ctx.lineWidth = 3; P('M5 12.5l4.5 4.5L19 7.5'); },
+      chat: () => { P('M4 5h16v11H9l-5 4V5z'); },
+    })[name]();
+    ctx.restore();
+  }
+
+  // ---------- scenes ----------
+  const SC = [];
+  const scene = (name, beats, dark, f, cues) => SC.push({ name, d: beats * BEAT, dark, f, cues: cues || [] });
+
+  // 1 · ideas that died in a drawer
+  const NOTES = [['تطبيق توصيل', -250, 760, -6], ['متجر إلكتروني', 120, 720, 5], ['منصة حجز', -170, 1010, 4], ['برنامج محاسبة', 210, 980, -4], ['تطبيق تعليمي', 10, 1240, -3]];
+  scene('ideas', 6, false, (u) => {
+    headline([{ s: 'كم فكرة مشروع' }], 330, u, { at: .05 });
+    headline([{ s: 'ماتت في درجك؟', hl: true }], 450, u, { at: .3 });
+    NOTES.forEach(([label, dx, y, rot], i) => {
+      const a = .5 + i * .14; const k = E.back(seg(u, a, a + .35)); if (k <= 0) return;
+      ctx.save(); ctx.translate(CX + dx, y - (1 - clamp(k)) * 160); ctx.rotate((rot * Math.PI) / 180); ctx.globalAlpha = clamp(k * 1.5);
+      shadow(24, 10, .18); rr(-160, -95, 320, 190, 10, '#FFFDF6'); noShadow();
+      rr(-50, -110, 100, 32, 6, 'rgba(198,244,50,.85)'); // tape
+      txt(label, 120, -20, { size: 40, align: 'right', color: C.ink });
+      ctx.fillStyle = 'rgba(11,18,32,.08)'; ctx.fillRect(-120, 30, 240, 6); ctx.fillRect(-120, 52, 160, 6);
+      const x = seg(u, 1.75 + i * .14, 1.95 + i * .14); // the red cross
+      if (x > 0) {
+        ctx.strokeStyle = C.red; ctx.lineWidth = 16; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-70, -60); ctx.lineTo(-70 + 140 * clamp(x * 2), -60 + 120 * clamp(x * 2)); ctx.stroke();
+        if (x > .5) { ctx.beginPath(); ctx.moveTo(70, -60); ctx.lineTo(70 - 140 * clamp(x * 2 - 1), -60 + 120 * clamp(x * 2 - 1)); ctx.stroke(); }
+      }
+      ctx.restore();
+    });
+  }, [[0, 'whoosh'], ...NOTES.map((_, i) => [.5 + i * .14, 'pop', i]), ...NOTES.map((_, i) => [1.8 + i * .14, 'hit'])]);
+
+  // 2 · months of building, zero users
+  scene('build', 6, true, (u) => {
+    headline([{ s: 'شهور من التطوير' }], 330, u, { dark: true, at: .05 });
+    headline([{ s: 'وفي الأخير' }, { s: 'ولا مستخدم', hl: true }], 450, u, { dark: true, at: .3 });
+    const k = E.out(seg(u, .35, .8)); if (k <= 0) return;
+    ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 60);
+    const x = 120, y = 640, w = 840, h = 560;
+    shadow(60, 30, .5); rr(x, y, w, h, 28, C.ink2, C.line, 2); noShadow();
+    [C.red, '#F2A516', '#1E9E6A'].forEach((c, i) => circle(x + 40 + i * 30, y + 38, 9, c));
+    mono('sprint_12 · backlog', x + w - 40, y + 38, { align: 'right', size: 20 });
+    // task bars filling month after month
+    const bars = [[C.indigo, .7], [C.lime, .55], ['#F2A516', .8], ['#D946A8', .45], [C.indigo, .9], ['#2F86D1', .6]];
+    bars.forEach(([c, len], i) => {
+      const bk = E.out(seg(u, .7 + i * .16, 1.3 + i * .16));
+      rr(x + 50, y + 100 + i * 62, (w - 100) * len * bk, 34, 8, c);
+    });
+    // months ticking
+    const months = Math.min(9, Math.floor(seg(u, .7, 2.6) * 9.99));
+    txt(`${months}`, x + w - 120, y + h - 70, { family: LAT, weight: 800, size: 64, dir: 'ltr', color: '#fff' });
+    txt('أشهر', x + w - 175, y + h - 66, { size: 32, align: 'right', color: C.muted });
+    // users stays at zero
+    const blink = Math.floor(u * 4) % 2 ? 1 : .55;
+    rr(x + 50, y + h - 110, 300, 76, 18, 'rgba(229,72,77,.14)', C.red, 2);
+    txt('USERS', x + 80, y + h - 72, { family: MONO, weight: 600, size: 22, dir: 'ltr', align: 'left', color: C.red, ls: 3 });
+    txt('0', x + 300, y + h - 70, { family: LAT, weight: 800, size: 48, dir: 'ltr', color: C.red, alpha: blink });
+    ctx.restore();
+    // clock
+    const ck = E.back(seg(u, .9, 1.25));
+    if (ck > 0) {
+      ctx.save(); ctx.translate(880, 640); ctx.scale(ck, ck);
+      circle(0, 0, 66, '#fff'); circle(0, 0, 66, null, C.ink, 6);
+      const a = u * 9; ctx.strokeStyle = C.ink; ctx.lineCap = 'round';
+      ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(a) * 44, -Math.cos(a) * 44); ctx.stroke();
+      ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(a / 12) * 28, -Math.cos(a / 12) * 28); ctx.stroke();
+      circle(0, 0, 8, C.red); ctx.restore();
+    }
+  }, [[0, 'swish'], [.35, 'whoosh'], ...[0, 1, 2, 3, 4, 5].map((i) => [.7 + i * .16, 'tick']), [.9, 'pop', 3], [2.2, 'pulse']]);
+
+  // 3 · «الحل؟»
+  scene('solution', 2, false, (u) => {
+    ctx.fillStyle = C.ink; ctx.fillRect(0, 0, W, H);
+    const r = E.io(seg(u, 0, .45)) * 1300;
+    circle(W + 100, H / 2, r, C.lime);
+    const k = E.back(seg(u, .25, .6));
+    if (k > 0) { ctx.save(); ctx.translate(CX, H / 2); ctx.scale(k, k); txt('الحل؟', 0, 0, { size: 190, color: C.ink }); ctx.restore(); }
+  }, [[0, 'riser'], [.3, 'impact']]);
+
+  // 4 · the Nawa badge drops in on a lanyard
+  scene('nawa', 6, false, (u) => {
+    const drop = E.spring(seg(u, 0, 1.1));
+    const swing = Math.sin(u * 5) * Math.exp(-u * 1.6) * .12;
+    const by = lerp(-500, 560, drop);
+    ctx.save(); ctx.translate(CX, 0); ctx.rotate(swing);
+    ctx.fillStyle = C.indigo; ctx.fillRect(-26, -40, 52, by - 120 + 40); // lanyard
+    rr(-46, by - 140, 92, 40, 10, '#C9CDD8'); // clip
+    shadow(50, 24, .35); rr(-230, by - 110, 460, 560, 36, C.ink); noShadow();
+    rr(-60, by - 82, 120, 16, 8, 'rgba(255,255,255,.12)'); // slot
+    txt('استوديو رقمي', 0, by + 0, { size: 34, color: C.lime });
+    mark(0, by + 150, 170);
+    txt('نواة', 0, by + 320, { size: 104, color: '#fff' });
+    mono('NAWA STUDIO · 2026', 0, by + 400, { size: 20, color: C.muted });
+    ctx.restore();
+    headline([{ s: 'من فكرة في راسك' }], 1290, u, { at: 1.0, size: 72 });
+    headline([{ s: 'لمنتج' }, { s: 'يستعمله الناس', hl: true }], 1395, u, { at: 1.2, size: 72 });
+    // idea → product
+    const ik = E.back(seg(u, 1.6, 1.9)), ak = seg(u, 1.85, 2.3), pk = E.back(seg(u, 2.2, 2.5));
+    if (ik > 0) { ctx.save(); ctx.translate(780, 1600); ctx.scale(ik, ik); ctx.rotate(.08); shadow(16, 8, .15); rr(-70, -70, 140, 140, 14, '#fff'); noShadow(); icon('bulb', 0, -10, 64, C.ink); txt('فكرة', 0, 46, { size: 26, color: C.mutedDark }); ctx.restore(); }
+    if (ak > 0) { ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.setLineDash([2, 14]); ctx.beginPath(); ctx.moveTo(680, 1600); ctx.quadraticCurveTo(540, 1520, lerp(680, 400, ak), lerp(1600, 1600, ak)); ctx.stroke(); ctx.restore(); }
+    if (pk > 0) { ctx.save(); ctx.translate(300, 1600); ctx.scale(pk, pk); ctx.rotate(-.06); shadow(20, 10, .2); rr(-80, -80, 160, 160, 22, C.lime); noShadow(); icon('phone', 0, -12, 70, C.ink); txt('منتج', 0, 52, { size: 28, color: C.ink }); ctx.restore(); }
+  }, [[0, 'whoosh'], [.55, 'bass'], [1.6, 'pop', 2], [2.2, 'ding']]);
+
+  // 5 · how we work, 6 steps
+  const STEPS = [['المنتج', 'نطوّر الموقع أو التطبيق', 'code'], ['الهوية', 'شعار وألوان وحضور', 'star'], ['التصاميم', 'محتوى السوشل ميديا', 'layers'], ['الإعلانات', 'نوصلك للناس الصح', 'mega'], ['النتائج', 'ندرس الأرقام', 'chart'], ['التطوير', 'نحسّن ونعيد الدورة', 'loop']];
+  scene('steps', 9, true, (u) => {
+    kicker('HOW WE WORK · 6 STEPS', 240, u, true);
+    headline([{ s: 'كيف' }, { s: 'نشتغل', hl: true }], 340, u, { dark: true, at: .05, size: 92 });
+    const x0 = 880, y0 = 560, gap = 190;
+    const lineK = seg(u, .4, .4 + STEPS.length * .42);
+    ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x0 - 2, y0, 4, gap * (STEPS.length - 1));
+    ctx.fillStyle = C.lime; ctx.fillRect(x0 - 2, y0, 4, gap * (STEPS.length - 1) * lineK);
+    STEPS.forEach(([t, sub, ic], i) => {
+      const a = .4 + i * .42; const k = E.out(seg(u, a, a + .35)); const y = y0 + i * gap;
+      const last = i === STEPS.length - 1; const done = u > a + .2;
+      circle(x0, y, 40, done ? (last ? C.lime : C.ink) : C.ink2, done ? C.lime : C.line, 4);
+      if (done) icon(last ? 'check' : ic, x0, y, 38, last ? C.ink : C.lime);
+      if (k <= 0) return;
+      ctx.save(); ctx.globalAlpha = k; ctx.translate((1 - k) * 60, 0);
+      rr(120, y - 62, 690, 124, 22, last && done ? 'rgba(198,244,50,.14)' : 'rgba(255,255,255,.05)', last && done ? C.lime : 'rgba(255,255,255,.1)', 2);
+      txt(t, 770, y - 16, { size: 46, align: 'right', color: '#fff' });
+      txt(sub, 770, y + 32, { size: 30, align: 'right', color: C.muted, family: AR, weight: 500 });
+      mono(String(i + 1).padStart(2, '0'), 175, y, { color: C.lime, size: 28 });
+      ctx.restore();
+    });
+  }, [[0, 'swish'], ...STEPS.map((_, i) => [.4 + i * .42, 'pluck', i]), [.4 + 5 * .42 + .2, 'ding']]);
+
+  // 6 · the MVP plan
+  const CHIPS = [['سبرنت كل أسبوعين', 'loop'], ['عرض كل أسبوع', 'check'], ['إطلاق ومتابعة', 'chart']];
+  scene('plan', 6, false, (u) => {
+    kicker('THE PLAN', 240, u, false);
+    headline([{ s: 'أول نسخة من' }, { s: 'منتجك', hl: true }], 340, u, { at: .05, size: 86 });
+    const k = E.back(seg(u, .3, .75)); if (k <= 0) return;
+    ctx.save(); ctx.translate(CX, 860); ctx.rotate(-.04 * (1 - clamp(k)) - .02); ctx.scale(clamp(k) * .1 + .9 * k, k);
+    shadow(50, 24, .22); rr(-280, -260, 560, 520, 34, '#fff'); noShadow();
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-280, -260, 560, 130, [34, 34, 0, 0]); ctx.fillStyle = C.ink; ctx.fill(); ctx.restore();
+    [-160, 160].forEach((x) => rr(x - 14, -290, 28, 70, 14, '#C9CDD8'));
+    txt('MVP', 0, -194, { family: LAT, weight: 800, size: 54, dir: 'ltr', color: C.lime });
+    const n = seg(u, .6, 1.2);
+    txt(`${Math.max(1, Math.round(4 * n))}–${Math.max(2, Math.round(6 * n))}`, 0, 0, { family: LAT, weight: 800, size: 190, dir: 'ltr', color: C.ink });
+    txt('أسابيع', 0, 150, { size: 46, color: C.mutedDark });
+    ctx.restore();
+    CHIPS.forEach(([s, ic], i) => {
+      const a = 1.2 + i * .28; const ck = E.back(seg(u, a, a + .3)); if (ck <= 0) return;
+      const y = 1270 + i * 120; const w = measure(s, 40) + 130; const x = i % 2 ? CX + 60 : CX - 60;
+      ctx.save(); ctx.translate(x, y); ctx.scale(ck, ck);
+      shadow(20, 8, .14); rr(-w / 2, -45, w, 90, 45, '#fff'); noShadow();
+      circle(w / 2 - 46, 0, 26, C.lime); icon(ic, w / 2 - 46, 0, 26, C.ink);
+      txt(s, w / 2 - 86, 2, { size: 40, align: 'right' });
+      ctx.restore();
+    });
+  }, [[0, 'whoosh'], [.3, 'bass'], [.6, 'tick'], [.9, 'tick'], [1.15, 'tick'], ...CHIPS.map((_, i) => [1.2 + i * .28, 'pop', 4 + i])]);
+
+  // 7 · ways to work (tickets)
+  scene('ways', 6, true, (u) => {
+    kicker('WAYS TO WORK', 240, u, true);
+    headline([{ s: 'اختر' }, { s: 'طريقة العمل', hl: true }], 340, u, { dark: true, at: .05, size: 88 });
+    function ticket(y, k, fill, title, sub, tag, ink, featured) {
+      if (k <= 0) return;
+      ctx.save(); ctx.translate(lerp(W + 600, CX, E.out(k)), y); ctx.rotate(featured ? .03 : -.03);
+      shadow(40, 20, .45);
+      ctx.beginPath(); ctx.roundRect(-400, -150, 800, 300, 28);
+      ctx.fillStyle = fill; ctx.fill(); noShadow();
+      circle(-400, 0, 34, C.ink); circle(400, 0, 34, C.ink); // punched holes
+      ctx.setLineDash([10, 12]); ctx.strokeStyle = ink === '#fff' ? 'rgba(255,255,255,.25)' : 'rgba(11,18,32,.2)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-150, -120); ctx.lineTo(-150, 120); ctx.stroke(); ctx.setLineDash([]);
+      txt(title, 350, -40, { size: 58, align: 'right', color: C.ink });
+      txt(sub, 350, 40, { size: 30, align: 'right', color: 'rgba(11,18,32,.65)', weight: 500 });
+      mono(tag, -275, 0, { color: C.ink, size: 24 });
+      if (featured) { rr(260, -190, 150, 56, 28, C.ink); txt('الأشمل', 335, -162, { size: 28, color: C.lime }); }
+      ctx.restore();
+    }
+    ticket(760, seg(u, .35, .8), '#fff', 'فريق منتج', 'مطوّرون ومصممون ومدير منتج', 'MONTHLY', C.ink, false);
+    ticket(1140, seg(u, .7, 1.15), C.lime, 'إطلاق كامل', 'منتج + هوية + محتوى + إعلانات', 'ALL-IN', C.ink, true);
+    const nk = E.out(seg(u, 1.4, 1.8));
+    if (nk > 0) txt('السعر حسب مشروعك · استشارة أولى مجانية', CX, 1460, { size: 36, color: C.muted, alpha: nk, weight: 500 });
+  }, [[0, 'swish'], [.35, 'whoosh'], [.7, 'whoosh'], [1.0, 'pop', 6], [1.4, 'tick']]);
+
+  // 8 · founder card + CTA
+  scene('founder', 12, false, (u) => {
+    headline([{ s: 'نستقبل مشاريع' }, { s: 'جديدة', hl: true }], 300, u, { at: .05, size: 88 });
+    const pk = E.back(seg(u, .3, .9)); const cy = 760;
+    if (pk > 0) {
+      ctx.save(); ctx.translate(CX, cy); ctx.scale(pk, pk);
+      circle(0, 0, 250, null, C.lime, 14);
+      circle(0, 0, 234, C.ink);
+      ctx.save(); ctx.beginPath(); ctx.arc(0, 0, 226, 0, Math.PI * 2); ctx.clip();
+      if (photo.complete && photo.naturalWidth) ctx.drawImage(photo, -226, -226, 452, 452);
+      ctx.restore();
+      const vk = E.back(seg(u, .9, 1.2));
+      if (vk > 0) { ctx.save(); ctx.translate(170, 170); ctx.scale(vk, vk); circle(0, 0, 46, C.indigo, '#fff', 8); icon('check', 0, 0, 44, '#fff'); ctx.restore(); }
+      ctx.restore();
+    }
+    headline([{ s: 'زكريا براهيمي' }], 1110, u, { at: 1.0, size: 80 });
+    const sk = E.out(seg(u, 1.3, 1.6));
+    if (sk > 0) mono('FOUNDER · NAWA STUDIO', CX, 1195, { alpha: sk, color: C.indigo, size: 24 });
+    const tags = ['Head of Product', 'ex-Yassir PM', '4+ years'];
+    let xr = CX + (tags.reduce((a, s) => a + measure(s, 30, MONO, 600) + 60, 0) + 20 * (tags.length - 1)) / 2;
+    tags.forEach((s, i) => {
+      const w = measure(s, 30, MONO, 600) + 60; const k = E.back(seg(u, 1.6 + i * .15, 1.9 + i * .15));
+      if (k > 0) { ctx.save(); ctx.translate(xr - w / 2, 1290); ctx.scale(k, k); rr(-w / 2, -32, w, 64, 32, i === 0 ? C.ink : '#fff', i === 0 ? null : 'rgba(11,18,32,.15)', 2); txt(s, 0, 2, { family: MONO, weight: 600, size: 24, dir: 'ltr', color: i === 0 ? C.lime : C.ink }); ctx.restore(); }
+      xr -= w + 20;
+    });
+    // CTA card
+    const ck = E.back(seg(u, 2.3, 2.75));
+    if (ck > 0) {
+      ctx.save(); ctx.translate(CX, 1560); ctx.scale(ck, ck);
+      shadow(40, 20, .3); rr(-420, -110, 840, 220, 40, C.ink); noShadow();
+      circle(320, 0, 62, C.lime); icon('chat', 320, 2, 56, C.ink);
+      txt('اكتب «نواة» في التعليقات', 220, -28, { size: 50, align: 'right', color: '#fff' });
+      txt('ونبدأ معك خطة مشروعك', 220, 40, { size: 34, align: 'right', color: C.muted, weight: 500 });
+      ctx.restore();
+    }
+    // the comment chip flying up, again and again
+    for (let n = 0; n < 3; n++) {
+      const a = 3.1 + n * 1.0; const fk = seg(u, a, a + 1.4); if (fk <= 0 || fk >= 1) continue;
+      ctx.save(); ctx.globalAlpha = (1 - fk) * clamp(fk * 6); ctx.translate(lerp(200, 150 + n * 30, fk), lerp(1450, 1370, E.out(fk)));
+      rr(-80, -32, 160, 64, 32, C.lime); txt('نواة', 0, 2, { size: 32 });
+      ctx.restore();
+    }
+    // end: the mark and the address
+    const ek = E.out(seg(u, 3.4, 3.8));
+    if (ek > 0) {
+      const addr = 'nawa-studio-six.vercel.app/start'; const tw = measure(addr, 24, MONO, 600); const x0 = CX - (64 + 20 + tw) / 2;
+      ctx.save(); ctx.globalAlpha = ek; mark(x0 + 32, 1790, 64); txt(addr, x0 + 84, 1790, { family: MONO, weight: 600, size: 24, dir: 'ltr', align: 'left', color: C.mutedDark }); ctx.restore();
+    }
+  }, [[0, 'whoosh'], [.3, 'bass'], [.9, 'ding'], [1.0, 'pop', 1], ...[0, 1, 2].map((i) => [1.6 + i * .15, 'pop', 3 + i]), [2.3, 'impact'], [3.1, 'pop', 5], [4.1, 'pop', 6], [5.1, 'pop', 7], [3.4, 'chime']]);
+
+  // ---------- timeline ----------
+  let t0 = 0; SC.forEach((s) => { s.start = t0; t0 += s.d; });
+  const DURATION = t0;
+  const CUES = []; SC.forEach((s) => s.cues.forEach(([u, name, p = 0]) => CUES.push([+(s.start + u).toFixed(3), name, p])));
+  CUES.sort((a, b) => a[0] - b[0]);
+  const MUSIC = { start: 0, end: SC[SC.length - 1].start + 2.5, bpm: BPM };
+
+  function hud(t, i, dark) {
+    const c = dark ? 'rgba(255,255,255,.4)' : 'rgba(11,18,32,.4)';
+    mono('@NAWA.STUDIO.AI', 60, 90, { align: 'left', size: 20, color: c });
+    mono(`NAWA · ${String(i + 1).padStart(2, '0')}/${String(SC.length).padStart(2, '0')}`, W - 60, 90, { align: 'right', size: 20, color: c });
+  }
+
+  function render(t) {
+    t = Math.max(0, Math.min(t, DURATION - 1e-4));
+    const i = SC.findIndex((s) => t >= s.start && t < s.start + s.d); const s = SC[i]; const u = t - s.start;
+    ctx.save(); ctx.clearRect(0, 0, W, H);
+    bg(s.dark);
+    const p = 1 + .04 * (1 - E.out(seg(u, 0, .25))); // a small punch-in on every cut
+    ctx.translate(CX, H / 2); ctx.scale(p, p); ctx.translate(-CX, -H / 2);
+    s.f(u);
+    ctx.restore();
+    if (s.name !== 'solution') hud(t, i, s.dark);
+  }
+
+  window.SHOWREEL = { render, DURATION, CUES, MUSIC };
+  const q = new URLSearchParams(location.search);
+  Promise.all([document.fonts.ready, photo.decode().catch(() => {})]).then(() => render(q.has('t') ? +q.get('t') : 0.01));
+})();
+</script>
+</body></html>
