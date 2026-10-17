@@ -143,7 +143,7 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
   }, [[0, 'whoosh'], ...NOTES.map((_, i) => [.5 + i * .14, 'pop', i]), ...NOTES.map((_, i) => [1.8 + i * .14, 'hit'])]);
 
   // 2 · months of building, zero users
-  scene('build', 6, true, (u) => {
+  scene('build', 9, true, (u) => {
     headline([{ s: 'شهور من التطوير' }], 330, u, { dark: true, at: .05 });
     headline([{ s: 'وفي الأخير' }, { s: 'ولا مستخدم', hl: true }], 450, u, { dark: true, at: .3 });
     const k = E.out(seg(u, .35, .8)); if (k <= 0) return;
@@ -190,7 +190,7 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
   }, [[0, 'riser'], [.3, 'impact']]);
 
   // 4 · the Nawa badge drops in on a lanyard
-  scene('nawa', 6, false, (u) => {
+  scene('nawa', 10, false, (u) => {
     const drop = E.spring(seg(u, 0, 1.1));
     const swing = Math.sin(u * 5) * Math.exp(-u * 1.6) * .12;
     const by = lerp(-500, 560, drop);
@@ -215,15 +215,16 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
 
   // 5 · how we work, 6 steps
   const STEPS = [['المنتج', 'نطوّر الموقع أو التطبيق', 'code'], ['الهوية', 'شعار وألوان وحضور', 'star'], ['التصاميم', 'محتوى السوشل ميديا', 'layers'], ['الإعلانات', 'نوصلك للناس الصح', 'mega'], ['النتائج', 'ندرس الأرقام', 'chart'], ['التطوير', 'نحسّن ونعيد الدورة', 'loop']];
-  scene('steps', 9, true, (u) => {
+  const STEP_AT = .5, STEP_GAP = .9; // one step per spoken word of the voice-over
+  scene('steps', 13, true, (u) => {
     kicker('HOW WE WORK · 6 STEPS', 240, u, true);
     headline([{ s: 'كيف' }, { s: 'نشتغل', hl: true }], 340, u, { dark: true, at: .05, size: 92 });
     const x0 = 880, y0 = 560, gap = 190;
-    const lineK = seg(u, .4, .4 + STEPS.length * .42);
+    const lineK = seg(u, STEP_AT, STEP_AT + STEPS.length * STEP_GAP);
     ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x0 - 2, y0, 4, gap * (STEPS.length - 1));
     ctx.fillStyle = C.lime; ctx.fillRect(x0 - 2, y0, 4, gap * (STEPS.length - 1) * lineK);
     STEPS.forEach(([t, sub, ic], i) => {
-      const a = .4 + i * .42; const k = E.out(seg(u, a, a + .35)); const y = y0 + i * gap;
+      const a = STEP_AT + i * STEP_GAP; const k = E.out(seg(u, a, a + .35)); const y = y0 + i * gap;
       const last = i === STEPS.length - 1; const done = u > a + .2;
       circle(x0, y, 40, done ? (last ? C.lime : C.ink) : C.ink2, done ? C.lime : C.line, 4);
       if (done) icon(last ? 'check' : ic, x0, y, 38, last ? C.ink : C.lime);
@@ -235,11 +236,11 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
       mono(String(i + 1).padStart(2, '0'), 175, y, { color: C.lime, size: 28 });
       ctx.restore();
     });
-  }, [[0, 'swish'], ...STEPS.map((_, i) => [.4 + i * .42, 'pluck', i]), [.4 + 5 * .42 + .2, 'ding']]);
+  }, [[0, 'swish'], ...STEPS.map((_, i) => [STEP_AT + i * STEP_GAP, 'pluck', i]), [STEP_AT + 5 * STEP_GAP + .2, 'ding']]);
 
   // 6 · the MVP plan
   const CHIPS = [['سبرنت كل أسبوعين', 'loop'], ['عرض كل أسبوع', 'check'], ['إطلاق ومتابعة', 'chart']];
-  scene('plan', 6, false, (u) => {
+  scene('plan', 10, false, (u) => {
     kicker('THE PLAN', 240, u, false);
     headline([{ s: 'أول نسخة من' }, { s: 'منتجك', hl: true }], 340, u, { at: .05, size: 86 });
     const k = E.back(seg(u, .3, .75)); if (k <= 0) return;
@@ -264,7 +265,7 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
   }, [[0, 'whoosh'], [.3, 'bass'], [.6, 'tick'], [.9, 'tick'], [1.15, 'tick'], ...CHIPS.map((_, i) => [1.2 + i * .28, 'pop', 4 + i])]);
 
   // 7 · ways to work (tickets)
-  scene('ways', 6, true, (u) => {
+  scene('ways', 11, true, (u) => {
     kicker('WAYS TO WORK', 240, u, true);
     headline([{ s: 'اختر' }, { s: 'طريقة العمل', hl: true }], 340, u, { dark: true, at: .05, size: 88 });
     function ticket(y, k, fill, title, sub, tag, ink, featured) {
@@ -344,6 +345,11 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
   const CUES = []; SC.forEach((s) => s.cues.forEach(([u, name, p = 0]) => CUES.push([+(s.start + u).toFixed(3), name, p])));
   CUES.sort((a, b) => a[0] - b[0]);
   const MUSIC = { start: 0, end: SC[SC.length - 1].start + 2.5, bpm: BPM };
+  // Arabic voice-over: one line per scene, [scene, offset in the scene, file]. The render script
+  // mixes them over the soundtrack and ducks the music under the voice.
+  const VO = [['ideas', .2, 'launch-01'], ['build', .25, 'launch-02'], ['solution', .15, 'launch-03'], ['nawa', .45, 'launch-04'],
+    ['steps', .3, 'launch-05'], ['plan', .25, 'launch-06'], ['ways', .3, 'launch-07'], ['founder', .2, 'launch-08']];
+  const VOICE = VO.map(([n, u, f]) => [+(SC.find((s) => s.name === n).start + u).toFixed(3), `assets/vo/${f}.mp3`]);
 
   function hud(t, i, dark) {
     const c = dark ? 'rgba(255,255,255,.4)' : 'rgba(11,18,32,.4)';
@@ -363,7 +369,7 @@ html, body { margin: 0; background: #0B1220; overflow: hidden; } canvas { displa
     if (s.name !== 'solution') hud(t, i, s.dark);
   }
 
-  window.SHOWREEL = { render, DURATION, CUES, MUSIC };
+  window.SHOWREEL = { render, DURATION, CUES, MUSIC, VOICE };
   const q = new URLSearchParams(location.search);
   Promise.all([document.fonts.ready, photo.decode().catch(() => {})]).then(() => render(q.has('t') ? +q.get('t') : 0.01));
 })();
