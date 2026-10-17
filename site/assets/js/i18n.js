@@ -3,7 +3,8 @@ window.NAWA_T = {
   ar: {
     'meta.title': 'نواة | من الفكرة إلى النمو',
     brand: 'نواة', mizan: 'ميزان', 'step.of': 'من 6',
-    'nav.journey': 'كيف نعمل', 'nav.team': 'فريق المنتج', 'nav.models': 'طرق العمل', 'nav.contact': 'تواصل', 'nav.cta': 'ابدأ مشروعك',
+    'nav.journey': 'كيف نعمل', 'nav.team': 'فريق المنتج', 'nav.models': 'طرق العمل', 'nav.madar': 'مدار', 'nav.contact': 'تواصل',
+    'fm.lead': 'ما نتعلّمه أثناء البناء، نشاركه معك.', 'fm.more': 'زر مدار', 'fm.min': 'د قراءة', 'fm.tip': 'نصيحة', 'fm.listen': 'استمع', 'fm.from': 'من نواة', 'nav.cta': 'ابدأ مشروعك',
     'hero.eyebrow': 'من الفكرة إلى النمو',
     'hero.title': 'نطلق <span class="lime">المنتجات الرقمية.</span><br>ونروي <span class="lime">القصص.</span>',
     'hero.sub': 'نرافقك في كل خطوة: نطوّر منتجك، ونصنع له هوية بصرية وحضورًا، ونصمّم محتواه على السوشيال ميديا، ونروّج له بالإعلانات، ثم ندرس النتائج ونطوّر.',
@@ -60,7 +61,8 @@ window.NAWA_T = {
   en: {
     'meta.title': 'Nawa | From idea to growth',
     brand: 'Nawa', mizan: 'Mizan', 'step.of': 'of 6',
-    'nav.journey': 'How we work', 'nav.team': 'Product team', 'nav.models': 'Ways to work', 'nav.contact': 'Contact', 'nav.cta': 'Start a project',
+    'nav.journey': 'How we work', 'nav.team': 'Product team', 'nav.models': 'Ways to work', 'nav.madar': 'Madar', 'nav.contact': 'Contact',
+    'fm.lead': 'What we learn while building, shared with you (in Arabic).', 'fm.more': 'Visit Madar', 'fm.min': 'min read', 'fm.tip': 'Tip', 'fm.listen': 'Listen', 'fm.from': 'by Nawa', 'nav.cta': 'Start a project',
     'hero.eyebrow': 'From idea to growth',
     'hero.title': 'We launch <span class="lime">digital products.</span><br>We tell <span class="lime">stories.</span>',
     'hero.sub': 'We stay with you at every step: we develop your product, create its visual identity and presence, design its social media content, promote it with ads, then study the results and improve.',
@@ -117,7 +119,8 @@ window.NAWA_T = {
   fr: {
     'meta.title': 'Nawa | De l’idée à la croissance',
     brand: 'Nawa', mizan: 'Mizan', 'step.of': 'sur 6',
-    'nav.journey': 'Notre méthode', 'nav.team': 'Équipe produit', 'nav.models': 'Collaborer', 'nav.contact': 'Contact', 'nav.cta': 'Lancer un projet',
+    'nav.journey': 'Notre méthode', 'nav.team': 'Équipe produit', 'nav.models': 'Collaborer', 'nav.madar': 'Madar', 'nav.contact': 'Contact',
+    'fm.lead': 'Ce que nous apprenons en construisant, partagé avec vous (en arabe).', 'fm.more': 'Visiter Madar', 'fm.min': 'min de lecture', 'fm.tip': 'Astuce', 'fm.listen': 'Écouter', 'fm.from': 'par Nawa', 'nav.cta': 'Lancer un projet',
     'hero.eyebrow': 'De l’idée à la croissance',
     'hero.title': 'Nous lançons des <span class="lime">produits numériques.</span><br>Nous racontons des <span class="lime">histoires.</span>',
     'hero.sub': 'Nous vous accompagnons à chaque étape : nous développons votre produit, créons son identité visuelle et sa présence, concevons ses contenus pour les réseaux sociaux, en faisons la promotion avec des publicités, puis étudions les résultats et améliorons.',

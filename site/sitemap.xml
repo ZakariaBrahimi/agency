@@ -5,6 +5,7 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://nawa-studio-six.vercel.app/en"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://nawa-studio-six.vercel.app/fr"/>
   </url>
+  <url><loc>https://nawa-studio-six.vercel.app/madar</loc></url>
   <url><loc>https://nawa-studio-six.vercel.app/start</loc></url>
   <url><loc>https://nawa-studio-six.vercel.app/privacy</loc></url>
 </urlset>

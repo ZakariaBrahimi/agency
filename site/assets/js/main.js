@@ -66,6 +66,22 @@
   $('mail').textContent = SITE.email;
   SITE.socials.forEach(([name, url]) => { const a = document.createElement('a'); a.href = url; a.textContent = name; a.rel = 'noopener'; $('socials').appendChild(a); });
 
+  // «من مدار»: the newest article, tip and episode. Titles stay Arabic; the labels follow the language.
+  fetch('/api/madar/render?json=latest').then((r) => r.json()).then((d) => {
+    const items = [...(d.articles || []), d.tip, d.episode].filter(Boolean);
+    if (!items.length) return;
+    const TC = { product: ['#5B4BFF', '#ECEAFF', 'المنتج'], agile: ['#E8674D', '#FBE3DD', 'Agile'], dev: ['#1E9E6A', '#DCF2E8', 'التطوير'], design: ['#D946A8', '#F9E0F1', 'التصميم'], social: ['#F2A516', '#FDEBD0', 'السوشل'], it: ['#2F86D1', '#DDEBF8', 'IT'] };
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const t = T[lang];
+    $('fmRow').innerHTML = items.map((p) => {
+      const [c, soft, name] = TC[p.topic] || TC.product;
+      if (p.kind === 'tip') return `<a class="fm-card tip" href="${esc(p.url)}" style="--ts:${soft};--tc:${c}" lang="ar" dir="rtl"><span class="md-tag" style="--tc:${c}"><i></i><span data-i="fm.tip">${t['fm.tip']}</span> #${esc(p.number)}</span><b>${esc(p.title)}</b></a>`;
+      if (p.kind === 'episode') return `<a class="fm-card pod" href="${esc(p.url)}" lang="ar" dir="rtl"><span class="md-kicker">After Launch · ${esc(p.number)}</span><b>${esc(p.title)}</b><span class="m">▶ <span data-i="fm.listen">${t['fm.listen']}</span>${p.duration ? ' · ' + esc(p.duration) + ' min' : ''}</span></a>`;
+      return `<a class="fm-card" href="${esc(p.url)}" lang="ar" dir="rtl"><span class="md-tag" style="--tc:${c}"><i></i>${name}</span><b>${esc(p.title)}</b><span class="m" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">${esc(p.minutes)} <span data-i="fm.min">${t['fm.min']}</span></span></a>`;
+    }).join('');
+    $('fromMadar').hidden = false;
+  }).catch(() => {});
+
   $('copyMail').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(SITE.email); $('copied').textContent = T[lang]['cta.copied']; }
     catch (e) {

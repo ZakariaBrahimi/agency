@@ -10,6 +10,14 @@
     {
       "source": "/fr",
       "destination": "/"
+    },
+    {
+      "source": "/madar",
+      "destination": "/api/madar/render?p="
+    },
+    {
+      "source": "/madar/:path*",
+      "destination": "/api/madar/render?p=:path*"
     }
   ],
   "headers": [

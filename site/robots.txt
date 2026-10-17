@@ -3,3 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 Sitemap: https://nawa-studio-six.vercel.app/sitemap.xml
+Sitemap: https://nawa-studio-six.vercel.app/madar/sitemap.xml

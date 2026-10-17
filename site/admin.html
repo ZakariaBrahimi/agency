@@ -9,11 +9,13 @@
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
 <link rel="stylesheet" href="assets/css/styles.css">
 <link rel="stylesheet" href="assets/css/admin.css">
+<link rel="stylesheet" href="assets/css/madar.css">
 <script type="module" src="assets/js/admin.js"></script>
 <script type="module" src="assets/js/admin-content.js"></script>
+<script type="module" src="assets/js/admin-madar.js"></script>
 </head>
 <body class="admin-page">
 
@@ -50,6 +52,7 @@
   <nav class="sections" id="sections" hidden aria-label="أقسام اللوحة">
     <button type="button" data-section="requests" aria-pressed="true">الطلبات</button>
     <button type="button" data-section="content" aria-pressed="false">المحتوى</button>
+    <button type="button" data-section="madar" aria-pressed="false">مدار</button>
   </nav>
 
   <!-- Setup notice (missing server settings) -->
@@ -98,12 +101,30 @@
     </div>
     <div id="ctBody"><p class="empty">…</p></div>
   </section>
+
+  <!-- Madar: community articles, tips and podcast (Supabase) -->
+  <section id="madar" class="mdx" hidden>
+    <div class="dash-head">
+      <div>
+        <h1>مدار</h1>
+        <p class="muted">المقالات والنصائح والبودكاست على <a href="/madar" target="_blank" rel="noopener" dir="ltr">/madar ↗</a></p>
+      </div>
+      <div class="ct-head-actions" id="mdHeadActions" hidden>
+        <button type="button" class="btn btn-ghost-dark" id="mdRefresh">تحديث</button>
+        <label class="md-new"><span class="sr-only">إنشاء</span>
+          <select id="mdNew" class="btn btn-lime"><option value="">+ جديد</option><option value="article">مقال</option><option value="tip">نصيحة</option><option value="episode">حلقة بودكاست</option></select>
+        </label>
+      </div>
+    </div>
+    <div id="mdBody"><p class="empty">…</p></div>
+  </section>
 </main>
 
 <dialog class="ct-dialog" id="ctDialog" aria-labelledby="ctDlgTitle">
   <form method="dialog" class="ct-dlg" id="ctForm"></form>
 </dialog>
 <div class="ct-toast" id="ctToast" role="status" aria-live="polite"></div>
+<div class="ct-toast" id="mdToast" role="status" aria-live="polite"></div>
 
 </body>
 </html>

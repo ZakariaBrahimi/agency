@@ -15,7 +15,8 @@ const LANG_NAME = { ar: 'العربية', en: 'English', fr: 'Français' };
 
 let briefs = [];
 let filter = 'all';
-let selected = (!location.hash.startsWith('#content') && location.hash.slice(1)) || null;
+const SECTION_HASH = /^#(content|madar)/;
+let selected = (!SECTION_HASH.test(location.hash) && location.hash.slice(1)) || null;
 
 async function api(path, opts = {}) {
   const r = await fetch(path, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...opts });
@@ -30,7 +31,7 @@ async function api(path, opts = {}) {
 function showLogin(msg = '') {
   $('booting').hidden = true;
   $('login').hidden = false; $('dash').hidden = true; $('logout').hidden = true; $('setup').hidden = true;
-  $('sections').hidden = true; $('content').hidden = true;
+  $('sections').hidden = true; $('content').hidden = true; $('madar').hidden = true;
   $('loginMsg').textContent = msg;
   setTimeout(() => $('pw').focus(), 50);
 }
@@ -87,15 +88,20 @@ function showSection(name) {
   $('dash').hidden = name !== 'requests' || setupNeeded;
   $('setup').hidden = name !== 'requests' || !setupNeeded;
   $('content').hidden = name !== 'content';
-  document.title = (name === 'content' ? 'المحتوى' : 'الطلبات') + ' | نواة';
-  if (name === 'content') window.dispatchEvent(new CustomEvent('nawa:content'));
-  else if (location.hash.startsWith('#content')) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
+  $('madar').hidden = name !== 'madar';
+  document.title = ({ content: 'المحتوى', madar: 'مدار' }[name] || 'الطلبات') + ' | نواة';
+  if (name === 'content' || name === 'madar') window.dispatchEvent(new CustomEvent('nawa:' + name));
+  else if (SECTION_HASH.test(location.hash)) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
 }
 $('sections').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-  if (b.dataset.section === 'content' && !location.hash.startsWith('#content')) history.replaceState(null, '', '#content');
+  const s = b.dataset.section;
+  if (s !== 'requests' && !location.hash.startsWith('#' + s)) history.replaceState(null, '', '#' + s);
   showSection(b.dataset.section);
 }));
-window.addEventListener('hashchange', () => { if (!$('sections').hidden && location.hash.startsWith('#content') && section !== 'content') showSection('content'); });
+window.addEventListener('hashchange', () => {
+  const m = location.hash.match(SECTION_HASH);
+  if (!$('sections').hidden && m && section !== m[1]) showSection(m[1]);
+});
 
 async function boot() {
   setupNeeded = false;
@@ -112,7 +118,7 @@ async function boot() {
   }
   $('booting').hidden = true;
   $('login').hidden = true; $('logout').hidden = false; $('sections').hidden = false;
-  showSection(location.hash.startsWith('#content') ? 'content' : 'requests');
+  showSection(location.hash.match(SECTION_HASH)?.[1] || 'requests');
   if (!setupNeeded) loadTelegram();
 }
 

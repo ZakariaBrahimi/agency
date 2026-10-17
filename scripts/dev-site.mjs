@@ -12,6 +12,11 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   let p = decodeURIComponent(url.pathname);
+  if (p === '/madar' || p.startsWith('/madar/')) { // vercel.json rewrite
+    url.searchParams.set('p', p.replace(/^\/madar\/?/, ''));
+    req.url = '/api/madar/render?' + url.searchParams;
+    p = '/api/madar/render';
+  }
   if (p.startsWith('/api/')) {
     let file = path.join(ROOT, p + '.js');
     if (!fs.existsSync(file)) file = path.join(ROOT, p, 'index.js'); // like Vercel: api/x/index.js serves /api/x

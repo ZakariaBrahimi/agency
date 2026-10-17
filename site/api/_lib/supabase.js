@@ -24,3 +24,20 @@ export const admin = {
     key: env('SUPABASE_SERVICE_ROLE_KEY'), method: 'PATCH', body: patch, prefer: 'return=representation',
   }),
 };
+
+// Madar: the public key reads published posts (row-level security) and can add subscribers and
+// pitches; the service key manages everything from /admin.
+const pub = () => env('SUPABASE_PUBLISHABLE_KEY');
+const svc = () => env('SUPABASE_SERVICE_ROLE_KEY');
+export const madar = {
+  ready: () => Boolean(env('SUPABASE_URL') && pub()),
+  posts: (query) => rest(`madar_posts?${query}`, { key: pub() }),
+  subscribe: (row) => rest('madar_subscribers', { key: pub(), method: 'POST', body: row, prefer: 'return=minimal' }),
+  pitch: (row) => rest('madar_pitches', { key: pub(), method: 'POST', body: row, prefer: 'return=minimal' }),
+  admin: {
+    list: (table, query) => rest(`${table}?${query}`, { key: svc() }),
+    insert: (table, row) => rest(table, { key: svc(), method: 'POST', body: row, prefer: 'return=representation' }),
+    update: (table, id, patch) => rest(`${table}?id=eq.${encodeURIComponent(id)}`, { key: svc(), method: 'PATCH', body: patch, prefer: 'return=representation' }),
+    remove: (table, id) => rest(`${table}?id=eq.${encodeURIComponent(id)}`, { key: svc(), method: 'DELETE' }),
+  },
+};
