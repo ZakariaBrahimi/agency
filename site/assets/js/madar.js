@@ -1,11 +1,21 @@
 // Madar pages: reading progress, sharing, forms, tip of the day (streak + saved tips) and the podcast player.
 (() => {
+  document.documentElement.classList.add('js');
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const store = {
     get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   };
+
+  // Phones: Nawa's menu behind a button, and Madar's search behind an icon.
+  const burger = $('.md-burger'); const menu = $('#mdMenu');
+  if (burger && menu) burger.addEventListener('click', () => { const open = burger.getAttribute('aria-expanded') !== 'true'; burger.setAttribute('aria-expanded', String(open)); menu.hidden = !open; });
+  const sBtn = $('.md-search-btn'); const sForm = $('#mdSearch');
+  if (sBtn && sForm) sBtn.addEventListener('click', () => { const open = !sForm.classList.contains('open'); sForm.classList.toggle('open', open); sBtn.setAttribute('aria-expanded', String(open)); if (open) $('input', sForm).focus(); });
+  // The table of contents starts folded on small screens, where it sits above the article.
+  const tocBox = $('details.md-toc');
+  if (tocBox && matchMedia('(max-width: 980px)').matches) tocBox.open = false;
 
   // Reading progress and the active heading in the table of contents.
   const bar = $('.md-progress i'); const prose = $('.md-article .md-prose');

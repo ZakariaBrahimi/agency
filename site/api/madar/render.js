@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const [a, b] = seg;
     if (!a) {
       const [articles, tips, eps] = await Promise.all([list('article', '', 7), list('tip', '', 4), list('episode', '', 1)]);
-      return page(200, { title: 'مدار من نواة | مقالات ونصائح وبودكاست في المنتجات الرقمية', description: 'مدار: مجتمع نواة لكل من يبني منتجًا رقميًا. مقالات ونصائح سريعة وبودكاست «بعد الإطلاق» في إدارة المنتجات وAgile والتطوير والتصميم والسوشل ميديا وIT.', path: '/madar', body: P.homePage({ articles, tips, episode: eps[0] }) });
+      return page(200, { title: 'مدار من نواة | مقالات ونصائح وبودكاست في المنتجات الرقمية', description: 'مدار: مجتمع نواة لكل من يبني منتجًا رقميًا. مقالات ونصائح سريعة وبودكاست «نبض» في إدارة المنتجات وAgile والتطوير والتصميم والسوشل ميديا وIT.', path: '/madar', body: P.homePage({ articles, tips, episode: eps[0] }) });
     }
     if ((a === 'articles' || a === 'topics') && seg.length <= 2) {
       const topic = a === 'topics' ? b : null;
@@ -53,13 +53,13 @@ export default async function handler(req, res) {
     }
     if (a === 'podcast' && !b) {
       const episodes = await list('episode', '', 200);
-      return page(200, { title: `${PODCAST.ar} (${PODCAST.en}) | بودكاست مدار من نواة`, description: 'بودكاست «بعد الإطلاق»: حوارات صريحة عمّا يحدث بعد إطلاق المنتجات الرقمية. لكل حلقة فصول ونص مكتوب.', path: '/madar/podcast', active: 'podcast', body: P.podcastPage({ episodes }) });
+      return page(200, { title: `${PODCAST.ar} (${PODCAST.en}) | بودكاست من نواة`, description: `بودكاست «${PODCAST.ar}» من نواة: ${PODCAST.tagline}. حوارات صريحة مع من بنوا منتجات رقمية، لكل حلقة فصول ونص مكتوب.`, path: '/madar/podcast', active: 'podcast', image: '/assets/img/nabd-cover.jpg', body: P.podcastPage({ episodes }) });
     }
     if (a === 'podcast' && b && seg.length === 2) {
       const ep = await one('episode', `slug=eq.${q(b)}`);
       if (!ep) return notFound();
       const more = await list('episode', `&id=neq.${ep.id}`, 3, 'id,kind,slug,topic,title,number,published_at');
-      return page(200, { title: `${ep.title} | ${PODCAST.ar}`, description: ep.excerpt || plain(ep.body), path: P.postUrl(ep), active: 'podcast', type: 'article', body: P.episodePage({ ep, more }),
+      return page(200, { title: `${ep.title} | ${PODCAST.ar}`, description: ep.excerpt || plain(ep.body), path: P.postUrl(ep), active: 'podcast', type: 'article', image: '/assets/img/nabd-cover.jpg', body: P.episodePage({ ep, more }),
         jsonLd: { '@context': 'https://schema.org', '@type': 'PodcastEpisode', name: ep.title, episodeNumber: ep.number, datePublished: ep.published_at, description: ep.excerpt, partOfSeries: { '@type': 'PodcastSeries', name: PODCAST.ar }, ...(ep.audio_url ? { associatedMedia: { '@type': 'MediaObject', contentUrl: ep.audio_url } } : {}) } });
     }
     if (a === 'write' && !b) return page(200, { title: 'اكتب معنا | مدار من نواة', description: 'شارك خبرتك في المنتجات الرقمية مع مجتمع مدار. نراجع المقال معك قبل النشر.', path: '/madar/write', active: 'write', body: P.writePage() });

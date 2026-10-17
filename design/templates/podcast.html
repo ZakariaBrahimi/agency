@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>Nabd podcast artwork</title>
+<!-- Podcast «نبض» (Nabd) artwork, rendered by scripts/render.cjs.
+     ?kind=mark|cover|episode|story|thumb  &n=1 &title=… &guest=… &role=… &topic=product|agile|dev|design|social|it
+     The mark is Nawa's nun: the same bowl, drawn as sound bars, with the lime dot pulsing above it. -->
+<style>
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Bricolage"; font-weight: 800; src: url("fonts/BricolageGrotesque-800-latin.woff2"); }
+:root { --ink: #0B1220; --indigo: #5B4BFF; --lime: #C6F432; --paper: #F6F5F2; --tc: #5B4BFF; }
+* { box-sizing: border-box; margin: 0; padding: 0; letter-spacing: 0; }
+html, body { background: transparent; }
+body { font-family: "Plex Ar", Tahoma, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+.lat { font-family: "Bricolage", "Plex Ar", sans-serif; direction: ltr; unicode-bidi: isolate; }
+.canvas { position: relative; overflow: hidden; width: var(--w); height: var(--h); }
+/* concentric rings: the pulse spreading from the dot (and Madar's orbit) */
+.rings { position: absolute; inset: 0; pointer-events: none; }
+.rings i { position: absolute; left: var(--cx); top: var(--cy); width: var(--s); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: calc(var(--u) * .5) solid rgba(255,255,255,var(--o)); }
+
+/* show cover */
+.cover { background: radial-gradient(circle at 50% 36%, #6E60FF 0, var(--indigo) 46%, #4A3BE6 100%); }
+.cover .stack { position: absolute; inset: 0 0 14% 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cover .mark { width: 44%; margin-bottom: calc(var(--u) * -3); }
+.cover .word { font-weight: 700; font-size: calc(var(--u) * 24); line-height: 1.25; }
+.cover .latn { font-size: calc(var(--u) * 5.2); color: var(--lime); letter-spacing: .4em !important; padding-left: .4em; margin-top: calc(var(--u) * 1); }
+.cover .tag { position: absolute; left: 0; right: 0; bottom: 6.5%; display: flex; justify-content: center; align-items: center; gap: calc(var(--u) * 2.2); font-size: calc(var(--u) * 3.6); font-weight: 500; color: rgba(255,255,255,.86); }
+.cover .tag svg { width: calc(var(--u) * 6); height: calc(var(--u) * 6); }
+
+/* episode cover */
+.episode { background: var(--ink); }
+.episode .band { position: absolute; inset: 0 0 auto 0; height: 1.6%; background: var(--tc); }
+.episode .num { position: absolute; top: 7%; left: 7%; font-size: calc(var(--u) * 30); line-height: .8; color: var(--lime); }
+.episode .num small { display: block; font-size: calc(var(--u) * 4); color: rgba(255,255,255,.55); letter-spacing: .2em !important; margin-bottom: calc(var(--u) * 2); }
+.episode .show { position: absolute; top: 7%; right: 7%; display: flex; align-items: center; gap: calc(var(--u) * 2.4); font-weight: 700; font-size: calc(var(--u) * 6); }
+.episode .show svg { width: calc(var(--u) * 11); height: calc(var(--u) * 11); }
+.episode .title { position: absolute; right: 7%; left: 7%; bottom: 25%; font-weight: 700; font-size: calc(var(--u) * 9); line-height: 1.32; text-wrap: balance; }
+.episode .guest { position: absolute; right: 7%; left: 7%; bottom: 8%; display: flex; align-items: center; gap: calc(var(--u) * 3); font-size: calc(var(--u) * 4.2); }
+.episode .guest b { font-weight: 700; }
+.episode .guest span { color: rgba(255,255,255,.62); }
+.episode .guest .chip { margin-inline-start: auto; background: var(--tc); color: #fff; padding: calc(var(--u) * 1.2) calc(var(--u) * 3); border-radius: 999px; font-size: calc(var(--u) * 3.4); font-weight: 700; }
+.episode .wave { position: absolute; left: 7%; right: 7%; bottom: 17.5%; height: 4%; display: flex; align-items: center; gap: calc(var(--u) * .9); direction: ltr; }
+.episode .wave i { flex: 1; border-radius: 99px; background: rgba(255,255,255,.22); }
+.episode .wave i.on { background: var(--lime); }
+
+/* story (1080x1920) */
+.story { background: var(--indigo); }
+.story .head { position: absolute; top: 6%; right: 8%; left: 8%; display: flex; align-items: center; justify-content: space-between; }
+.story .head b { font-size: calc(var(--u) * 7); font-weight: 700; }
+.story .head span { background: var(--lime); color: var(--ink); font-weight: 700; padding: calc(var(--u) * 1.4) calc(var(--u) * 4); border-radius: 999px; font-size: calc(var(--u) * 4.4); }
+.story .card { position: absolute; top: 15%; left: 8%; right: 8%; aspect-ratio: 1; border-radius: calc(var(--u) * 5); overflow: hidden; box-shadow: 0 calc(var(--u) * 6) calc(var(--u) * 14) rgba(11,18,32,.45); }
+.story .card .episode { position: absolute; inset: 0; }
+.story .cta { position: absolute; left: 8%; right: 8%; bottom: 11%; text-align: center; }
+.story .cta p { font-size: calc(var(--u) * 5); font-weight: 500; color: rgba(255,255,255,.9); margin-bottom: calc(var(--u) * 4); }
+.story .cta .btn { display: inline-flex; align-items: center; gap: calc(var(--u) * 2.5); background: var(--ink); color: #fff; font-weight: 700; font-size: calc(var(--u) * 5); padding: calc(var(--u) * 3) calc(var(--u) * 7); border-radius: 999px; }
+.story .cta .btn i { width: calc(var(--u) * 6); height: calc(var(--u) * 6); border-radius: 50%; background: var(--lime); display: grid; place-items: center; color: var(--ink); font-style: normal; font-size: calc(var(--u) * 3); }
+.story .bigwave { position: absolute; left: 8%; right: 8%; bottom: 27%; height: 6%; display: flex; align-items: center; gap: calc(var(--u) * 1.1); direction: ltr; }
+.story .bigwave i { flex: 1; border-radius: 99px; background: rgba(255,255,255,.35); }
+.story .bigwave i.on { background: var(--lime); }
+
+/* youtube thumbnail */
+.thumb { background: var(--ink); }
+.thumb .left { position: absolute; top: 0; bottom: 0; left: 0; width: 42%; background: radial-gradient(circle at 50% 50%, #6E60FF 0, var(--indigo) 60%); }
+.thumb .left svg { position: absolute; left: 50%; top: 50%; width: 62%; translate: -50% -50%; }
+.thumb .num { position: absolute; left: 6%; bottom: 6%; font-size: calc(var(--u) * 9); color: var(--lime); line-height: 1; }
+.thumb .txt { position: absolute; right: 5%; left: 47%; top: 50%; translate: 0 -50%; }
+.thumb .txt .k { font-size: calc(var(--u) * 3.6); font-weight: 700; color: var(--lime); margin-bottom: calc(var(--u) * 2); }
+.thumb .txt h1 { font-size: calc(var(--u) * 7.6); line-height: 1.3; font-weight: 700; text-wrap: balance; }
+.thumb .txt p { margin-top: calc(var(--u) * 3); font-size: calc(var(--u) * 3.6); color: rgba(255,255,255,.7); }
+
+.markonly { width: var(--w); height: var(--h); display: grid; place-items: center; }
+.markonly svg { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const W = Number(q.get('w') || 1500), H = Number(q.get('h') || 1500);
+const TOPIC = { product: ['#5B4BFF', 'المنتج'], agile: ['#E8674D', 'Agile'], dev: ['#1E9E6A', 'التطوير'], design: ['#D946A8', 'التصميم'], social: ['#F2A516', 'السوشل ميديا'], it: ['#2F86D1', 'IT'] };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// The mark. bg: tile color or 'none'; bars/dot colors.
+function mark({ bg = '#5B4BFF', bars = '#FFFFFF', dot = '#C6F432', rings = true, tile = true } = {}) {
+  const hs = [44, 86, 60, 118, 78, 104, 58, 46];
+  const n = hs.length, x0 = 160, x1 = 352;
+  const lines = hs.map((h, i) => {
+    const x = x0 + (i * (x1 - x0)) / (n - 1);
+    const y = 236 + Math.sqrt(Math.max(0, 110 * 110 - (x - 256) ** 2));
+    return `<line x1="${x.toFixed(1)}" y1="${(y - h / 2).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(y + h / 2).toFixed(1)}"/>`;
+  }).join('');
+  return `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-label="Nabd">
+    ${tile ? `<rect width="512" height="512" rx="120" fill="${bg}"/>` : ''}
+    ${rings ? `<circle cx="256" cy="148" r="64" fill="none" stroke="${dot}" stroke-opacity=".45" stroke-width="6"/><circle cx="256" cy="148" r="90" fill="none" stroke="${dot}" stroke-opacity=".2" stroke-width="5"/>` : ''}
+    <g stroke="${bars}" stroke-width="24" stroke-linecap="round">${lines}</g>
+    <circle cx="256" cy="148" r="40" fill="${dot}"/>
+  </svg>`;
+}
+const nawaMark = '<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#0B1220"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>';
+const wave = (n, on, seed = 3) => Array.from({ length: n }, (_, i) => { const h = 25 + Math.abs(Math.sin(i * 1.7 + seed) * 60 + Math.sin(i * .6) * 15); return `<i style="height:${Math.min(100, h).toFixed(0)}%"${i < on ? ' class="on"' : ''}></i>`; }).join('');
+const rings = (cx, cy, sizes) => `<div class="rings">${sizes.map(([s, o]) => `<i style="--cx:${cx};--cy:${cy};--s:${s};--o:${o}"></i>`).join('')}</div>`;
+
+function episodeHtml() {
+  const n = q.get('n') || '1', [tc, tname] = TOPIC[q.get('topic')] || TOPIC.product;
+  return `<div class="canvas episode" style="--tc:${tc}">
+    <div class="band"></div>
+    ${rings('78%', '88%', [['70%', .05], ['110%', .04]])}
+    <div class="num lat"><small>EPISODE</small>${esc(n.padStart(2, '0'))}</div>
+    <div class="show">${mark({ rings: false })}<span>نبض</span></div>
+    <div class="title">${esc(q.get('title') || 'لماذا فشل إطلاقنا الأول؟')}</div>
+    <div class="wave">${wave(48, 18)}</div>
+    <div class="guest"><b>${esc(q.get('guest') || 'اسم الضيف')}</b><span>${esc(q.get('role') || 'مؤسس منصة توصيل')}</span><span class="chip">${tname}</span></div>
+  </div>`;
+}
+
+const kind = q.get('kind') || 'cover';
+const root = document.getElementById('root');
+document.documentElement.style.setProperty('--w', W + 'px');
+document.documentElement.style.setProperty('--h', H + 'px');
+document.documentElement.style.setProperty('--u', Math.min(W, H) / 100 + 'px');
+
+if (kind === 'mark') {
+  root.innerHTML = `<div class="markonly" id="logo">${mark({ tile: q.get('tile') !== '0', bg: q.get('bg') || '#5B4BFF', bars: q.get('bars') || '#FFFFFF', rings: q.get('rings') !== '0' })}</div>`;
+} else if (kind === 'cover') {
+  root.innerHTML = `<div class="canvas cover">
+    ${rings('50%', '29%', [['58%', .1], ['86%', .07], ['118%', .05], ['152%', .035]])}
+    <div class="stack"><div class="mark">${mark({ tile: false, rings: false })}</div>
+    <div class="word">نبض</div>
+    <div class="latn lat">NABD</div></div>
+    <div class="tag"><span>بودكاست من نواة · ما يحدث بعد الإطلاق</span>${nawaMark}</div>
+  </div>`;
+} else if (kind === 'episode') {
+  root.innerHTML = episodeHtml();
+} else if (kind === 'story') {
+  const n = q.get('n') || '1';
+  document.documentElement.style.setProperty('--u', W / 100 + 'px');
+  const inner = episodeHtml();
+  root.innerHTML = `<div class="canvas story">
+    ${rings('50%', '40%', [['90%', .08], ['130%', .05], ['175%', .035]])}
+    <div class="head"><b>نبض</b><span>حلقة جديدة · ${esc(n)}</span></div>
+    <div class="card" id="card"></div>
+    <div class="bigwave">${wave(36, 14, 5)}</div>
+    <div class="cta"><p>حوار صريح عمّا يحدث بعد إطلاق المنتجات</p><span class="btn"><i>▶</i>استمع الآن · الرابط في البايو</span></div>
+  </div>`;
+  // the episode cover inside the card, scaled to the card width
+  const card = document.getElementById('card'); const cw = W * 0.84;
+  card.innerHTML = `<div style="--w:${cw}px;--h:${cw}px;--u:${cw / 100}px;position:absolute;inset:0">${inner}</div>`;
+} else if (kind === 'thumb') {
+  const n = q.get('n') || '1';
+  document.documentElement.style.setProperty('--u', H / 100 * 1.4 + 'px');
+  root.innerHTML = `<div class="canvas thumb">
+    <div class="left">${rings('50%', '50%', [['70%', .12], ['105%', .07]])}${mark({ tile: false, rings: false })}<span class="num lat">${esc(n.padStart(2, '0'))}</span></div>
+    <div class="txt"><div class="k">نبض · الحلقة ${esc(n)}</div><h1>${esc(q.get('title') || 'لماذا فشل إطلاقنا الأول؟')}</h1><p>${esc(q.get('guest') || 'اسم الضيف')} · ${esc(q.get('role') || 'مؤسس منصة توصيل')}</p></div>
+  </div>`;
+}
+document.fonts.ready.then(() => document.body.setAttribute('data-ready', '1'));
+</script>
+</body>
+</html>

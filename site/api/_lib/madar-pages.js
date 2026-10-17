@@ -5,6 +5,8 @@ import { siteUrl } from './http.js';
 
 const NAWA_MARK = '<svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>';
 export const ORBIT = (ink = '#0B1220') => `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="${ink}" stroke-width="10" stroke-dasharray="200 52" transform="rotate(-60 50 50)"/><circle cx="50" cy="50" r="13" fill="#C6F432"/><circle cx="84" cy="30" r="7" fill="#5B4BFF"/></svg>`;
+// The podcast mark: Nawa's nun bowl drawn as sound bars, the lime dot pulsing above (design/templates/podcast.html).
+export const PODMARK = (tile = true, bars = '#FFFFFF') => `<svg viewBox="0 0 512 512" aria-hidden="true">${tile ? '<rect width="512" height="512" rx="120" fill="#5B4BFF"/>' : ''}<circle cx="256" cy="148" r="64" fill="none" stroke="#C6F432" stroke-opacity=".45" stroke-width="6"/><g stroke="${bars}" stroke-width="24" stroke-linecap="round"><line x1="160" y1="263.2" x2="160" y2="307.2"/><line x1="187.4" y1="279.9" x2="187.4" y2="365.9"/><line x1="214.9" y1="309.0" x2="214.9" y2="369.0"/><line x1="242.3" y1="286.1" x2="242.3" y2="404.1"/><line x1="269.7" y1="306.1" x2="269.7" y2="384.1"/><line x1="297.1" y1="287.0" x2="297.1" y2="391.0"/><line x1="324.6" y1="292.7" x2="324.6" y2="350.7"/><line x1="352" y1="262.7" x2="352" y2="308.7"/></g><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>`;
 const ARR = '<span class="arr" aria-hidden="true">→</span>'; // mirrored in RTL by madar.css
 
 const fmtDate = (s) => (s ? new Date(s).toLocaleDateString('ar-DZ', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
@@ -18,7 +20,7 @@ export const postUrl = (p) => href[p.kind](p);
 
 // ---------- layout ----------
 
-export function layout({ title, description, path, body, active = 'home', type = 'website', jsonLd, noindex }) {
+export function layout({ title, description, path, body, active = 'home', type = 'website', jsonLd, noindex, image = '/assets/img/og.png' }) {
   const url = siteUrl() + path;
   const nav = [['home', '/madar', 'الرئيسية'], ['articles', '/madar/articles', 'المقالات'], ['tips', '/madar/tips', 'نصائح'], ['podcast', '/madar/podcast', 'البودكاست'], ['write', '/madar/write', 'اكتب معنا']];
   return `<!doctype html>
@@ -39,7 +41,7 @@ ${noindex ? '<meta name="robots" content="noindex">' : ''}
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(url)}">
-<meta property="og:image" content="${siteUrl()}/assets/img/og.png">
+<meta property="og:image" content="${siteUrl()}${image}">
 <meta property="og:locale" content="ar_AR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,14 +63,18 @@ ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(
       <a href="/madar" class="on" aria-current="true">مدار</a>
       <a href="/#contact">تواصل</a>
     </nav>
-    <div class="nav-end"><a class="btn btn-lime" href="/start">ابدأ مشروعك</a></div>
+    <div class="nav-end"><a class="btn btn-lime" href="/start">ابدأ مشروعك</a><button type="button" class="md-burger" aria-expanded="false" aria-controls="mdMenu" aria-label="قائمة نواة"><i></i><i></i><i></i></button></div>
   </div>
+  <nav class="md-menu" id="mdMenu" aria-label="نواة" hidden>
+    <div class="wrap"><a href="/#journey">كيف نعمل</a><a href="/#s1">فريق المنتج</a><a href="/#models">طرق العمل</a><a href="/madar" aria-current="true">مدار</a><a href="/#contact">تواصل</a><a class="btn btn-lime" href="/start">ابدأ مشروعك</a></div>
+  </nav>
 </header>
 <div class="md-bar">
   <div class="wrap md-bar-in">
     <a class="md-lock" href="/madar" aria-label="مدار من نواة">${ORBIT()}<b>مدار</b><small>من نواة</small></a>
     <nav class="md-nav" aria-label="مدار">${nav.map(([k, h, l]) => `<a href="${h}"${k === active ? ' aria-current="page"' : ''}>${l}</a>`).join('')}</nav>
-    <form class="md-search" action="/madar/articles" method="get" role="search">
+    <button type="button" class="md-search-btn" aria-expanded="false" aria-controls="mdSearch" aria-label="ابحث في مدار"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    <form class="md-search" id="mdSearch" action="/madar/articles" method="get" role="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input type="search" name="q" placeholder="ابحث في مدار: Roadmap، سكرم، Figma…" aria-label="ابحث في مدار">
     </form>
@@ -101,7 +107,13 @@ export function chips(active, base = '/madar/topics/') {
 }
 
 // Generated cover art: the topic color with Nawa's orbit, so no stock images are needed.
-const cover = (topic, cls = '') => { const t = topicById(topic); return `<div class="md-cover ${cls}" style="--tc:${t.color};--ts:${t.soft}" aria-hidden="true"><span class="o1"></span><span class="o2"></span><span class="d"></span></div>`; };
+// Each post gets its own composition (ring size, dot position) from its slug.
+const hash = (s) => [...String(s || '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const cover = (topic, cls = '', seed = '') => {
+  const t = topicById(topic); const h = hash(seed);
+  const vars = seed ? `;--rx:${8 + (h % 30)}%;--ry:${8 + ((h >> 5) % 28)}%;--rs:${52 + ((h >> 10) % 22)}%;--dx:${22 + ((h >> 15) % 50)}%;--dy:${30 + ((h >> 20) % 30)}%` : '';
+  return `<div class="md-cover ${cls}" style="--tc:${t.color};--ts:${t.soft}${vars}" aria-hidden="true"><span class="o1"></span><span class="o2"></span><span class="d"></span></div>`;
+};
 
 const byline = (p, extra = '') => `<span class="md-by"><span class="md-av" style="--tc:${topicById(p.topic).color}">${initial(p.author_name)}</span><b>${esc(p.author_name)}</b>${extra}</span>`;
 
@@ -109,7 +121,7 @@ export function postCard(p) {
   const mins = readingMinutes(p.body);
   return `<article class="md-card">
     <a href="${postUrl(p)}" class="md-card-link" aria-label="${esc(p.title)}"></a>
-    ${cover(p.topic)}
+    ${cover(p.topic, '', p.slug)}
     <div class="md-card-body">
       ${topicTagStatic(p.topic, p.series ? `${topicById(p.topic).short} · ${esc(p.series)}` : '')}
       <h3>${esc(p.title)}</h3>
@@ -132,16 +144,14 @@ export function tipCard(p, { big = false } = {}) {
 function episodePanel(e) {
   if (!e) {
     return `<div class="md-pod soon">
-      <span class="md-kicker">Podcast · ${PODCAST.en}</span>
-      <div class="md-pod-cover">${ORBIT('#FFFFFF')}</div>
-      <b>${PODCAST.ar}: قريبًا</b>
-      <p>بودكاست عمّا يحدث بعد إطلاق المنتجات: النمو والأخطاء والدروس. اشترك في رسالة الخميس لتصلك أول حلقة.</p>
-      <a class="btn btn-lime" href="/madar/podcast">عن البودكاست</a>
+      <div class="md-pod-row"><div class="md-pod-cover">${PODMARK(false)}</div><div><span class="md-kicker">Podcast · ${PODCAST.en}</span><b class="md-pod-name">${PODCAST.ar}</b></div></div>
+      <p>${PODCAST.tagline}: حوارات صريحة عن النمو والأخطاء والدروس. أول حلقة قريبًا، اشترك في رسالة الخميس لتصلك.</p>
+      <a class="btn btn-lime" href="/madar/podcast">عن البودكاست ${ARR}</a>
     </div>`;
   }
   return `<a class="md-pod" href="${postUrl(e)}">
     <span class="md-kicker">Podcast · ${PODCAST.en}</span>
-    <div class="md-pod-row"><div class="md-pod-cover">${ORBIT('#FFFFFF')}</div>
+    <div class="md-pod-row"><div class="md-pod-cover">${PODMARK(false)}</div>
       <div><b>الحلقة ${e.number ?? ''}: ${esc(e.title)}</b><span>${e.duration_min ? e.duration_min + ' دقيقة' : ''}</span></div></div>
     <span class="md-pod-play"><span class="pl">▶</span> استمع الآن</span>
   </a>`;
@@ -235,7 +245,7 @@ export function articlePage({ post, related, series }) {
     <div class="md-art-grid">
       <div class="md-prose">${html}</div>
       <aside class="md-art-side">
-        ${toc.length > 1 ? `<nav class="md-toc" aria-label="المحتويات"><b>في هذا المقال</b><ol>${toc.map((h) => `<li><a href="#${h.id}">${esc(h.text)}</a></li>`).join('')}</ol></nav>` : ''}
+        ${toc.length > 1 ? `<details class="md-toc" open><summary>في هذا المقال</summary><nav aria-label="المحتويات"><ol>${toc.map((h) => `<li><a href="#${h.id}">${esc(h.text)}</a></li>`).join('')}</ol></nav></details>` : ''}
         ${parts}
         <div class="md-share"><button type="button" class="btn btn-ghost-ink" data-share>شارك المقال</button><span class="md-form-msg" role="status"></span></div>
       </aside>
@@ -280,15 +290,22 @@ export function tipPage({ tip, more }) {
 export function podcastPage({ episodes }) {
   return `<div class="wrap md-podp">
     <header class="md-pod-hero">
-      <div class="md-pod-art">${ORBIT('#FFFFFF')}</div>
-      <div>
+      <span class="md-pod-rings" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div class="md-pod-art">${PODMARK(false)}</div>
+      <div class="md-pod-txt">
         <span class="md-kicker lime">Podcast · ${PODCAST.en}</span>
         <h1>${PODCAST.ar}</h1>
-        <p>الإطلاق ليس النهاية. حوارات صريحة مع من بنوا منتجات رقمية: ماذا حدث بعد الإطلاق، ما الذي نجح، وما الذي لن يكرروه. لكل حلقة فصول ونص مكتوب.</p>
+        <p class="md-pod-tag">${PODCAST.tagline}. بودكاست من نواة.</p>
+        <p>الإطلاق ليس النهاية. حوارات صريحة مع من بنوا منتجات رقمية: ماذا حدث بعد الإطلاق، ما الذي نجح، وما الذي لن يكرروه.</p>
       </div>
     </header>
+    <ul class="md-pod-facts">
+      <li><b>ضيف واحد</b><span>مؤسس، مدير منتج، مصمم أو مسوّق بنى شيئًا حقيقيًا.</span></li>
+      <li><b>30 إلى 45 دقيقة</b><span>حلقة كل أسبوعين، بالعربية.</span></li>
+      <li><b>فصول ونص كامل</b><span>تقفز إلى ما يهمك، أو تقرأ بدل أن تسمع.</span></li>
+    </ul>
     ${episodes.length ? `<div class="md-eps">${episodes.map((e) => `<a class="md-ep" href="${postUrl(e)}">
-        <span class="md-ep-n">${e.number ?? ''}</span>
+        <span class="md-ep-n">${String(e.number ?? '').padStart(2, '0')}</span>
         <div><b>${esc(e.title)}</b>${e.excerpt ? `<p>${esc(e.excerpt)}</p>` : ''}<span class="md-meta">${fmtDate(e.published_at)}${e.duration_min ? ` · ${e.duration_min} دقيقة` : ''} · ${topicById(e.topic).short}</span></div>
         <span class="md-ep-play" aria-hidden="true">▶</span></a>`).join('')}</div>`
       : `<div class="md-soon"><b>أول حلقة قريبًا</b><p>نسجّل الآن. اشترك في رسالة الخميس لتصلك فور نشرها.</p>${newsletter('podcast')}</div>`}
@@ -302,7 +319,7 @@ export function episodePage({ ep, more }) {
     <nav class="md-crumbs" aria-label="المسار"><a href="/madar">مدار</a> / <a href="/madar/podcast">${PODCAST.ar}</a></nav>
     <div class="md-ep-grid">
       <div class="md-player" data-player>
-        <div class="md-ep-cover"><span class="num">${ep.number ?? ''}</span>${ORBIT('#FFFFFF')}<span class="lbl">${esc(ep.title)}</span></div>
+        <div class="md-ep-cover"><span class="band" style="background:${topicById(ep.topic).color}"></span><span class="num">${String(ep.number ?? '').padStart(2, '0')}</span><span class="show">${PODMARK()}${PODCAST.ar}</span><span class="wave">${Array.from({ length: 36 }, (_, i) => `<i style="height:${Math.round(25 + Math.abs(Math.sin(i * 1.7 + 3) * 60 + Math.sin(i * 0.6) * 15)) % 101}%"></i>`).join('')}</span><span class="lbl">${esc(ep.title)}</span></div>
         <div class="md-ep-titles"><span class="md-kicker">${PODCAST.ar} · الحلقة ${ep.number ?? ''}</span><h1>${esc(ep.title)}</h1><span class="md-meta">${fmtDate(ep.published_at)}${ep.duration_min ? ` · ${ep.duration_min} دقيقة` : ''}</span></div>
         ${ep.audio_url ? `<audio src="${esc(ep.audio_url)}" preload="metadata" controls></audio>
         <div class="md-ctrls"><button type="button" data-skip="-15">-15</button><button type="button" class="play" data-play aria-label="تشغيل">▶</button><button type="button" data-skip="30">+30</button><button type="button" class="rate" data-rate>1×</button></div>`
@@ -311,7 +328,7 @@ export function episodePage({ ep, more }) {
       </div>
       <div class="md-prose md-transcript">${ep.excerpt ? `<p class="md-art-ex">${esc(ep.excerpt)}</p>` : ''}${html}</div>
     </div>
-    ${more.length ? `<section class="md-related"><div class="md-row-head"><h2>حلقات أخرى</h2><a href="/madar/podcast">كل الحلقات ${ARR}</a></div><div class="md-eps">${more.map((e) => `<a class="md-ep" href="${postUrl(e)}"><span class="md-ep-n">${e.number ?? ''}</span><div><b>${esc(e.title)}</b></div><span class="md-ep-play" aria-hidden="true">▶</span></a>`).join('')}</div></section>` : ''}
+    ${more.length ? `<section class="md-related"><div class="md-row-head"><h2>حلقات أخرى</h2><a href="/madar/podcast">كل الحلقات ${ARR}</a></div><div class="md-eps">${more.map((e) => `<a class="md-ep" href="${postUrl(e)}"><span class="md-ep-n">${String(e.number ?? '').padStart(2, '0')}</span><div><b>${esc(e.title)}</b></div><span class="md-ep-play" aria-hidden="true">▶</span></a>`).join('')}</div></section>` : ''}
   </article>`;
 }
 

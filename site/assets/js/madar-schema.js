@@ -12,7 +12,7 @@ export const TOPICS = [
 export const topicById = (id) => TOPICS.find((t) => t.id === id) || TOPICS[0];
 
 export const KINDS = { article: 'مقال', tip: 'نصيحة', episode: 'حلقة بودكاست' };
-export const PODCAST = { ar: 'بعد الإطلاق', en: 'After Launch' };
+export const PODCAST = { ar: 'نبض', en: 'Nabd', tagline: 'ما يحدث بعد الإطلاق' };
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 

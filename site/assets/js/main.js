@@ -76,7 +76,7 @@
     $('fmRow').innerHTML = items.map((p) => {
       const [c, soft, name] = TC[p.topic] || TC.product;
       if (p.kind === 'tip') return `<a class="fm-card tip" href="${esc(p.url)}" style="--ts:${soft};--tc:${c}" lang="ar" dir="rtl"><span class="md-tag" style="--tc:${c}"><i></i><span data-i="fm.tip">${t['fm.tip']}</span> #${esc(p.number)}</span><b>${esc(p.title)}</b></a>`;
-      if (p.kind === 'episode') return `<a class="fm-card pod" href="${esc(p.url)}" lang="ar" dir="rtl"><span class="md-kicker">After Launch · ${esc(p.number)}</span><b>${esc(p.title)}</b><span class="m">▶ <span data-i="fm.listen">${t['fm.listen']}</span>${p.duration ? ' · ' + esc(p.duration) + ' min' : ''}</span></a>`;
+      if (p.kind === 'episode') return `<a class="fm-card pod" href="${esc(p.url)}" lang="ar" dir="rtl"><span class="md-kicker">Nabd · نبض · ${esc(p.number)}</span><b>${esc(p.title)}</b><span class="m">▶ <span data-i="fm.listen">${t['fm.listen']}</span>${p.duration ? ' · ' + esc(p.duration) + ' min' : ''}</span></a>`;
       return `<a class="fm-card" href="${esc(p.url)}" lang="ar" dir="rtl"><span class="md-tag" style="--tc:${c}"><i></i>${name}</span><b>${esc(p.title)}</b><span class="m" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">${esc(p.minutes)} <span data-i="fm.min">${t['fm.min']}</span></span></a>`;
     }).join('');
     $('fromMadar').hidden = false;
