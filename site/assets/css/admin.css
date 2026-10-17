@@ -292,3 +292,22 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .ct-meta.ok a { color: inherit; }
 .ct-meta.bad { color: #B42318; font-weight: 600; }
 .ct-pfbtns .btn-dark.armed { background: #B42318; }
+
+/* ---------- loading (admin-ui.js) ---------- */
+.api-bar { position: fixed; top: env(safe-area-inset-top, 0px); inset-inline: 0; height: 3px; z-index: 100; overflow: hidden; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.api-bar.on { opacity: 1; }
+.api-bar::before { content: ""; position: absolute; inset-block: 0; width: 40%; background: var(--lime); border-radius: 3px; box-shadow: 0 0 10px color-mix(in srgb, var(--lime) 70%, transparent); animation: api-bar 1.1s ease-in-out infinite; }
+@keyframes api-bar { from { inset-inline-start: -40%; } to { inset-inline-start: 100%; } }
+@media (prefers-reduced-motion: reduce) { .api-bar::before { animation-duration: 2.4s; } }
+.spin.on { display: inline-block; animation: spin .7s linear infinite; color: var(--indigo); }
+.loading-block { display: grid; gap: 14px; margin-top: 18px; }
+.loading-msg { display: flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 600; margin: 0; }
+.skel { display: block; border-radius: 16px; background: linear-gradient(90deg, #ECEAE4 25%, #F6F5F2 50%, #ECEAE4 75%); background-size: 200% 100%; animation: skel 1.4s ease-in-out infinite; }
+@keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+.skel-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.skel-stats .skel { height: 84px; }
+.skel-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.skel-cal .skel { height: 96px; border-radius: 14px; }
+.skel-row { height: 62px; }
+@media (max-width: 640px) { .skel-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .skel-cal .skel { height: 56px; } }

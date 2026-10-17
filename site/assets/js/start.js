@@ -355,6 +355,7 @@ function setLang(next, persist) {
 async function submit() {
   const btn = $('nextBtn');
   btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
   $('nextLabel').textContent = ui('sending');
   try {
     const r = await fetch('/api/brief', {
@@ -375,6 +376,7 @@ async function submit() {
     showError(ui('failed'));
   } finally {
     btn.disabled = false;
+    btn.removeAttribute('aria-busy');
     $('nextLabel').textContent = ui(step === 4 ? 'submit' : 'next');
   }
 }

@@ -10,12 +10,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
-<link rel="stylesheet" href="assets/css/styles.css?v=20261017b">
-<link rel="stylesheet" href="assets/css/admin.css?v=20261017b">
-<link rel="stylesheet" href="assets/css/madar.css?v=20261017b">
-<script type="module" src="assets/js/admin.js?v=20261017b"></script>
-<script type="module" src="assets/js/admin-content.js?v=20261017b"></script>
-<script type="module" src="assets/js/admin-madar.js?v=20261017b"></script>
+<link rel="stylesheet" href="assets/css/styles.css?v=20261017c">
+<link rel="stylesheet" href="assets/css/admin.css?v=20261017c">
+<link rel="stylesheet" href="assets/css/madar.css?v=20261017c">
+<script src="assets/js/admin-ui.js?v=20261017c"></script>
+<script type="module" src="assets/js/admin.js?v=20261017c"></script>
+<script type="module" src="assets/js/admin-content.js?v=20261017c"></script>
+<script type="module" src="assets/js/admin-madar.js?v=20261017c"></script>
 </head>
 <body class="admin-page">
 
@@ -80,7 +81,7 @@
 
     <details class="tg" id="tg">
       <summary>إشعارات تيليغرام</summary>
-      <div id="tgBody" class="tg-body">…</div>
+      <div id="tgBody" class="tg-body"><p class="loading-msg"><span class="spin on"></span>جارٍ التحقق من إعدادات تيليغرام…</p></div>
     </details>
   </section>
 
@@ -99,7 +100,7 @@
         <button type="button" class="btn btn-lime" id="ctNew">+ منشور جديد</button>
       </div>
     </div>
-    <div id="ctBody"><p class="empty">…</p></div>
+    <div id="ctBody"></div>
   </section>
 
   <!-- Madar: community articles, tips and podcast (Supabase) -->
@@ -116,7 +117,7 @@
         </label>
       </div>
     </div>
-    <div id="mdBody"><p class="empty">…</p></div>
+    <div id="mdBody"></div>
   </section>
 </main>
 

@@ -1,6 +1,6 @@
 // /admin → «مدار»: write and publish articles, tips and podcast episodes; read newsletter sign-ups and
 // "write with us" pitches. Data lives in Supabase (madar_* tables) through /api/admin/madar.
-import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261017b';
+import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261017c';
 
 const $ = (id) => document.getElementById(id);
 const API = '/api/admin/madar';
@@ -28,7 +28,7 @@ const isLive = (p) => p.status === 'published' && p.published_at && new Date(p.p
 
 async function load() {
   const body = $('mdBody');
-  body.innerHTML = '<p class="empty">جارٍ التحميل…</p>';
+  body.innerHTML = NawaUI.loading('جارٍ تحميل مدار…', 'cards');
   try {
     const [a, b, c] = await Promise.all([call(`${API}?what=posts`), call(`${API}?what=subscribers`), call(`${API}?what=pitches`)]);
     state.posts = a.posts; state.subscribers = b.subscribers; state.pitches = c.pitches; state.loaded = true;

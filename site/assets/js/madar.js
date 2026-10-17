@@ -50,7 +50,7 @@
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = $('.md-form-msg', f); const btn = $('button[type=submit]', f);
-      btn.disabled = true; msg.textContent = 'جارٍ الإرسال…';
+      btn.disabled = true; btn.setAttribute('aria-busy', 'true'); msg.textContent = 'جارٍ الإرسال…';
       try {
         const r = await fetch(f.action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(f))) });
         const d = await r.json().catch(() => ({}));
@@ -59,7 +59,7 @@
         msg.textContent = f.dataset.form === 'pitch' ? 'وصلتنا فكرتك. نرد عليك خلال أسبوع.' : 'تم الاشتراك. أول رسالة يوم الخميس.';
       } catch (err) {
         msg.textContent = ERR[err.message] || 'تعذّر الإرسال. حاول مرة أخرى.';
-      } finally { btn.disabled = false; }
+      } finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
     });
   });
   const qs = new URLSearchParams(location.search);

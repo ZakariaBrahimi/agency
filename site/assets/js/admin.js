@@ -1,5 +1,5 @@
 // /admin: requests dashboard. Talks to /api/admin/* (session cookie set by /api/admin/login).
-import { SERVICES, PROJECT, CONTACT, CURRENCY_NAME, DEFAULT_CURRENCY, t, serviceById, formatAnswer } from './brief-schema.js?v=20261017b';
+import { SERVICES, PROJECT, CONTACT, CURRENCY_NAME, DEFAULT_CURRENCY, t, serviceById, formatAnswer } from './brief-schema.js?v=20261017c';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

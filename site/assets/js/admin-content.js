@@ -1,6 +1,6 @@
 // /admin → «المحتوى»: plan, draft, edit and schedule posts. Data lives in the Nawa Google Drive;
 // scheduling (your approval) adds events to the "Nawa · Content" Google Calendar.
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261017b';
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261017c';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -52,6 +52,7 @@ function toast(msg, bad = false) {
 // ---------- load ----------
 async function load() {
   const body = $('ctBody');
+  if (!body.firstChild) body.innerHTML = NawaUI.loading('جارٍ التحقق من حساب Google…', 'calendar');
   try {
     state.status = await call('/api/admin/google');
   } catch (e) { if (e.code !== 'signed_out') body.innerHTML = `<p class="empty">${esc(errText(e))}</p>`; return; }
@@ -73,7 +74,7 @@ async function load() {
       <p class="muted">سيظهر تنبيه «Google hasn't verified this app» لأن التطبيق خاص بك: اضغط <b dir="ltr">Advanced</b> ثم <b dir="ltr">Go to Nawa Admin</b> ووافق على الصلاحيات.</p></div>`;
     return;
   }
-  body.innerHTML = '<p class="empty">جارٍ تحميل المحتوى من Google Drive…</p>';
+  body.innerHTML = NawaUI.loading('جارٍ تحميل المحتوى من Google Drive…', 'calendar');
   try {
     absorb(await call(API));
     state.loaded = true;

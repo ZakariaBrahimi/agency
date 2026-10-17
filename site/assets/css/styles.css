@@ -439,3 +439,16 @@
 .node b { transition: background .35s, color .35s, border-color .35s, transform .35s; }
 .node.on b { background: var(--lime); color: var(--ink); border-color: var(--lime); transform: scale(1.12); box-shadow: 0 0 0 8px color-mix(in srgb, var(--lime) 18%, transparent); }
 .cycle:not(.auto) .node.n1 b { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+
+/* Busy buttons (any page): a spinner before the label while the action runs. */
+.btn[aria-busy="true"], button[aria-busy="true"] { cursor: progress; pointer-events: none; }
+.btn[aria-busy="true"] { opacity: .9; transform: none; }
+.btn[aria-busy="true"]::before, button[aria-busy="true"]:not(.btn)::before {
+  content: ""; display: inline-block; flex: none; width: .95em; height: .95em; border-radius: 50%;
+  border: 2px solid currentColor; border-inline-end-color: transparent; vertical-align: -.12em;
+  margin-inline-end: .45em; animation: busy-spin .7s linear infinite;
+}
+.btn[aria-busy="true"]::before { margin-inline-end: 0; } /* .btn already spaces its children with gap */
+.login-btn[aria-busy="true"]::before { content: none; } /* the sign-in button has its own spinner */
+@keyframes busy-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn[aria-busy="true"]::before, button[aria-busy="true"]:not(.btn)::before { animation-duration: 1.6s; } }
