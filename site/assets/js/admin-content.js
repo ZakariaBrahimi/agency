@@ -1,6 +1,6 @@
 // /admin → «المحتوى»: plan, draft, edit and schedule posts. Data lives in the Nawa Google Drive;
 // scheduling (your approval) adds events to the "Nawa · Content" Google Calendar.
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, captionFor, platformStatus, postStatus } from './content-schema.js';
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -14,10 +14,14 @@ const ERR = {
   bad_date: 'اختر تاريخًا ووقتًا صحيحين.',
   no_platforms: 'اختر منصة واحدة على الأقل.',
   bad_file: 'هذا الملف غير مدعوم. استخدم صورة أو فيديو.',
+  meta_not_configured: 'Meta غير مربوطة بعد: أضف META_ACCESS_TOKEN وMETA_PAGE_ID وMETA_IG_USER_ID في Vercel.',
+  already_published: 'نُشر هذا المنشور على هذه المنصة من قبل.',
+  publishing: 'النشر جارٍ الآن. انتظر دقيقة ثم حدّث.',
+  bad_platform: 'هذه المنصة غير مختارة لهذا المنشور.',
 };
 const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
 
-const state = { loaded: false, status: null, posts: [], settings: {}, rootUrl: '', email: '', view: 'calendar', filter: 'all', month: null, open: null, dirty: false };
+const state = { loaded: false, status: null, posts: [], settings: {}, rootUrl: '', email: '', view: 'calendar', filter: 'all', month: null, open: null, dirty: false, meta: null };
 try { state.view = localStorage.getItem('nawa.ct.view') || 'calendar'; } catch {}
 
 // ---------- API ----------
@@ -81,6 +85,21 @@ async function load() {
   $('ctHeadActions').hidden = false;
   render();
   routeHash();
+  call(`${API}?action=meta`).then((m) => { state.meta = m; const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
+}
+
+const fmtTime = (iso) => new Date(iso).toLocaleString('ar-DZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+// What a Facebook/Instagram row says about direct publishing.
+function metaLine(p, pf) {
+  const s = p.schedule?.[pf];
+  const media = p.media || [];
+  if (s?.remote?.url) return `<span class="ct-meta ok">✓ نُشر ${s.publishedAt ? fmtTime(s.publishedAt) : ''} · <a href="${esc(s.remote.url)}" target="_blank" rel="noopener">عرض المنشور ↗</a></span>`;
+  if (s?.status === 'publishing') return '<span class="ct-meta">⏳ إنستغرام يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.</span>';
+  const warn = pf === 'instagram' && !media.length ? '<span class="ct-meta bad">إنستغرام يحتاج صورة أو فيديو قبل النشر.</span>'
+    : pf === 'facebook' && media.length > 1 && media.some((m) => m.video || /^video\//.test(m.mimeType || '')) ? '<span class="ct-meta bad">فيسبوك لا يجمع الفيديو مع الصور في منشور واحد.</span>' : '';
+  const err = s?.error ? `<span class="ct-meta bad">${esc(s.error.message)}${s.error.tries >= 3 ? ' توقفت المحاولات التلقائية: صحّح ثم اضغط «انشر الآن».' : ''}</span>` : '';
+  const when = s && s.status === 'scheduled' ? (s.auto === false ? '<span class="ct-meta">النشر التلقائي متوقف: انشر يدويًا أو فعّله.</span>' : `<span class="ct-meta">⏱ يُنشر تلقائيًا في موعده على ${PLATFORMS[pf].name}.</span>`) : '';
+  return warn + err + when;
 }
 
 function routeHash() {
@@ -433,21 +452,27 @@ function drawSchedule(p) {
   const def = p.date || `${todayAt()}T20:00`;
   box.innerHTML = `<div class="ct-sec-head"><h3>الموافقة والجدولة</h3></div>
     <p class="muted">الجدولة هي موافقتك: تضيف حدثًا في تقويم «Nawa · Content» مع تذكير قبل ساعة. يُحفظ أي تعديل غير محفوظ أولًا.</p>
+    ${state.meta?.configured ? `<p class="ct-metabar">${state.meta.accounts ? `<b>النشر المباشر مفعّل</b> · فيسبوك: <bdi>${esc(state.meta.accounts.page)}</bdi> · إنستغرام: <bdi dir="ltr">@${esc(state.meta.accounts.ig)}</bdi>. المنشورات المجدولة على هاتين المنصتين تُنشر وحدها في موعدها (خلال 5 دقائق).` : `<b>Meta:</b> ${esc(state.meta.error || 'تعذّر التحقق من الحساب.')}`}</p>` : ''}
     ${pfs.length ? `<div class="ct-all">
       <input type="datetime-local" id="ceAllAt" value="${esc(def)}" aria-label="موعد كل المنصات">
       <button type="button" class="btn btn-lime" id="ceAll">جدولة على كل المنصات (${pfs.length})</button>
     </div>
     <ul class="ct-pfrows">${pfs.map((pf) => {
       const s = p.schedule?.[pf]; const st = platformStatus(p, pf);
+      const direct = state.meta?.configured && AUTO_PLATFORMS.includes(pf);
+      const canPublish = direct && st !== 'published' && st !== 'publishing' && !(pf === 'instagram' && !(p.media || []).length);
       return `<li class="ct-pfrow">
         <span class="ct-pfname"><b>${PLATFORMS[pf].name}</b><span class="pill ct-st st-${st}">${STATUS[st]}${s?.at ? ` · <span dir="ltr">${esc(s.at.replace('T', ' '))}</span>` : ''}</span></span>
         <input type="datetime-local" data-at="${pf}" value="${esc(s?.at || def)}" aria-label="موعد ${PLATFORMS[pf].name}">
         <span class="ct-pfbtns">
           <button type="button" class="btn btn-ghost-dark" data-one="${pf}">${s ? 'تحديث الموعد' : 'جدولة هنا فقط'}</button>
-          ${s ? `<button type="button" class="btn btn-ghost-dark" data-pub="${pf}" data-v="${st !== 'published'}">${st === 'published' ? 'إلغاء «منشور»' : 'تم النشر ✓'}</button>
-                 <button type="button" class="link-btn ct-danger" data-un="${pf}">إلغاء الجدولة</button>` : ''}
+          ${canPublish ? `<button type="button" class="btn btn-dark" data-now="${pf}">انشر الآن على ${PLATFORMS[pf].name}</button>` : ''}
+          ${direct && s && st === 'scheduled' ? `<button type="button" class="link-btn" data-auto="${pf}" data-v="${s.auto === false}">${s.auto === false ? 'تفعيل النشر التلقائي' : 'إيقاف النشر التلقائي'}</button>` : ''}
+          ${s && !(direct && (st !== 'published' || s.remote)) ? `<button type="button" class="btn btn-ghost-dark" data-pub="${pf}" data-v="${st !== 'published'}">${st === 'published' ? 'إلغاء «منشور»' : 'تم النشر ✓'}</button>` : ''}
+          ${s && st !== 'published' ? `<button type="button" class="link-btn ct-danger" data-un="${pf}">إلغاء الجدولة</button>` : ''}
           <button type="button" class="link-btn" data-copy="${pf}">نسخ نص ${PLATFORMS[pf].name}</button>
         </span>
+        ${direct ? `<span class="ct-metas">${metaLine(p, pf)}</span>` : ''}
       </li>`;
     }).join('')}</ul>` : '<p class="muted">اختر منصة واحدة على الأقل في الأعلى ثم احفظ.</p>'}`;
 
@@ -466,6 +491,17 @@ function drawSchedule(p) {
   box.querySelectorAll('[data-un]').forEach((b) => b.addEventListener('click', () => run(() => act('unschedule', { id: p.id, platforms: [b.dataset.un] }), 'أُلغيت الجدولة وحُذف الحدث من التقويم.')));
   box.querySelectorAll('[data-pub]').forEach((b) => b.addEventListener('click', () => run(() => act('published', { id: p.id, platform: b.dataset.pub, value: b.dataset.v === 'true' }), b.dataset.v === 'true' ? 'سُجّل كمنشور.' : 'أُعيد إلى «مجدول».')));
   box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(captionFor({ ...current(), captions: formPatch().captions }, b.dataset.copy))));
+  box.querySelectorAll('[data-auto]').forEach((b) => b.addEventListener('click', () => run(() => act('auto', { id: p.id, platform: b.dataset.auto, value: b.dataset.v === 'true' }), b.dataset.v === 'true' ? 'سيُنشر تلقائيًا في موعده.' : 'أُوقف النشر التلقائي لهذه المنصة.')));
+  box.querySelectorAll('[data-now]').forEach((b) => b.addEventListener('click', async () => {
+    const pf = b.dataset.now;
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = `تأكيد: انشر على ${PLATFORMS[pf].name} الآن`; b.classList.add('armed'); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = `انشر الآن على ${PLATFORMS[pf].name}`; b.classList.remove('armed'); } }, 5000); return; }
+    b.textContent = 'جارٍ النشر… قد يستغرق دقيقة';
+    let result = '';
+    await run(async () => { const d = await act('publish', { id: p.id, platform: pf }); result = d.result; return d; },
+      `نُشر على ${PLATFORMS[pf].name}.`);
+    if (result === 'pending') toast('إنستغرام يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.');
+    else if (result === 'failed') toast(current()?.schedule?.[pf]?.error?.message || 'تعذّر النشر.', true);
+  }));
 }
 
 // ---------- boot ----------

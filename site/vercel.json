@@ -18,6 +18,10 @@
     {
       "source": "/madar/:path*",
       "destination": "/api/madar/render?p=:path*"
+    },
+    {
+      "source": "/media/:k",
+      "destination": "/api/admin/content?action=pub-media&k=:k"
     }
   ],
   "headers": [
@@ -69,5 +73,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/admin/content.js": {
+      "maxDuration": 60
+    }
+  }
 }

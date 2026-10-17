@@ -14,10 +14,21 @@
 // POST ?action=unschedule  { id, platforms: [...] }
 // POST ?action=published   { id, platform, value: true|false }
 // POST ?action=seed        adds the starter plan (once)
+// GET  ?action=meta        -> { configured, accounts }   (Facebook Page and Instagram account names)
+// POST ?action=publish     { id, platform }               publishes to Facebook or Instagram now
+// POST ?action=auto        { id, platform, value }        automatic publishing at the scheduled time on/off
+//
+// Public (no admin session), each with its own check:
+// GET  /media/<sealed>     -> a post's file for Meta to download (rewritten here as ?action=pub-media)
+// POST ?action=cron        publishes what is due; called every 5 minutes by Supabase (header x-cron-secret)
 import crypto from 'node:crypto';
-import { json, readJson, siteUrl } from '../_lib/http.js';
+import { json, readJson, siteUrl, env } from '../_lib/http.js';
 import { isAdmin } from '../_lib/session.js';
 import * as G from '../_lib/google.js';
+import * as M from '../_lib/meta.js';
+import { META_PLATFORMS, isDue, publishPlatform, serveMedia } from '../_lib/publish.js';
+import { seal, unseal } from '../_lib/seal.js';
+import { kv } from '../_lib/supabase.js';
 import { PLATFORMS, PLATFORM_IDS, KINDS, checkPost, isAt, captionFor, STARTER_PLAN } from '../../assets/js/content-schema.js';
 
 const newId = () => 'p_' + crypto.randomBytes(6).toString('hex');
@@ -83,14 +94,62 @@ async function ensureFolder(g, loc, post) {
 
 const slim = (f) => ({ id: f.id, name: f.name, mimeType: f.mimeType, ...(f.videoMediaMetadata ? { video: true } : {}) });
 
+// The scheduler needs Drive without a browser: the admin's Google connection is kept sealed in
+// Supabase (app_state), refreshed whenever the content section is opened.
+let storedConn = '';
+async function rememberConnection(conn) {
+  if (!kv.ready() || storedConn === conn.refresh) return;
+  try { await kv.set('google', seal('nawa-google-store', conn)); storedConn = conn.refresh; } catch (e) { console.error('kv', e.message); }
+}
+
+function cronAllowed(req) {
+  const want = env('CRON_SECRET'); const got = String(req.headers['x-cron-secret'] || '');
+  if (!want || got.length !== want.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want));
+}
+
+// Publishes every due Facebook/Instagram entry, oldest first, within ~50 seconds.
+async function runSchedule(g) {
+  const started = Date.now(); const deadline = started + 50e3;
+  const { loc, data } = await G.readIndex(g);
+  const due = [];
+  for (const post of data.posts) for (const pf of META_PLATFORMS) if (post.platforms?.includes(pf) && isDue(post.schedule?.[pf])) due.push({ post, pf });
+  due.sort((a, b) => (a.post.schedule[a.pf].at < b.post.schedule[b.pf].at ? -1 : 1));
+  const results = [];
+  for (const { post, pf } of due) {
+    if (Date.now() > deadline - 15e3) break;
+    const r = await publishPlatform(g, post, pf, { deadline, persist: () => G.writeIndex(g, loc, data) });
+    results.push({ post: post.id, platform: pf, result: r });
+    post.updatedAt = now();
+    if (r === 'published') await syncEvents(g, data, post).catch((e) => console.error('events', e.message));
+    await G.writeIndex(g, loc, data);
+  }
+  return results;
+}
+
 export default async function handler(req, res) {
+  const url0 = new URL(req.url, 'http://x');
+  const act0 = url0.searchParams.get('action') || '';
+  if (act0 === 'pub-media' && (req.method === 'GET' || req.method === 'HEAD')) {
+    try { return await serveMedia(req, res, url0.searchParams.get('k'), G.DRIVE_BASE); }
+    catch (e) { console.error('media', e.message); res.statusCode = 502; return res.end(); }
+  }
+  if (act0 === 'cron') {
+    if (!cronAllowed(req)) return json(res, 401, { ok: false });
+    if (!M.metaConfigured() || !G.googleConfigured()) return json(res, 200, { ok: true, skipped: 'not_configured' });
+    const conn = unseal('nawa-google-store', await kv.get('google').catch(() => null));
+    if (!conn) return json(res, 200, { ok: true, skipped: 'no_google' });
+    try { return json(res, 200, { ok: true, results: await runSchedule(G.client(conn)) }); }
+    catch (e) { console.error('cron', e.message); return json(res, 502, { ok: false, error: e.reconnect ? 'google_not_connected' : 'error' }); }
+  }
+
   if (!isAdmin(req)) return json(res, 401, { ok: false, error: 'signed_out' });
   if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'google_not_configured' });
   const conn = G.connection(req);
   if (!conn) return json(res, 409, { ok: false, error: 'google_not_connected' });
   const g = G.client(conn);
-  const url = new URL(req.url, 'http://x');
-  const action = url.searchParams.get('action') || '';
+  const url = url0;
+  const action = act0;
 
   try {
     // ---- image previews
@@ -130,7 +189,12 @@ export default async function handler(req, res) {
       }
       return reply({ post });
     }
-    if (req.method === 'GET') return reply();
+    if (req.method === 'GET' && action === 'meta') {
+      if (!M.metaConfigured()) return json(res, 200, { ok: true, configured: false });
+      try { return json(res, 200, { ok: true, configured: true, accounts: await M.accounts() }); }
+      catch (e) { return json(res, 200, { ok: true, configured: true, error: M.explain(e) }); }
+    }
+    if (req.method === 'GET') { await rememberConnection(conn); return reply(); }
     if (req.method !== 'POST') return json(res, 405, { ok: false });
 
     const body = await readJson(req);
@@ -210,7 +274,12 @@ export default async function handler(req, res) {
         if (!pfs.length) return json(res, 400, { ok: false, error: 'no_platforms' });
         if (!isAt(body.at)) return json(res, 400, { ok: false, error: 'bad_date' });
         post.schedule ||= {};
-        for (const pf of pfs) post.schedule[pf] = { at: body.at, status: 'scheduled', approvedAt: now() };
+        for (const pf of pfs) {
+          const old = post.schedule[pf];
+          // moving an already-published entry only changes its time; it is never published twice
+          post.schedule[pf] = old?.status === 'published' ? { ...old, at: body.at }
+            : { at: body.at, status: 'scheduled', approvedAt: now(), ...(old?.auto === false ? { auto: false } : {}) };
+        }
         post.updatedAt = now();
         await syncEvents(g, data, post);
         await save();
@@ -231,6 +300,31 @@ export default async function handler(req, res) {
         if (body.value) s.publishedAt = now(); else delete s.publishedAt;
         post.updatedAt = now();
         await syncEvents(g, data, post);
+        await save();
+        return reply({ post });
+      }
+      case 'publish': {
+        if (!post || !META_PLATFORMS.includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: 'bad_platform' });
+        if (!M.metaConfigured()) return json(res, 409, { ok: false, error: 'meta_not_configured' });
+        post.schedule ||= {};
+        const s = post.schedule[body.platform];
+        if (s?.status === 'published') return json(res, 409, { ok: false, error: 'already_published' });
+        if (s?.lockedAt && Date.now() - Date.parse(s.lockedAt) < 5 * 60e3) return json(res, 409, { ok: false, error: 'publishing' });
+        // publishing now is also the approval: the entry is scheduled for this minute if it wasn't
+        if (!s) post.schedule[body.platform] = { at: new Date(Date.now() + 3600e3).toISOString().slice(0, 16), status: 'scheduled', approvedAt: now() }; // Algiers = UTC+1
+        else delete s.error;
+        await rememberConnection(conn);
+        const result = await publishPlatform(g, post, body.platform, { deadline: Date.now() + 45e3, persist: save });
+        post.updatedAt = now();
+        await syncEvents(g, data, post).catch((e) => console.error('events', e.message));
+        await save();
+        return reply({ post, result });
+      }
+      case 'auto': {
+        const s = post?.schedule?.[body.platform];
+        if (!s || !META_PLATFORMS.includes(body.platform)) return json(res, 400, { ok: false, error: 'not_scheduled' });
+        if (body.value) { delete s.auto; delete s.error; } else s.auto = false;
+        post.updatedAt = now();
         await save();
         return reply({ post });
       }

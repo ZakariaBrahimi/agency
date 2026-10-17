@@ -15,6 +15,7 @@ const MOCK = env('GOOGLE_MOCK_BASE'); // local tests only: points every Google h
 const OAUTH = MOCK || 'https://oauth2.googleapis.com';
 const ACCOUNTS = MOCK || 'https://accounts.google.com';
 const API = MOCK || 'https://www.googleapis.com';
+export const DRIVE_BASE = API;
 
 export const SCOPES = [
   'openid', 'email',
@@ -139,7 +140,7 @@ export function client(conn) {
       return text ? JSON.parse(text) : null;
     }
   }
-  return { call, cacheKey: id };
+  return { call, token, cacheKey: id };
 }
 
 // ---------- Drive ----------

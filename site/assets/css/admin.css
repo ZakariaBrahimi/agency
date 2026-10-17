@@ -134,6 +134,8 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .ct-st.st-draft { background: #ECEDEF; color: #4B5160; }
 .ct-st.st-scheduled { background: #E7E5FF; color: #3B2FD1; }
 .ct-st.st-published { background: #DCF5E3; color: #17703A; }
+.ct-st.st-publishing, .ct-pf.st-publishing { background: #FFF1D6; color: #8A5A00; }
+.ct-chip.st-publishing { background: #FFF1D6; border-inline-start-color: #C98A00; }
 
 .ct-sub { font-size: 17px; margin: 22px 0 10px; }
 .ct-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; align-items: start; }
@@ -280,3 +282,13 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .md-f .md-check input { width: auto; }
 .md-danger { border-top: 1px solid var(--line); padding-top: 12px; }
 .link-btn.danger { color: #B42318; }
+
+/* direct publishing (Facebook / Instagram through Meta) */
+.ct-metabar { background: #ECEAFF; border-radius: 12px; padding: 10px 14px; font-size: 14px; margin: 8px 0 12px; }
+.ct-metas { grid-column: 1 / -1; display: grid; gap: 4px; }
+.ct-metas:empty { display: none; }
+.ct-meta { font-size: 13.5px; color: var(--muted); }
+.ct-meta.ok { color: #17703A; font-weight: 600; }
+.ct-meta.ok a { color: inherit; }
+.ct-meta.bad { color: #B42318; font-weight: 600; }
+.ct-pfbtns .btn-dark.armed { background: #B42318; }

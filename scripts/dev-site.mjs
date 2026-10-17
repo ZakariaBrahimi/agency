@@ -12,6 +12,10 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   let p = decodeURIComponent(url.pathname);
+  if (p.startsWith('/media/')) { // vercel.json rewrite
+    req.url = '/api/admin/content?action=pub-media&k=' + encodeURIComponent(p.slice(7));
+    p = '/api/admin/content';
+  }
   if (p === '/madar' || p.startsWith('/madar/')) { // vercel.json rewrite
     url.searchParams.set('p', p.replace(/^\/madar\/?/, ''));
     req.url = '/api/madar/render?' + url.searchParams;

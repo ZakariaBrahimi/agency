@@ -19,8 +19,12 @@ export const KINDS = {
 export const STATUS = {
   draft: 'مسودة',
   scheduled: 'مجدول',
+  publishing: 'قيد النشر',
   published: 'منشور',
 };
+
+/** Platforms the dashboard can publish to directly (through Meta). */
+export const AUTO_PLATFORMS = ['facebook', 'instagram'];
 
 const AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 export const isAt = (s) => typeof s === 'string' && AT.test(s);

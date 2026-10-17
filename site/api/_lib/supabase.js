@@ -41,3 +41,15 @@ export const madar = {
     remove: (table, id) => rest(`${table}?id=eq.${encodeURIComponent(id)}`, { key: svc(), method: 'DELETE' }),
   },
 };
+
+// Small server-only key/value store (table app_state, no public access): used to keep the Google
+// connection, sealed, so scheduled publishing can reach Drive when no one has the admin open.
+export const kv = {
+  ready: () => Boolean(env('SUPABASE_URL') && svc()),
+  async get(k) {
+    const [row] = await rest(`app_state?select=value&key=eq.${encodeURIComponent(k)}`, { key: svc() });
+    return row?.value ?? null;
+  },
+  set: (k, value) => rest('app_state?on_conflict=key', { key: svc(), method: 'POST', body: { key: k, value, updated_at: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' }),
+  del: (k) => rest(`app_state?key=eq.${encodeURIComponent(k)}`, { key: svc(), method: 'DELETE' }),
+};
