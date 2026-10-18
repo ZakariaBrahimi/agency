@@ -1,6 +1,7 @@
 // /admin → «المحتوى»: plan, draft, edit and schedule posts. Data lives in the Nawa Google Drive;
 // scheduling (your approval) adds events to the "Nawa · Content" Google Calendar.
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261017d';
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261018a';
+import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261018a';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -18,6 +19,7 @@ const ERR = {
   already_published: 'نُشر هذا المنشور على هذه المنصة من قبل.',
   publishing: 'النشر جارٍ الآن. انتظر دقيقة ثم حدّث.',
   bad_platform: 'هذه المنصة غير مختارة لهذا المنشور.',
+  storage_not_configured: 'قاعدة البيانات غير مربوطة (Supabase).',
 };
 const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
 
@@ -86,7 +88,8 @@ async function load() {
   $('ctHeadActions').hidden = false;
   render();
   routeHash();
-  call(`${API}?action=meta`).then((m) => { state.meta = m; const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
+  call(`${API}?action=meta`).then((m) => { state.meta = m; drawStories(); const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
+  call(`${API}?action=stories`).then((d) => { state.stories = d.sets; drawStories(); }).catch(() => {});
 }
 
 const fmtTime = (iso) => new Date(iso).toLocaleString('ar-DZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -149,6 +152,7 @@ function render() {
       <button type="button" class="btn btn-lime" id="ctSeed">إضافة الخطة</button></div>` : '';
 
   body.innerHTML = `${seed}
+    <div id="ctStories"></div>
     <div class="stats">
       <div class="stat"><b dir="ltr">${counts.draft}</b><span>مسودات</span></div>
       <div class="stat hl"><b dir="ltr">${counts.scheduled}</b><span>مجدولة</span></div>
@@ -165,7 +169,59 @@ function render() {
     e.target.disabled = true;
     try { absorb(await act('seed')); toast('أُضيفت خطة الشهر الأول.'); jumpToFirst(); render(); } catch (err) { toast(errText(err), true); e.target.disabled = false; }
   };
+  drawStories();
   if (state.view === 'list') renderList(); else renderCalendar();
+}
+
+// ---------- highlight stories ----------
+// Six ready-made story sets (rendered into /assets/stories). Publishing posts a set's stories to
+// Instagram in order; Instagram has no API for highlights, so the highlight itself is made in the app.
+function drawStories() {
+  const box = $('ctStories'); if (!box) return;
+  const sets = state.stories || {};
+  const done = STORY_SETS.filter((s) => sets[s.id]?.publishedAt).length;
+  const live = state.meta?.configured && state.meta.accounts;
+  let open = true; try { open = localStorage.getItem('nawa.ct.stories') !== 'closed'; } catch {}
+  const label = (set, st) => (st.publishedAt ? 'انشرها مرة أخرى' : st.done ? `أكمل النشر (${set.count - st.done})` : `انشر ${set.count} قصص`);
+  box.innerHTML = `<details class="ct-card ct-stories"${open ? ' open' : ''}>
+    <summary><b>قصص الهايلايت</b> <span class="muted">${STORY_SETS.length} مجموعات · ${done} منشورة على إنستغرام</span></summary>
+    <p class="muted">انشر قصص كل مجموعة، ثم في تطبيق إنستغرام: ملفك ← <b>+</b> ← هايلايت جديد ← اختر قصص المجموعة ← اكتب الاسم ← «تعديل الغلاف» واختر صورة الغلاف من هاتفك. القصص تبقى في الأرشيف بعد 24 ساعة، فيمكنك صنع الهايلايت لاحقًا.</p>
+    ${state.meta && !live ? `<p class="ct-metabar"><b>Meta:</b> ${esc(state.meta.error || ERR.meta_not_configured)}</p>` : ''}
+    <ul class="ct-story-sets">${STORY_SETS.map((set) => {
+      const st = sets[set.id] || {};
+      const status = st.publishedAt ? `<span class="pill ct-st st-published">نُشرت · ${esc(fmtTime(st.publishedAt))}</span>`
+        : st.done ? `<span class="pill ct-st st-scheduled">نُشر ${st.done} من ${set.count}</span>` : '';
+      return `<li class="ct-story-set">
+        <div class="ct-story-head"><span class="ct-story-cover" style="background-image:url(${storyCover(set)})"></span><b>${esc(set.name)}</b>${status}</div>
+        <div class="ct-story-frames">${storyFiles(set).map((f, i) => `<a href="${f}" target="_blank" rel="noopener"><img src="${f}" alt="${esc(set.name)} · قصة ${i + 1}" loading="lazy"></a>`).join('')}</div>
+        ${st.error ? `<p class="ct-story-err">${esc(st.error.message)}</p>` : ''}
+        <div class="ct-story-btns">
+          ${live ? `<button type="button" class="btn ${st.publishedAt ? 'btn-ghost-dark' : 'btn-dark'}" data-story="${set.id}">${label(set, st)}</button>` : ''}
+          <a class="link-btn" href="${storyCover(set)}" download="highlight-${set.id}.jpg">تنزيل الغلاف</a>
+        </div>
+      </li>`;
+    }).join('')}</ul>
+  </details>`;
+  box.querySelector('details').addEventListener('toggle', (e) => { try { localStorage.setItem('nawa.ct.stories', e.target.open ? 'open' : 'closed'); } catch {} });
+  box.querySelectorAll('[data-story]').forEach((b) => b.addEventListener('click', async () => {
+    const set = STORY_SETS.find((s) => s.id === b.dataset.story);
+    if (!b.dataset.armed) {
+      b.dataset.armed = '1'; b.textContent = `تأكيد: انشر «${set.name}» على إنستغرام`; b.classList.add('armed');
+      setTimeout(() => { if (b.isConnected && b.dataset.armed) { delete b.dataset.armed; b.textContent = label(set, sets[set.id] || {}); b.classList.remove('armed'); } }, 5000);
+      return;
+    }
+    box.querySelectorAll('[data-story]').forEach((x) => (x.disabled = true));
+    b.textContent = 'جارٍ النشر… قد يستغرق دقيقة';
+    try {
+      const d = await act('story', { set: set.id });
+      state.stories = d.sets;
+      const st = d.sets[set.id];
+      if (st.publishedAt) toast(`نُشرت قصص «${set.name}». أضفها الآن إلى هايلايت من التطبيق.`);
+      else if (st.error) toast(st.error.message, true);
+      else toast(`نُشر ${st.done} من ${set.count}. اضغط «أكمل النشر» للباقي.`);
+    } catch (e) { toast(errText(e), true); }
+    drawStories();
+  }));
 }
 
 function jumpToFirst() {

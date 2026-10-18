@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>نواة · Instagram stories</title>
+<style>
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-arabic.woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF; }
+@font-face { font-family: "Plex Ar"; font-weight: 500; src: url("fonts/IBMPlexSansArabic-500-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Plex Ar"; font-weight: 700; src: url("fonts/IBMPlexSansArabic-700-latin.woff2"); unicode-range: U+0000-024F, U+2000-206F; }
+@font-face { font-family: "Bricolage"; font-weight: 800; src: url("fonts/BricolageGrotesque-800-latin.woff2"); }
+@font-face { font-family: "JB Mono"; font-weight: 600; src: url("fonts/JetBrainsMono-600-latin.woff2"); }
+:root { --ink: #0B1220; --ink2: #141C30; --line: #273250; --indigo: #5B4BFF; --lime: #C6F432; --paper: #F6F5F2; --muted: #8B93A8; --muted-dark: #5E6578; }
+* { box-sizing: border-box; margin: 0; padding: 0; letter-spacing: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+body { font-family: "Plex Ar", Tahoma, sans-serif; font-weight: 700; -webkit-font-smoothing: antialiased; }
+.mono { font-family: "JB Mono", monospace; font-weight: 600; letter-spacing: .12em; direction: ltr; }
+.lat { font-family: "Bricolage", sans-serif; font-weight: 800; direction: ltr; }
+
+/* 1080x1920. Instagram covers the top ~250px (progress bar, name) and the bottom ~300px (reply bar):
+   everything that matters sits between them. */
+.story { position: relative; width: 1080px; height: 1920px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; padding: 300px 90px 360px; text-align: center; }
+.story.paper { background: var(--paper); color: var(--ink); }
+.story.ink { background: radial-gradient(ellipse 80% 55% at 50% 42%, #1A2340, var(--ink) 70%); color: #fff; }
+.story::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--g) 2px, transparent 2px), linear-gradient(90deg, var(--g) 2px, transparent 2px); background-size: 60px 60px; }
+.paper::before { --g: rgba(11,18,32,.045); } .ink::before { --g: rgba(255,255,255,.035); }
+.story > * { position: relative; }
+.hud { position: absolute; top: 236px; left: 90px; right: 90px; display: flex; justify-content: space-between; font-size: 20px; opacity: .45; }
+
+.kicker { font-size: 26px; color: var(--muted-dark); } .ink .kicker { color: var(--lime); }
+h1 { font-size: 104px; line-height: 1.25; }
+h1.s { font-size: 88px; }
+h1 .hl { display: inline-block; background: var(--lime); color: var(--ink); padding: 0 26px; border-radius: 22px; line-height: 1.3; }
+.sub { font-size: 44px; font-weight: 500; line-height: 1.55; color: var(--muted-dark); max-width: 860px; }
+.ink .sub { color: #C9CEDB; }
+
+.mark { width: 180px; height: 180px; }
+.list { list-style: none; width: 100%; display: flex; flex-direction: column; gap: 26px; }
+.list li { display: flex; align-items: center; gap: 30px; padding: 30px 36px; border-radius: 30px; text-align: right; background: #fff; box-shadow: 0 14px 40px rgba(11,18,32,.08); }
+.ink .list li { background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); box-shadow: none; }
+.list li.on { background: rgba(198,244,50,.14); border-color: var(--lime); }
+.paper .list li.on { background: var(--ink); color: #fff; }
+.list .n { flex: none; width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--lime); font-size: 34px; }
+.ink .list .n { background: var(--lime); color: var(--ink); }
+.list b { display: block; font-size: 50px; line-height: 1.3; }
+.list span { display: block; font-size: 34px; font-weight: 500; color: var(--muted-dark); line-height: 1.45; }
+.ink .list span, .paper .list li.on span { color: var(--muted); }
+
+.big { font-size: 280px; line-height: 1; color: var(--ink); } .ink .big { color: #fff; }
+.pill { display: inline-flex; align-items: center; gap: 18px; padding: 26px 44px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 34px; }
+.ink .pill { background: var(--lime); color: var(--ink); }
+.pill .mono { letter-spacing: .02em; }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+.chip { padding: 16px 30px; border-radius: 999px; font-size: 28px; border: 2px solid rgba(11,18,32,.15); background: #fff; }
+.chip.dark { background: var(--ink); color: var(--lime); border-color: var(--ink); }
+
+.photo { width: 460px; height: 460px; border-radius: 50%; border: 14px solid var(--lime); background: var(--ink) center/cover; box-shadow: 0 30px 70px rgba(11,18,32,.25); }
+.quote { font-size: 46px; font-weight: 500; line-height: 1.6; color: var(--muted-dark); max-width: 860px; }
+.tickets { display: flex; flex-direction: column; gap: 34px; width: 100%; }
+.ticket { position: relative; padding: 46px 56px; border-radius: 30px; background: #fff; color: var(--ink); text-align: right; display: flex; justify-content: space-between; align-items: center; }
+.ticket.lime { background: var(--lime); }
+.ticket b { display: block; font-size: 58px; } .ticket span { font-size: 32px; font-weight: 500; opacity: .7; }
+.ticket .tag { font-size: 24px; opacity: .8; }
+.ticket .best { position: absolute; top: -26px; right: 40px; background: var(--ink); color: var(--lime); padding: 8px 26px; border-radius: 999px; font-size: 26px; }
+
+.card { width: 100%; padding: 56px; border-radius: 40px; background: #fff; color: var(--ink); text-align: right; box-shadow: 0 30px 80px rgba(11,18,32,.12); }
+.ink .card { background: var(--ink2); color: #fff; border: 2px solid var(--line); box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+.card .t { font-size: 54px; line-height: 1.45; } .card .d { font-size: 36px; font-weight: 500; line-height: 1.6; color: var(--muted-dark); margin-top: 22px; }
+.ink .card .d { color: var(--muted); }
+.card .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 34px; font-size: 22px; color: var(--muted-dark); }
+.ink .card .meta { color: var(--muted); }
+.card .badge { background: var(--lime); color: var(--ink); padding: 8px 22px; border-radius: 999px; font-size: 24px; font-family: "Plex Ar"; letter-spacing: 0; }
+
+/* a dashboard sketch for Mizan: shapes only, no made-up numbers */
+.dash { width: 100%; padding: 46px; border-radius: 40px; background: var(--ink2); border: 2px solid var(--line); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 26px; box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+.dash .tile { border-radius: 24px; background: rgba(255,255,255,.05); padding: 30px 26px; text-align: right; }
+.dash .tile b { display: block; font-size: 34px; color: #fff; } .dash .tile i { display: block; height: 16px; border-radius: 8px; background: rgba(255,255,255,.12); margin-top: 22px; width: 70%; }
+.dash .tile.on i { background: var(--lime); }
+.dash .chart { grid-column: 1 / -1; height: 300px; border-radius: 24px; background: rgba(255,255,255,.04); display: flex; align-items: flex-end; gap: 22px; padding: 30px; }
+.dash .chart i { flex: 1; border-radius: 12px 12px 4px 4px; background: var(--indigo); }
+.dash .chart i:last-child { background: var(--lime); }
+
+.pod { width: 420px; height: 420px; border-radius: 48px; background: var(--indigo); display: grid; place-items: center; box-shadow: 0 40px 90px rgba(91,75,255,.35); }
+
+/* highlight cover: Instagram crops it to a small circle, so the icon stays in the middle */
+.cover { width: 1080px; height: 1920px; display: grid; place-items: center; background: var(--ink); }
+.cover .disc { width: 1080px; height: 1080px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 70% 25%, #2A3146, var(--ink) 62%); }
+.cover svg { width: 460px; height: 460px; fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.cover .lime { stroke: var(--lime); } .cover .dot { fill: var(--lime); stroke: none; }
+</style></head>
+<body>
+<div id="root"></div>
+<script>
+// The highlights and their stories. ?s=<set>&n=<1..3> renders one story; ?s=<set>&cover=1 its highlight cover.
+// The names and ids here match site/assets/js/stories-schema.js (the admin publishes the rendered JPEGs).
+const MARK = (tile = '#5B4BFF') => `<svg class="mark" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="${tile}"/><path d="M146 236a110 110 0 0 1 220 0" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>`;
+const URL_START = 'nawa-studio-six.vercel.app/start';
+const URL_MADAR = 'nawa-studio-six.vercel.app/madar';
+
+const ICONS = {
+  about: '<circle cx="46" cy="36" r="15"/><path d="M20 82c0-15 11-26 26-26s26 11 26 26"/><circle class="dot" cx="76" cy="26" r="7"/>',
+  services: '<rect x="14" y="22" width="72" height="56" rx="10"/><path d="M14 38h72"/><circle class="dot" cx="25" cy="30" r="3"/><path class="lime" d="M50 48v16M42 56h16"/>',
+  process: '<path d="M18 50a32 32 0 0 1 56-21l6 7M80 18v18H62"/><path class="lime" d="M82 50a32 32 0 0 1-56 21l-6-7M20 82V64h18"/><circle class="dot" cx="50" cy="50" r="6"/>',
+  mizan: '<path d="M50 16v66M30 82h40M20 30h60"/><path d="M20 30l-10 26h20zM80 30l-10 26h20z"/><path class="lime" d="M10 56a10 6 0 0 0 20 0M70 56a10 6 0 0 0 20 0"/><circle class="dot" cx="50" cy="16" r="5"/>',
+  madar: '<ellipse cx="50" cy="50" rx="38" ry="16"/><ellipse class="lime" cx="50" cy="50" rx="38" ry="16" transform="rotate(60 50 50)"/><circle cx="50" cy="50" r="10"/><circle class="dot" cx="84" cy="44" r="6"/>',
+  start: '<path d="M18 30a12 12 0 0 1 12-12h40a12 12 0 0 1 12 12v26a12 12 0 0 1-12 12H42L26 82V68a12 12 0 0 1-8-12z"/><circle class="dot" cx="38" cy="43" r="4"/><circle class="dot" cx="50" cy="43" r="4"/><circle class="dot" cx="62" cy="43" r="4"/>',
+};
+
+const h = (parts, cls = '') => `<h1 class="${cls}">${parts}</h1>`;
+const hl = (s) => `<span class="hl">${s}</span>`;
+const list = (items, start = 1, on = -1) => `<ul class="list">${items.map(([b, s], i) => `<li class="${i === on ? 'on' : ''}"><span class="n lat">${String(start + i).padStart(2, '0')}</span><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ul>`;
+const pill = (text, mono) => `<div class="pill">${mono ? `<span class="mono">${text}</span>` : text}</div>`;
+
+const SETS = {
+  about: { name: 'من نحن', frames: [
+    { tone: 'ink', html: `${MARK()}<p class="kicker mono">WHO WE ARE</p>${h(`نواة ${hl('استوديو رقمي')}`)}<p class="sub">نطلق المنتجات الرقمية. ونروي القصص.</p>` },
+    { tone: 'paper', html: `<div class="photo" style="background-image:url(assets/founder.jpg)"></div>${h('زكريا براهيمي', 's')}<p class="kicker mono" style="color:var(--indigo)">FOUNDER · NAWA STUDIO</p>
+      <div class="chips" dir="ltr"><span class="chip dark mono">Head of Product</span><span class="chip mono">ex-Yassir PM</span><span class="chip mono">4+ years</span></div>` },
+    { tone: 'ink', html: `<p class="kicker mono">WHY NAWA</p>${h(`فريق منتج ${hl('في مكان واحد')}`, 's')}
+      ${list([['من الفكرة إلى الإطلاق', 'تطوير وهوية ومحتوى وإعلانات'], ['نبدأ صغيرًا ونطلق بسرعة', 'أول نسخة في أسابيع، لا في شهور'], ['نقيس كل شيء', 'ونحسّن بالأرقام، لا بالتخمين']])}` },
+  ] },
+  services: { name: 'خدماتنا', frames: [
+    { tone: 'paper', html: `<p class="kicker mono">WHAT WE DO · 6 SERVICES</p>${h(`من الفكرة ${hl('إلى النمو')}`)}<p class="sub">ست خدمات في دورة واحدة، خذها كاملة أو اختر ما تحتاجه.</p>` },
+    { tone: 'ink', html: `<p class="kicker mono">01 — 03</p>${list([['المنتج', 'موقع، تطبيق أو منصة SaaS'], ['الهوية', 'شعار وألوان وحضور يليق بمنتجك'], ['التصاميم', 'محتوى السوشل ميديا']])}` },
+    { tone: 'ink', html: `<p class="kicker mono">04 — 06</p>${list([['الإعلانات', 'نوصلك للناس الصح على ميتا وتيك توك'], ['النتائج', 'ندرس الأرقام ونفهم ما يحدث'], ['التطوير', 'نحسّن ونعيد الدورة من جديد']], 4, 2)}` },
+  ] },
+  process: { name: 'كيف نشتغل', frames: [
+    { tone: 'paper', html: `<p class="kicker mono">THE PLAN · MVP</p>${h(`أول نسخة من ${hl('منتجك')}`, 's')}<div class="big lat">4–6</div><p class="sub">أسابيع، من أول جلسة إلى منتج يستعمله الناس.</p>` },
+    { tone: 'ink', html: `<p class="kicker mono">HOW WE WORK</p>${list([['جلسة اكتشاف مجانية', 'نفهم الفكرة والسوق والهدف'], ['خطة وتقدير واضح', 'ماذا نبني أولًا، ومتى، وبكم'], ['سبرنت كل أسبوعين', 'وعرض لما أنجزناه كل أسبوع'], ['إطلاق ومتابعة', 'نقيس ونحسّن بعد الإطلاق']], 1, 3)}` },
+    { tone: 'ink', html: `<p class="kicker mono">WAYS TO WORK</p>${h(`اختر ${hl('طريقة العمل')}`, 's')}
+      <div class="tickets"><div class="ticket"><div><b>فريق منتج</b><span>مطوّرون ومصممون ومدير منتج</span></div><span class="tag mono">MONTHLY</span></div>
+      <div class="ticket lime"><span class="best">الأشمل</span><div><b>إطلاق كامل</b><span>منتج + هوية + محتوى + إعلانات</span></div><span class="tag mono">ALL-IN</span></div></div>
+      <p class="sub">السعر حسب مشروعك · استشارة أولى مجانية</p>` },
+  ] },
+  mizan: { name: 'ميزان', frames: [
+    { tone: 'ink', html: `<p class="kicker mono">OUR FIRST PRODUCT</p>${h(`ميزان ${hl('منتجنا الأول')}`, 's')}<p class="sub">المبيعات والمخزون والسيولة في لوحة واحدة.</p>` },
+    { tone: 'ink', html: `${h(`كل أرقام تجارتك ${hl('في مكان واحد')}`, 's')}
+      <div class="dash"><div class="tile on"><b>المبيعات</b><i></i></div><div class="tile"><b>المخزون</b><i></i></div><div class="tile"><b>السيولة</b><i></i></div>
+      <div class="chart"><i style="height:38%"></i><i style="height:52%"></i><i style="height:45%"></i><i style="height:66%"></i><i style="height:60%"></i><i style="height:84%"></i></div></div>` },
+    { tone: 'paper', html: `<p class="kicker mono">WHY WE BUILD</p>${h(`لماذا بنينا ${hl('ميزان')}؟`, 's')}<p class="quote">ما نتعلمه من بناء منتجاتنا الخاصة نضعه في خدمة منتجات عملائنا.</p>${MARK()}` },
+  ] },
+  madar: { name: 'مدار', frames: [
+    { tone: 'paper', html: `<p class="kicker mono">MADAR · COMMUNITY</p>${h(`مدار ${hl('مجتمع نواة')}`, 's')}<p class="sub">مقالات ونصائح في إدارة المنتج، أجايل، التطوير، التصميم والسوشل ميديا.</p>
+      <div class="chips"><span class="chip dark">مقالات</span><span class="chip">نصيحة كل يوم</span><span class="chip">بودكاست نبض</span></div>` },
+    { tone: 'ink', html: `<p class="kicker mono">TIP OF THE DAY</p>
+      <div class="card"><div class="meta"><span class="mono">MADAR · PRODUCT</span><span class="badge">نصيحة اليوم</span></div>
+      <div class="t">اسأل «ماذا فعلت آخر مرة؟» بدل «هل ستستخدمه؟».</div>
+      <div class="d">الناس يتوقعون سلوكهم في المستقبل بشكل سيئ، لكنهم يتذكرون ما فعلوه فعلًا. اسأل عن الماضي.</div></div>
+      <p class="sub">نصيحة جديدة كل يوم على مدار.</p>` },
+    { tone: 'ink', html: `<div class="pod"><svg viewBox="0 0 100 100" width="250" height="250" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"><path d="M14 50h14l8-18 12 40 10-30 6 8h22"/><circle cx="86" cy="50" r="5" fill="#C6F432" stroke="none"/></svg></div>
+      ${h(`بودكاست ${hl('نبض')}`, 's')}<p class="sub">ما يحدث بعد الإطلاق.</p>${pill(URL_MADAR, true)}` },
+  ] },
+  start: { name: 'ابدأ', frames: [
+    { tone: 'paper', html: `${MARK('#0B1220')}${h(`عندك فكرة؟ ${hl('نبدأ معك')}`, 's')}<p class="sub">استشارة أولى مجانية، والسعر حسب مشروعك.</p>` },
+    { tone: 'ink', html: `<p class="kicker mono">HOW TO START</p>${list([['املأ الطلب', 'دقيقتان، من الرابط في البايو'], ['نردّ عليك', 'خلال يومي عمل'], ['جلسة اكتشاف مجانية', 'ونقترح عليك خطة واضحة']], 1, 2)}` },
+    { tone: 'ink', html: `${h(`ابدأ ${hl('مشروعك')}`)}${pill(URL_START, true)}<p class="sub">الرابط في البايو، أو اكتب لنا «نواة» في الرسائل.</p>` },
+  ] },
+};
+
+const q = new URLSearchParams(location.search);
+const set = SETS[q.get('s') || 'about'];
+const root = document.getElementById('root');
+if (q.has('cover')) {
+  root.innerHTML = `<div class="cover"><div class="disc"><svg viewBox="0 0 100 100">${ICONS[q.get('s') || 'about']}</svg></div></div>`;
+} else {
+  const n = Math.max(1, Math.min(set.frames.length, Number(q.get('n')) || 1));
+  const f = set.frames[n - 1];
+  root.innerHTML = `<section class="story ${f.tone}">
+    <div class="hud mono"><span>@NAWA.STUDIO.AI</span><span>${String(n).padStart(2, '0')}/${String(set.frames.length).padStart(2, '0')}</span></div>
+    ${f.html}</section>`;
+}
+window.STORIES = Object.fromEntries(Object.entries(SETS).map(([id, s]) => [id, { name: s.name, count: s.frames.length }]));
+</script>
+</body></html>

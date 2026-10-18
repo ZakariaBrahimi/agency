@@ -23,8 +23,7 @@ const JOBS = [
   { name: 'covers/x-header', url: T('cover.html'), w: 1500, h: 500, safe: [300, 60, 1140, 380] },
   // YouTube banner: only the central 1546x423 is visible on every device
   { name: 'covers/youtube-banner', url: T('cover.html'), w: 2560, h: 1440, safe: [507, 508, 1546, 423] },
-  // Instagram story highlight covers (1080x1920, icon inside the central circle)
-  ...['services', 'work', 'mizan', 'results', 'contact'].map((k) => ({ name: `highlights/highlight-${k}`, url: T(`highlight.html?k=${k}`), w: 1080, h: 1920 })),
+  // Instagram highlight covers and their stories: scripts/render-stories.cjs
   { name: 'posts/mizan-intro', url: T('product-post.html'), w: 1080, h: 1350 },
   // Website share image (Open Graph), written straight into the site
   { name: 'og', url: T('cover.html'), w: 1200, h: 630, safe: [60, 70, 1080, 490], out: 'site/assets/img/og.png' },

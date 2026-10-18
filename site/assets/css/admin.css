@@ -310,6 +310,24 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .ct-meta.bad { color: #B42318; font-weight: 600; }
 .ct-pfbtns .btn-dark.armed { background: #B42318; }
 
+/* highlight stories (Instagram) */
+.ct-stories { margin: 18px 0 0; }
+.ct-stories summary { cursor: pointer; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; list-style: none; font-size: 17px; }
+.ct-stories summary::-webkit-details-marker { display: none; }
+.ct-stories summary::after { content: "▾"; margin-inline-start: auto; color: var(--muted); transition: transform .2s; }
+.ct-stories:not([open]) summary::after { transform: rotate(90deg); }
+.ct-stories > .muted { margin: 12px 0 0; font-size: 14px; line-height: 1.7; }
+.ct-story-sets { list-style: none; padding: 0; margin: 16px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.ct-story-set { border: 1px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 12px; align-content: start; }
+.ct-story-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ct-story-cover { width: 44px; height: 44px; border-radius: 50%; background: var(--ink) center / 260% auto no-repeat; box-shadow: 0 0 0 2px var(--card), 0 0 0 4px #C6F432; flex: none; }
+.ct-story-head .pill { font-size: 12px; }
+.ct-story-frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ct-story-frames img { display: block; width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; background: var(--ink); }
+.ct-story-err { margin: 0; font-size: 13.5px; color: #B42318; font-weight: 600; }
+.ct-story-btns { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ct-story-btns .btn.armed { background: #B42318; border-color: #B42318; color: #fff; }
+
 /* ---------- loading (admin-ui.js) ---------- */
 .api-bar { position: fixed; top: env(safe-area-inset-top, 0px); inset-inline: 0; height: 3px; z-index: 100; overflow: hidden; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .api-bar.on { opacity: 1; }

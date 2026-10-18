@@ -1,6 +1,6 @@
 // /admin → «مدار»: write and publish articles, tips and podcast episodes; read newsletter sign-ups and
 // "write with us" pitches. Data lives in Supabase (madar_* tables) through /api/admin/madar.
-import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261017d';
+import { TOPICS, topicById, KINDS, renderMarkdown, readingMinutes, slugify, SLUG, esc } from './madar-schema.js?v=20261018a';
 
 const $ = (id) => document.getElementById(id);
 const API = '/api/admin/madar';

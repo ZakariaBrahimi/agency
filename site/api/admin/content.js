@@ -17,6 +17,8 @@
 // GET  ?action=meta        -> { configured, accounts }   (Facebook Page and Instagram account names)
 // POST ?action=publish     { id, platform }               publishes to Facebook or Instagram now
 // POST ?action=auto        { id, platform, value }        automatic publishing at the scheduled time on/off
+// GET  ?action=stories     -> { sets: { [id]: state } }   highlight stories published so far (no Google needed)
+// POST ?action=story       { set }                        publishes one highlight's stories to Instagram, in order
 //
 // Public (no admin session), each with its own check:
 // GET  /media/<sealed>     -> a post's file for Meta to download (rewritten here as ?action=pub-media)
@@ -30,6 +32,7 @@ import { META_PLATFORMS, isDue, publishPlatform, serveMedia } from '../_lib/publ
 import { seal, unseal } from '../_lib/seal.js';
 import { kv } from '../_lib/supabase.js';
 import { PLATFORMS, PLATFORM_IDS, KINDS, checkPost, isAt, captionFor, STARTER_PLAN } from '../../assets/js/content-schema.js';
+import { STORY_SETS, storyFiles } from '../../assets/js/stories-schema.js';
 
 const newId = () => 'p_' + crypto.randomBytes(6).toString('hex');
 const now = () => new Date().toISOString();
@@ -127,6 +130,41 @@ async function runSchedule(g) {
   return results;
 }
 
+// Highlight stories: state per set in app_state («stories»): { done, ids, container?, publishedAt?, error? }.
+// A set publishes its stories one after another; a run that stops part-way continues where it left off.
+async function stories(req, res) {
+  if (!kv.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
+  const all = (await kv.get('stories')) || {};
+  if (req.method === 'GET') return json(res, 200, { ok: true, sets: all });
+  if (!M.metaConfigured()) return json(res, 409, { ok: false, error: 'meta_not_configured' });
+  if (req.method !== 'POST') return json(res, 405, { ok: false });
+  const { set: id } = await readJson(req);
+  const set = STORY_SETS.find((s) => s.id === id);
+  if (!set) return json(res, 400, { ok: false, error: 'bad_set' });
+  const st = all[set.id] && !all[set.id].publishedAt ? all[set.id] : { done: 0, ids: [] };
+  if (st.lockedAt && Date.now() - Date.parse(st.lockedAt) < 90e3) return json(res, 409, { ok: false, error: 'publishing' });
+  const persist = () => kv.set('stories', { ...all, [set.id]: st });
+  st.lockedAt = now(); delete st.error;
+  await persist();
+  const deadline = Date.now() + 50e3; const files = storyFiles(set);
+  try {
+    while (st.done < files.length && Date.now() < deadline - 8e3) {
+      const r = st.container ? await M.finishInstagram(st.container, deadline) : await M.publishStory(siteUrl() + files[st.done], deadline);
+      if (r.pending) { st.container = r.pending; break; }
+      delete st.container; st.ids.push(r.id); st.done++;
+      await persist();
+    }
+    if (st.done === files.length) st.publishedAt = now();
+  } catch (e) {
+    console.error('story', set.id, e.code, e.message);
+    delete st.container;
+    st.error = { message: M.explain(e), at: now() };
+  }
+  delete st.lockedAt;
+  await persist();
+  return json(res, 200, { ok: true, sets: { ...all, [set.id]: st } });
+}
+
 export default async function handler(req, res) {
   const url0 = new URL(req.url, 'http://x');
   const act0 = url0.searchParams.get('action') || '';
@@ -144,6 +182,10 @@ export default async function handler(req, res) {
   }
 
   if (!isAdmin(req)) return json(res, 401, { ok: false, error: 'signed_out' });
+  if (act0 === 'stories' || act0 === 'story') {
+    try { return await stories(req, res); }
+    catch (e) { console.error('stories', e.message); return json(res, 502, { ok: false, error: 'error' }); }
+  }
   if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'google_not_configured' });
   const conn = G.connection(req);
   if (!conn) return json(res, 409, { ok: false, error: 'google_not_connected' });

@@ -123,6 +123,14 @@ export async function publishInstagram({ caption, items }, deadline) {
   return publishContainer(container);
 }
 
+/** One image story. Returns { id, url }, or { pending: containerId } when the deadline passes first. */
+export async function publishStory(imageUrl, deadline) {
+  const container = (await graph(`/${IG()}/media`, { method: 'POST', params: { media_type: 'STORIES', image_url: imageUrl } })).id;
+  if (!(await waitReady(container, deadline))) return { pending: container };
+  const d = await graph(`/${IG()}/media_publish`, { method: 'POST', params: { creation_id: container } });
+  return { id: d.id };
+}
+
 /** Finishes a container that was still processing on an earlier run. */
 export async function finishInstagram(container, deadline) {
   if (!(await waitReady(container, deadline))) return { pending: container };

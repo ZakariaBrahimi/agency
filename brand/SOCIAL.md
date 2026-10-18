@@ -25,7 +25,7 @@ Bio (max 150). Once Mizan has an account, change «صانعو ميزان» to «
 ```
 Link: https://nawa-studio-six.vercel.app/start
 
-Highlights: خدماتنا · أعمالنا · ميزان · النتائج · تواصل (exports/highlights/highlight-*.png)
+Highlights: من نحن · خدماتنا · كيف نشتغل · ميزان · مدار · ابدأ — 3 stories each, published from the admin (المحتوى ← قصص الهايلايت). Covers: exports/highlights/highlight-*.png. Source: design/templates/stories.html, render with `node scripts/render-stories.cjs`.
 
 ## Facebook
 
