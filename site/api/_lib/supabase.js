@@ -46,10 +46,13 @@ export const madar = {
 // connection, sealed, so scheduled publishing can reach Drive when no one has the admin open.
 export const kv = {
   ready: () => Boolean(env('SUPABASE_URL') && svc()),
+  // value is a text column: objects and arrays are stored as JSON text and parsed back on read.
   async get(k) {
     const [row] = await rest(`app_state?select=value&key=eq.${encodeURIComponent(k)}`, { key: svc() });
-    return row?.value ?? null;
+    const v = row?.value ?? null;
+    if (typeof v !== 'string' || !/^[[{]/.test(v)) return v;
+    try { return JSON.parse(v); } catch { return null; }
   },
-  set: (k, value) => rest('app_state?on_conflict=key', { key: svc(), method: 'POST', body: { key: k, value, updated_at: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' }),
+  set: (k, value) => rest('app_state?on_conflict=key', { key: svc(), method: 'POST', body: { key: k, value: typeof value === 'string' ? value : JSON.stringify(value), updated_at: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' }),
   del: (k) => rest(`app_state?key=eq.${encodeURIComponent(k)}`, { key: svc(), method: 'DELETE' }),
 };

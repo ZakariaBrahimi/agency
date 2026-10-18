@@ -179,7 +179,8 @@ async function stories(req, res) {
 // Cron: the next queued set, if any. Returns null when there is nothing to do.
 async function runStoriesQueue() {
   if (!kv.ready()) return null;
-  const queue = (await kv.get('stories_queue')) || [];
+  const raw = await kv.get('stories_queue');
+  const queue = Array.isArray(raw) ? raw : [];
   if (!queue.length) return null;
   const set = STORY_SETS.find((s) => s.id === queue[0]);
   if (!set) { await kv.set('stories_queue', queue.slice(1)); return { set: queue[0], result: 'unknown' }; }
