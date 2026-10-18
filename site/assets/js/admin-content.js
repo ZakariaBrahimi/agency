@@ -89,7 +89,7 @@ async function load() {
   render();
   routeHash();
   call(`${API}?action=meta`).then((m) => { state.meta = m; drawStories(); const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
-  call(`${API}?action=stories`).then((d) => { state.stories = d.sets; drawStories(); }).catch(() => {});
+  call(`${API}?action=stories`).then((d) => { state.stories = d.sets; state.storyQueue = d.queue || []; drawStories(); }).catch(() => {});
 }
 
 const fmtTime = (iso) => new Date(iso).toLocaleString('ar-DZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -190,7 +190,8 @@ function drawStories() {
     <ul class="ct-story-sets">${STORY_SETS.map((set) => {
       const st = sets[set.id] || {};
       const status = st.publishedAt ? `<span class="pill ct-st st-published">نُشرت · ${esc(fmtTime(st.publishedAt))}</span>`
-        : st.done ? `<span class="pill ct-st st-scheduled">نُشر ${st.done} من ${set.count}</span>` : '';
+        : st.done ? `<span class="pill ct-st st-scheduled">نُشر ${st.done} من ${set.count}</span>`
+        : (state.storyQueue || []).includes(set.id) ? '<span class="pill ct-st st-scheduled">في الطابور · تُنشر تلقائيًا</span>' : '';
       return `<li class="ct-story-set">
         <div class="ct-story-head"><span class="ct-story-cover" style="background-image:url(${storyCover(set)})"></span><b>${esc(set.name)}</b>${status}</div>
         <div class="ct-story-frames">${storyFiles(set).map((f, i) => `<a href="${f}" target="_blank" rel="noopener"><img src="${f}" alt="${esc(set.name)} · قصة ${i + 1}" loading="lazy"></a>`).join('')}</div>
@@ -214,7 +215,7 @@ function drawStories() {
     b.textContent = 'جارٍ النشر… قد يستغرق دقيقة';
     try {
       const d = await act('story', { set: set.id });
-      state.stories = d.sets;
+      state.stories = d.sets; state.storyQueue = d.queue || [];
       const st = d.sets[set.id];
       if (st.publishedAt) toast(`نُشرت قصص «${set.name}». أضفها الآن إلى هايلايت من التطبيق.`);
       else if (st.error) toast(st.error.message, true);

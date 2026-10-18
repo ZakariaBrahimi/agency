@@ -17,8 +17,9 @@
 // GET  ?action=meta        -> { configured, accounts }   (Facebook Page and Instagram account names)
 // POST ?action=publish     { id, platform }               publishes to Facebook or Instagram now
 // POST ?action=auto        { id, platform, value }        automatic publishing at the scheduled time on/off
-// GET  ?action=stories     -> { sets: { [id]: state } }   highlight stories published so far (no Google needed)
+// GET  ?action=stories     -> { sets: { [id]: state }, queue }   highlight stories published so far (no Google needed)
 // POST ?action=story       { set }                        publishes one highlight's stories to Instagram, in order
+//                          (sets listed in app_state «stories_queue» are published by the cron run, one per run)
 //
 // Public (no admin session), each with its own check:
 // GET  /media/<sealed>     -> a post's file for Meta to download (rewritten here as ?action=pub-media)
@@ -130,23 +131,17 @@ async function runSchedule(g) {
   return results;
 }
 
-// Highlight stories: state per set in app_state («stories»): { done, ids, container?, publishedAt?, error? }.
+// Highlight stories: state per set in app_state «stories»: { done, ids, container?, publishedAt?, error? }.
 // A set publishes its stories one after another; a run that stops part-way continues where it left off.
-async function stories(req, res) {
-  if (!kv.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
+// «stories_queue» lists sets waiting for the cron run, which publishes one set every 5 minutes.
+async function publishSet(set, deadline) {
   const all = (await kv.get('stories')) || {};
-  if (req.method === 'GET') return json(res, 200, { ok: true, sets: all });
-  if (!M.metaConfigured()) return json(res, 409, { ok: false, error: 'meta_not_configured' });
-  if (req.method !== 'POST') return json(res, 405, { ok: false });
-  const { set: id } = await readJson(req);
-  const set = STORY_SETS.find((s) => s.id === id);
-  if (!set) return json(res, 400, { ok: false, error: 'bad_set' });
   const st = all[set.id] && !all[set.id].publishedAt ? all[set.id] : { done: 0, ids: [] };
-  if (st.lockedAt && Date.now() - Date.parse(st.lockedAt) < 90e3) return json(res, 409, { ok: false, error: 'publishing' });
+  if (st.lockedAt && Date.now() - Date.parse(st.lockedAt) < 90e3) return { all, st, busy: true };
   const persist = () => kv.set('stories', { ...all, [set.id]: st });
   st.lockedAt = now(); delete st.error;
   await persist();
-  const deadline = Date.now() + 50e3; const files = storyFiles(set);
+  const files = storyFiles(set);
   try {
     while (st.done < files.length && Date.now() < deadline - 8e3) {
       const r = st.container ? await M.finishInstagram(st.container, deadline) : await M.publishStory(siteUrl() + files[st.done], deadline);
@@ -162,7 +157,37 @@ async function stories(req, res) {
   }
   delete st.lockedAt;
   await persist();
-  return json(res, 200, { ok: true, sets: { ...all, [set.id]: st } });
+  all[set.id] = st;
+  return { all, st };
+}
+
+async function stories(req, res) {
+  if (!kv.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
+  if (req.method === 'GET') return json(res, 200, { ok: true, sets: (await kv.get('stories')) || {}, queue: (await kv.get('stories_queue')) || [] });
+  if (!M.metaConfigured()) return json(res, 409, { ok: false, error: 'meta_not_configured' });
+  if (req.method !== 'POST') return json(res, 405, { ok: false });
+  const { set: id } = await readJson(req);
+  const set = STORY_SETS.find((s) => s.id === id);
+  if (!set) return json(res, 400, { ok: false, error: 'bad_set' });
+  const r = await publishSet(set, Date.now() + 50e3);
+  if (r.busy) return json(res, 409, { ok: false, error: 'publishing' });
+  const queue = ((await kv.get('stories_queue')) || []).filter((q) => q !== set.id || !r.st.publishedAt);
+  await kv.set('stories_queue', queue);
+  return json(res, 200, { ok: true, sets: r.all, queue });
+}
+
+// Cron: the next queued set, if any. Returns null when there is nothing to do.
+async function runStoriesQueue() {
+  if (!kv.ready()) return null;
+  const queue = (await kv.get('stories_queue')) || [];
+  if (!queue.length) return null;
+  const set = STORY_SETS.find((s) => s.id === queue[0]);
+  if (!set) { await kv.set('stories_queue', queue.slice(1)); return { set: queue[0], result: 'unknown' }; }
+  const r = await publishSet(set, Date.now() + 50e3);
+  if (r.busy) return { set: set.id, result: 'busy' };
+  // a finished or failed set leaves the queue (a failure shows in the admin); a partial one stays
+  if (r.st.publishedAt || r.st.error) await kv.set('stories_queue', ((await kv.get('stories_queue')) || []).filter((q) => q !== set.id));
+  return { set: set.id, result: r.st.publishedAt ? 'published' : r.st.error ? 'failed' : 'partial', done: r.st.done };
 }
 
 export default async function handler(req, res) {
@@ -174,7 +199,10 @@ export default async function handler(req, res) {
   }
   if (act0 === 'cron') {
     if (!cronAllowed(req)) return json(res, 401, { ok: false });
-    if (!M.metaConfigured() || !G.googleConfigured()) return json(res, 200, { ok: true, skipped: 'not_configured' });
+    if (!M.metaConfigured()) return json(res, 200, { ok: true, skipped: 'not_configured' });
+    try { const story = await runStoriesQueue(); if (story) return json(res, 200, { ok: true, stories: story }); } // one job per run keeps it under the time limit
+    catch (e) { console.error('cron stories', e.message); }
+    if (!G.googleConfigured()) return json(res, 200, { ok: true, skipped: 'not_configured' });
     const conn = unseal('nawa-google-store', await kv.get('google').catch(() => null));
     if (!conn) return json(res, 200, { ok: true, skipped: 'no_google' });
     try { return json(res, 200, { ok: true, results: await runSchedule(G.client(conn)) }); }
