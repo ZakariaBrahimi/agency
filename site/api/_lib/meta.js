@@ -127,8 +127,15 @@ export async function publishInstagram({ caption, items }, deadline) {
 export async function publishStory(imageUrl, deadline) {
   const container = (await graph(`/${IG()}/media`, { method: 'POST', params: { media_type: 'STORIES', image_url: imageUrl } })).id;
   if (!(await waitReady(container, deadline))) return { pending: container };
-  const d = await graph(`/${IG()}/media_publish`, { method: 'POST', params: { creation_id: container } });
-  return { id: d.id };
+  // Meta can report a story container FINISHED a moment before it accepts media_publish
+  // ("not ready for publishing" / "cannot be found"): wait and try again.
+  for (let tries = 0; ; tries++) {
+    try { return { id: (await graph(`/${IG()}/media_publish`, { method: 'POST', params: { creation_id: container } })).id }; }
+    catch (e) {
+      if (tries >= 3 || !(e.code === 9007 || /not ready|cannot be found/i.test(e.message)) || Date.now() + 6000 > deadline) throw e;
+      await sleep(4000);
+    }
+  }
 }
 
 /** Finishes a container that was still processing on an earlier run. */
