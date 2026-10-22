@@ -1,0 +1,22 @@
+{
+  "_comment": "MizaniyaPay, a Nawa client. Strategy doc: https://claude.ai/artifact/68JNKBSEUVAvvqHqEbeMvD",
+  "name": "Mizaniya Pay",
+  "handles": { "instagram": "mizaniya_pay", "facebook": "61567755312320", "linkedin": "mizaniya-pay", "tiktok": "" },
+  "website": "https://www.mizaniyapay.dz",
+  "app": {
+    "android": "https://play.google.com/store/apps/details?id=com.mizaniya.pay",
+    "ios": "https://apps.apple.com/dz/app/mizaniya-pay/id6758762310"
+  },
+  "partner_signup": "https://partner.mizaniyapay.dz/sign-up",
+  "colors": {
+    "navy": "#1F4E67",
+    "yellow": "#F8E91C",
+    "deep_navy": "#183B4E",
+    "ink": "#0C1527",
+    "white": "#FFFFFF"
+  },
+  "fonts": { "latin": "Poppins", "arabic": "IBM Plex Sans Arabic" },
+  "languages": ["darija", "en"],
+  "banned_words": ["wallet", "e-wallet", "محفظة", "بورتفاي", "portefeuille"],
+  "preferred_words": ["balance", "your Mizaniya account", "the app", "رصيدك", "حسابك"]
+}
