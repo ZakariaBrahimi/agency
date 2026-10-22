@@ -1,0 +1,25 @@
+/* Mizaniya Pay design tokens. Colors come from the logo; see ../brand.json. */
+@font-face { font-family: 'Poppins'; font-weight: 400; src: url('fonts/poppins-latin-400-normal.woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 500; src: url('fonts/poppins-latin-500-normal.woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 600; src: url('fonts/poppins-latin-600-normal.woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 700; src: url('fonts/poppins-latin-700-normal.woff2'); }
+@font-face { font-family: 'Poppins'; font-weight: 800; src: url('fonts/poppins-latin-800-normal.woff2'); }
+@font-face { font-family: 'Plex Arabic'; font-weight: 400; src: url('fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2'); }
+@font-face { font-family: 'Plex Arabic'; font-weight: 500; src: url('fonts/ibm-plex-sans-arabic-arabic-500-normal.woff2'); }
+@font-face { font-family: 'Plex Arabic'; font-weight: 600; src: url('fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2'); }
+@font-face { font-family: 'Plex Arabic'; font-weight: 700; src: url('fonts/ibm-plex-sans-arabic-arabic-700-normal.woff2'); }
+
+:root {
+  --navy: #1F4E67;
+  --deep: #183B4E;
+  --night: #0F2533;
+  --ink: #0C1527;
+  --yellow: #F8E91C;
+  --white: #FFFFFF;
+  --mist: #E8EFF3;
+  --font: 'Poppins', 'Plex Arabic', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--deep); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+.ar { font-family: 'Plex Arabic', 'Poppins', sans-serif; direction: rtl; }
+.hl { color: var(--yellow); }

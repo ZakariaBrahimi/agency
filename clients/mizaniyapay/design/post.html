@@ -1,0 +1,135 @@
+<title>Mizaniya Pay posts</title>
+<!-- 1080x1350 feed posts and carousel slides. Pick one with ?id=<slide id> (see SLIDES below). -->
+<link rel="stylesheet" href="mp.css">
+<style>
+  #post { position: relative; width: 1080px; height: 1350px; overflow: hidden; color: var(--white); display: flex; flex-direction: column; padding: 72px 80px 76px; }
+  #post.navy { background: radial-gradient(120% 90% at 85% 10%, #2A6584 0%, var(--navy) 45%, var(--deep) 100%); }
+  #post.deep { background: radial-gradient(110% 80% at 20% 0%, #21506A 0%, var(--deep) 50%, var(--night) 100%); }
+  #post.light { background: linear-gradient(180deg, #FFFFFF 0%, var(--mist) 100%); color: var(--ink); }
+  .top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+  .count { font: 600 30px/1 Poppins; letter-spacing: 2px; opacity: .7; }
+  .deco { position: absolute; right: -170px; bottom: -120px; width: 760px; opacity: .14; z-index: 0; }
+  .light .deco { opacity: .1; }
+  .body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2; gap: 34px; }
+  .badge { width: 132px; height: 132px; border-radius: 36px; background: var(--yellow); color: var(--navy); display: grid; place-items: center; }
+  .kicker { font: 600 30px/1 Poppins; letter-spacing: 4px; text-transform: uppercase; color: var(--yellow); }
+  .light .kicker { color: var(--navy); }
+  h1.ar { font-weight: 700; font-size: 104px; line-height: 1.22; text-align: right; }
+  h1.big { font-size: 128px; }
+  .en { font: 500 44px/1.35 Poppins; color: #D6E4EC; max-width: 860px; }
+  .light .en { color: #3B5566; }
+  .chips { display: flex; flex-wrap: wrap; gap: 16px; }
+  .chip { font: 600 30px/1 Poppins; padding: 20px 28px; border-radius: 999px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.18); }
+  .chip.y { background: var(--yellow); color: var(--navy); border-color: var(--yellow); }
+  .light .chip { background: #fff; border-color: #CBD9E2; color: var(--navy); }
+  .steps { display: grid; gap: 22px; }
+  .step { display: flex; align-items: center; gap: 28px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.14); border-radius: 28px; padding: 26px 30px; }
+  .step b { flex: none; width: 76px; height: 76px; border-radius: 50%; background: var(--yellow); color: var(--navy); font: 700 38px/76px Poppins; text-align: center; }
+  .step .t { font: 600 38px/1.25 Poppins; }
+  .step .t .ar { display: block; font-size: 34px; font-weight: 600; color: #D6E4EC; margin-top: 6px; text-align: left; direction: rtl; unicode-bidi: plaintext; }
+  .foot { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; font: 600 30px/1 Poppins; }
+  .swipe { display: flex; align-items: center; gap: 14px; color: var(--yellow); }
+  .stores { display: flex; gap: 18px; }
+  .store { display: flex; align-items: center; gap: 14px; background: #000; color: #fff; border-radius: 18px; padding: 18px 28px; font: 600 30px/1.1 Poppins; }
+  .store small { display: block; font: 400 18px/1 Poppins; opacity: .8; margin-bottom: 4px; }
+  .url { font: 600 34px/1 Poppins; color: var(--yellow); }
+  /* 1 November */
+  .nov { align-items: center; text-align: center; }
+  .nov .date { font: 800 230px/1 Poppins; color: var(--yellow); letter-spacing: -6px; }
+  .nov .year { font: 700 64px/1 Poppins; letter-spacing: 18px; margin-top: -10px; opacity: .9; }
+  .nov h1.ar { text-align: center; font-size: 84px; }
+  .nov .line { width: 120px; height: 8px; border-radius: 4px; background: var(--yellow); }
+  .star { width: 96px; height: 96px; color: var(--yellow); }
+</style>
+<div id="post"></div>
+<script src="mp.js"></script>
+<script>
+  const I = (n, s) => MP.icon(n, s);
+  const STORES = `<div class="stores"><div class="store"><span><small>GET IT ON</small>Google Play</span></div><div class="store"><span><small>Download on the</small>App Store</span></div></div>`;
+  const step = (n, en, ar) => `<div class="step"><b>${n}</b><div class="t">${en}<span class="ar">${ar}</span></div></div>`;
+
+  // Each slide: theme, page count, and the HTML for its body. Copy and captions: ../week-1.md
+  const SLIDES = {
+    // Sun 1 Nov: tribute, no product push.
+    'nov1': { theme: 'deep', body: `<div class="body nov">
+        <svg class="star" viewBox="0 0 48 48"><path fill="currentColor" d="M24 4l5.6 13.3 14.4 1.2-11 9.4 3.4 14.1L24 34.4 11.6 42l3.4-14.1-11-9.4 14.4-1.2Z"/></svg>
+        <div><div class="date">1 Nov</div><div class="year">1954</div></div>
+        <div class="line"></div>
+        <h1 class="ar">المجد والخلود<br>لشهدائنا الأبرار</h1>
+        <div class="en">72 years since the first of November.<br>Glory to our martyrs.</div></div>` },
+
+    // Tue 3 Nov: "Mizaniya Pay in 6 slides" (users)
+    'app-1': { theme: 'navy', n: '1/6', body: `<div class="body">
+        <div class="kicker">Mizaniya Pay in 6 slides</div>
+        <h1 class="ar big">كلش في<br><span class="hl">تطبيق واحد</span></h1>
+        <div class="en">Send, receive, scan, recharge and pay your bills. All from your phone.</div></div>`, swipe: true },
+    'app-2': { theme: 'deep', n: '2/6', body: `<div class="body">
+        <div class="badge">${I('send', 76)}</div>
+        <h1 class="ar">ابعث الدراهم<br><span class="hl">في ثانية</span></h1>
+        <div class="en">Send money instantly, or request it from a friend. No RIP needed.</div>
+        <div class="chips"><span class="chip">Send</span><span class="chip">Request</span><span class="chip">Top up</span></div></div>`, swipe: true },
+    'app-3': { theme: 'navy', n: '3/6', body: `<div class="body">
+        <div class="badge">${I('qr', 76)}</div>
+        <h1 class="ar">سكاني<br><span class="hl">وخلّص</span></h1>
+        <div class="en">Scan a QR code to pay or get paid. No phone numbers, no account details.</div></div>`, swipe: true },
+    'app-4': { theme: 'deep', n: '4/6', body: `<div class="body">
+        <div class="badge">${I('phone', 76)}</div>
+        <h1 class="ar">فليكسي وانترنت<br><span class="hl">من دارك</span></h1>
+        <div class="en">Recharge your mobile and top up your internet in a few taps, any time.</div>
+        <div class="chips"><span class="chip">All mobile operators</span><span class="chip">Internet</span></div></div>`, swipe: true },
+    'app-5': { theme: 'navy', n: '5/6', body: `<div class="body">
+        <div class="badge">${I('bill', 76)}</div>
+        <h1 class="ar">خلّص الفواتير<br><span class="hl">بلا صف</span></h1>
+        <div class="en">Pay your bills with your saved CIB or Edahabia card. No queue, no trip.</div>
+        <div class="chips"><span class="chip y">CIB</span><span class="chip y">Edahabia</span></div></div>`, swipe: true },
+    'app-6': { theme: 'light', n: '6/6', body: `<div class="body">
+        <div class="kicker">Built for Algeria</div>
+        <h1 class="ar" style="color:var(--navy)">حمّل<br>Mizaniya Pay</h1>
+        <div class="en">Open your account in minutes and make your first payment today.</div>
+        ${STORES}</div>`, end: 'Link in bio' },
+
+    // Thu 5 Nov: "Your shop without a TPE?" (merchants)
+    'shop-1': { theme: 'navy', n: '1/6', body: `<div class="body">
+        <div class="kicker">For shops &amp; merchants</div>
+        <h1 class="ar big">حانوتك بلا TPE؟<br><span class="hl">ماشي مشكل</span></h1>
+        <div class="en">Accept CIB, Edahabia and app payments with just a QR code.</div></div>`, swipe: true },
+    'shop-2': { theme: 'deep', n: '2/6', body: `<div class="body">
+        <div class="badge">${I('shop', 76)}</div>
+        <h1 class="ar">«ما عنديش الصرف»<br><span class="hl">«نخلصك غدوة»</span></h1>
+        <div class="en">No change, no card machine, "I'll pay you tomorrow". Every one of these is a lost sale.</div></div>`, swipe: true },
+    'shop-3': { theme: 'navy', n: '3/6', body: `<div class="body">
+        <div class="badge">${I('qr', 76)}</div>
+        <div class="kicker">Virtual TPE</div>
+        <h1 class="ar">QR واحد<br><span class="hl">يقبل كلش</span></h1>
+        <div class="en">Your customer scans, pays with their card or the app, and you see it straight away.</div>
+        <div class="chips"><span class="chip y">CIB</span><span class="chip y">Edahabia</span><span class="chip y">Mizaniya Pay app</span></div></div>`, swipe: true },
+    'shop-4': { theme: 'deep', n: '4/6', body: `<div class="body">
+        <div class="kicker">Live in under 24 hours</div>
+        <div class="steps">
+          ${step(1, 'Create your Partner account', 'افتح حسابك')}
+          ${step(2, 'Get your dashboard &amp; POS access', 'خذ لوحة التحكم')}
+          ${step(3, 'Accept payments anywhere', 'استقبل الخلاص')}
+          ${step(4, 'Get paid instantly', 'دراهمك توصلك')}
+        </div></div>`, swipe: true },
+    'shop-5': { theme: 'navy', n: '5/6', body: `<div class="body">
+        <div class="badge">${I('chart', 76)}</div>
+        <h1 class="ar">تبّع كل<br><span class="hl">دينار</span></h1>
+        <div class="en">See every payment and your daily revenue in real time, from one dashboard.</div></div>`, swipe: true },
+    'shop-6': { theme: 'light', n: '6/6', body: `<div class="body">
+        <div class="kicker">Mizaniya for Partners</div>
+        <h1 class="ar" style="color:var(--navy)">افتح حسابك<br>Partner اليوم</h1>
+        <div class="chips"><span class="chip">No hardware</span><span class="chip">No setup fee</span><span class="chip">Live in under 24h</span></div>
+        <div class="url" style="color:var(--navy)">partner.mizaniyapay.dz</div></div>`, end: 'Link in bio' },
+  };
+
+  const id = new URLSearchParams(location.search).get('id') || 'app-1';
+  const s = SLIDES[id];
+  const el = document.getElementById('post');
+  el.className = s.theme;
+  const dark = s.theme !== 'light';
+  el.innerHTML = `
+    <div class="deco">${MP.mark({ size: 760, face: 'none', rim: dark ? '#FFFFFF' : '#1F4E67' })}</div>
+    <div class="top">${MP.logo({ height: 92, tone: dark ? 'dark' : 'light' })}<span class="count">${s.n || ''}</span></div>
+    ${s.body}
+    <div class="foot"><span>@mizaniya_pay</span>${s.swipe ? `<span class="swipe">Swipe ${I('arrow', 40)}</span>` : s.end ? `<span class="swipe" style="color:${dark ? 'var(--yellow)' : 'var(--navy)'}">${s.end}</span>` : ''}</div>`;
+</script>

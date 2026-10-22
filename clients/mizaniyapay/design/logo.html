@@ -1,0 +1,10 @@
+<title>Mizaniya Pay logo</title>
+<link rel="stylesheet" href="mp.css">
+<style>body{background:transparent} #logo{display:inline-block;padding:20px}</style>
+<div id="logo"></div>
+<script src="mp.js"></script>
+<script>
+  const q = new URLSearchParams(location.search), kind = q.get('kind') || 'horizontal';
+  document.body.style.background = q.get('bg') || 'transparent';
+  document.getElementById('logo').innerHTML = kind === 'mark' ? MP.mark({ size: 1200 }) : MP.logo({ height: 400, tone: kind === 'horizontal-dark' ? 'dark' : 'light' });
+</script>

@@ -1,0 +1,216 @@
+<title>Mizaniya Pay reels</title>
+<!-- 1080x1920 motion reels. ?id=qr | recharge | outro. Open in a browser to watch it loop, or render
+     frame-exact with ../render.cjs (window.REEL = { render(t), DURATION, CUES, MUSIC }). -->
+<link rel="stylesheet" href="mp.css">
+<style>
+  #reel { position: relative; width: 1080px; height: 1920px; overflow: hidden; color: #fff;
+    background: radial-gradient(110% 70% at 80% 5%, #2A6584 0%, var(--navy) 40%, var(--deep) 75%, var(--night) 100%); }
+  #reel.night { background: radial-gradient(90% 60% at 50% 0%, #1B3A4F 0%, #0E2130 50%, #070F16 100%); }
+  .abs { position: absolute; left: 0; right: 0; }
+  .hook { top: 560px; padding: 0 80px; text-align: center; }
+  .hook h1 { font-family: 'Plex Arabic', 'Poppins'; direction: rtl; font-weight: 700; font-size: 112px; line-height: 1.25; }
+  .hook p { font: 500 50px/1.35 Poppins; color: #D6E4EC; margin-top: 36px; }
+  .clock { top: 300px; text-align: center; font: 700 220px/1 Poppins; color: var(--yellow); letter-spacing: 4px; }
+  .label { top: 150px; text-align: center; font: 700 64px/1.2 Poppins; }
+  .label .ar { display: block; direction: rtl; font-family: 'Plex Arabic', 'Poppins'; font-size: 52px; color: var(--yellow); margin-top: 10px; }
+  .phone { position: absolute; left: 50%; top: 430px; width: 640px; height: 1300px; margin-left: -320px; border-radius: 86px;
+    background: #0B0F14; box-shadow: 0 60px 120px rgba(0,0,0,.45), inset 0 0 0 3px #2B3A45; padding: 20px; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 68px; overflow: hidden; background: #F3F6F8; color: var(--ink); }
+  .notch { position: absolute; top: 22px; left: 50%; width: 170px; height: 44px; margin-left: -85px; border-radius: 22px; background: #0B0F14; z-index: 9; }
+  .scr { position: absolute; inset: 0; padding: 96px 34px 34px; }
+  .app-top { display: flex; justify-content: space-between; align-items: center; }
+  .bal { margin-top: 28px; border-radius: 34px; padding: 34px; color: #fff; background: linear-gradient(135deg, var(--navy), var(--deep)); }
+  .bal small { font: 500 22px Poppins; opacity: .8; }
+  .bal div { font: 700 52px/1.2 Poppins; margin-top: 8px; }
+  .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 26px; }
+  .act { background: #fff; border-radius: 24px; padding: 20px 0 16px; text-align: center; font: 600 19px Poppins; color: var(--navy); box-shadow: 0 4px 14px rgba(15,37,51,.07); }
+  .act svg { display: block; margin: 0 auto 8px; }
+  .act.hi { outline: 4px solid var(--yellow); }
+  .sec { margin-top: 34px; font: 700 26px Poppins; color: var(--ink); }
+  .tile { display: flex; align-items: center; gap: 18px; background: #fff; border-radius: 24px; padding: 22px; margin-top: 16px; font: 600 26px Poppins; color: var(--navy); box-shadow: 0 4px 14px rgba(15,37,51,.07); }
+  .tile i { width: 70px; height: 70px; border-radius: 20px; background: #E6EEF2; display: grid; place-items: center; }
+  .tile small { display: block; font: 400 20px Poppins; color: #5D7381; margin-top: 4px; }
+  .cam { background: #0E141A; }
+  .qrbox { position: absolute; left: 50%; top: 360px; width: 380px; height: 380px; margin-left: -190px; }
+  .qrbox .corner { position: absolute; width: 80px; height: 80px; border: 10px solid var(--yellow); }
+  .scanline { position: absolute; left: 20px; right: 20px; height: 6px; border-radius: 3px; background: var(--yellow); box-shadow: 0 0 30px var(--yellow); }
+  .qrimg { position: absolute; inset: 60px; background: #fff; border-radius: 12px; padding: 18px; }
+  .camtxt { position: absolute; left: 0; right: 0; top: 820px; text-align: center; color: #fff; font: 600 30px Poppins; }
+  .h2 { font: 700 34px Poppins; color: var(--ink); margin-top: 20px; }
+  .who { display: flex; align-items: center; gap: 18px; margin-top: 26px; font: 600 28px Poppins; }
+  .who i { width: 80px; height: 80px; border-radius: 50%; background: var(--navy); color: var(--yellow); display: grid; place-items: center; font: 700 34px Poppins; font-style: normal; }
+  .amount { margin-top: 70px; text-align: center; font: 700 96px Poppins; color: var(--navy); }
+  .amount span { font-size: 40px; color: #5D7381; }
+  .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 28px; }
+  .chip { background: #fff; border-radius: 22px; padding: 26px 0; text-align: center; font: 700 32px Poppins; color: var(--navy); border: 3px solid transparent; }
+  .chip.on { border-color: var(--navy); background: #E6EEF2; }
+  .field { margin-top: 22px; background: #fff; border-radius: 22px; padding: 24px; font: 600 28px Poppins; color: var(--ink); }
+  .field small { display: block; font: 500 20px Poppins; color: #5D7381; margin-bottom: 6px; }
+  .btn { position: absolute; left: 34px; right: 34px; bottom: 60px; border-radius: 28px; padding: 30px; text-align: center; font: 700 32px Poppins; background: var(--navy); color: #fff; }
+  .done { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--navy); color: #fff; }
+  .done .ok { width: 220px; height: 220px; border-radius: 50%; background: var(--yellow); color: var(--navy); display: grid; place-items: center; }
+  .done h3 { font: 700 64px Poppins; margin-top: 46px; }
+  .done .ar { font: 600 46px 'Plex Arabic', 'Poppins'; direction: rtl; color: var(--yellow); margin-top: 12px; }
+  .done p { font: 500 30px Poppins; opacity: .85; margin-top: 22px; }
+  .tap { position: absolute; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: rgba(248,233,28,.45); border: 5px solid var(--yellow); pointer-events: none; z-index: 8; }
+  .end { inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 54px;
+    background: radial-gradient(90% 60% at 50% 40%, #2A6584 0%, var(--navy) 45%, var(--deep) 100%); }
+  .end h2 { font: 700 96px/1.2 'Plex Arabic', 'Poppins'; direction: rtl; }
+  .end p { font: 600 46px Poppins; color: var(--yellow); }
+  .stores { display: flex; gap: 22px; }
+  .store { background: #000; color: #fff; border-radius: 22px; padding: 22px 34px; font: 600 38px/1.1 Poppins; text-align: left; }
+  .store small { display: block; font: 400 22px/1 Poppins; opacity: .8; margin-bottom: 6px; }
+  .handle { font: 600 36px Poppins; opacity: .8; }
+</style>
+<div id="reel"></div>
+<script src="mp.js"></script>
+<script>
+(function () {
+  const id = new URLSearchParams(location.search).get('id') || 'qr';
+  const I = MP.icon;
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const k = (t, a, b) => clamp((t - a) / (b - a));
+  const out3 = (x) => 1 - Math.pow(1 - x, 3);
+  const back = (x) => { const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  // Fade/slide in over [a, a+d], out over [b, b+d].
+  const show = (t, a, b, d = 0.35) => clamp(Math.min(out3(k(t, a, a + d)), 1 - k(t, b, b + d)));
+
+  // A plain QR-looking grid (decorative, encodes nothing).
+  function qrSVG() {
+    let r = ''; let seed = 7;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
+      const finder = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13);
+      if (finder) continue;
+      if (rnd() > 0.52) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+    }
+    const f = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+    return `<svg viewBox="0 0 21 21" width="100%" height="100%" fill="#0C1527" shape-rendering="crispEdges">${r}${f(0, 0)}${f(14, 0)}${f(0, 14)}</svg>`;
+  }
+
+  const appTop = `<div class="app-top">${MP.logo({ height: 58, tone: 'light' })}${I('bolt', 40)}</div>`;
+  const home = (hi) => `${appTop}
+    <div class="bal"><small>Available balance</small><div>12,500.00 DZD</div></div>
+    <div class="acts">
+      <div class="act">${I('send', 44)}Send</div><div class="act">${I('card', 44)}Top up</div>
+      <div class="act">${I('request', 44)}Request</div><div class="act ${hi === 'qr' ? 'hi' : ''}">${I('qr', 44)}Scan</div></div>
+    <div class="sec">Marketplace</div>
+    <div class="tile ${hi === 'market' ? 'hi' : ''}" style="${hi === 'market' ? 'outline:4px solid var(--yellow)' : ''}"><i>${I('phone', 44)}</i><div>Mobile recharge<small>All operators</small></div></div>
+    <div class="tile"><i>${I('wifi', 44)}</i><div>Internet<small>Top up your line</small></div></div>
+    <div class="tile"><i>${I('bill', 44)}</i><div>Bills<small>Pay without the queue</small></div></div>`;
+  const endCard = (cta, sub) => `<div class="abs end" id="end">
+      <div id="endlogo">${MP.logo({ height: 210, tone: 'dark' })}</div>
+      <h2 id="endh">${cta}</h2><p id="endp">${sub}</p>
+      <div class="stores" id="ends"><div class="store"><small>GET IT ON</small>Google Play</div><div class="store"><small>Download on the</small>App Store</div></div>
+      <div class="handle">@mizaniya_pay</div></div>`;
+
+  const REELS = {
+    qr: {
+      DURATION: 12.5, theme: '',
+      html: `
+        <div class="abs hook" id="hook"><h1>بعتلو الدراهم<br>بلا ما تسقسيه<br>على <span class="hl">الـ RIP</span></h1><p>Send money without asking for his RIP.</p></div>
+        <div class="abs label" id="lab"></div>
+        <div class="phone" id="phone"><div class="screen"><div class="notch"></div>
+          <div class="scr" id="s1">${home('qr')}</div>
+          <div class="scr cam" id="s2"><div class="qrbox"><div class="qrimg">${qrSVG()}</div>
+            <div class="corner" style="left:0;top:0;border-right:0;border-bottom:0;border-radius:30px 0 0 0"></div><div class="corner" style="right:0;top:0;border-left:0;border-bottom:0;border-radius:0 30px 0 0"></div>
+            <div class="corner" style="left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 30px"></div><div class="corner" style="right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 30px 0"></div>
+            <div class="scanline" id="line"></div></div><div class="camtxt" id="camtxt">Point at the QR code</div></div>
+          <div class="scr" id="s3">${appTop}<div class="h2">Send money</div><div class="who"><i>A</i><div>Amine<div style="font:400 22px Poppins;color:#5D7381">Mizaniya Pay user</div></div></div>
+            <div class="amount"><b id="amt">0</b> <span>DZD</span></div><div class="btn" id="b3">Confirm</div></div>
+          <div class="scr done" id="s4"><div class="ok">${I('check', 140)}</div><h3>Sent!</h3><div class="ar">تم الإرسال</div><p>2,000 DZD to Amine · just now</p></div>
+          <div class="tap" id="tap"></div></div></div>
+        ${endCard('حمّل Mizaniya Pay', 'Scan. Send. Done.')}`,
+      taps: [[4.0, 'qr'], [7.5, 'b3']],
+      labels: [[2.9, 4.6, '1. Scan', 'سكاني'], [4.6, 6.4, '1. Scan', 'سكاني'], [6.4, 7.9, '2. Amount', 'المبلغ'], [7.9, 9.6, '3. Done', 'خلاص!']],
+      screens: [['s1', 2.6, 4.6], ['s2', 4.6, 6.4], ['s3', 6.4, 7.9], ['s4', 7.9, 99]],
+      CUES: [[0.15, 'whoosh', 0], [0.5, 'pop', 2], [2.7, 'swish', 0], [4.0, 'click', 0], [4.6, 'swish', 0], [6.1, 'tick', 0], [6.4, 'swish', 0],
+             [6.7, 'tick', 0], [6.9, 'tick', 0], [7.1, 'tick', 0], [7.5, 'click', 0], [7.95, 'ding', 0], [9.6, 'whoosh', 0], [9.9, 'impact', 0], [10.4, 'pop', 4]],
+      extra(t) {
+        const line = document.getElementById('line'); line.style.top = (30 + 310 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * k(t, 4.7, 6.1) * 1.5))) + 'px';
+        document.getElementById('camtxt').textContent = t > 6.05 ? 'QR detected ✓' : 'Point at the QR code';
+        const n = Math.round(2000 * out3(k(t, 6.6, 7.2)) / 500) * 500;
+        document.getElementById('amt').textContent = n.toLocaleString('en-US');
+      },
+    },
+    recharge: {
+      DURATION: 12.5, theme: 'night',
+      html: `
+        <div class="abs clock" id="clock">23:58</div>
+        <div class="abs hook" id="hook" style="top:640px"><h1>الكريدي كمل<br><span class="hl">في نص الليل؟</span></h1><p>Out of credit at midnight?</p></div>
+        <div class="abs label" id="lab"></div>
+        <div class="phone" id="phone"><div class="screen"><div class="notch"></div>
+          <div class="scr" id="s1">${home('market')}</div>
+          <div class="scr" id="s3">${appTop}<div class="h2">Mobile recharge</div>
+            <div class="field"><small>Phone number</small>06 •• •• •• ••</div>
+            <div class="sec">Amount</div>
+            <div class="chips"><div class="chip" id="c1">100 DA</div><div class="chip" id="c2">200 DA</div><div class="chip" id="c5">500 DA</div><div class="chip" id="c10">1,000 DA</div></div>
+            <div class="btn" id="b3">Recharge</div></div>
+          <div class="scr done" id="s4"><div class="ok">${I('check', 140)}</div><h3>Recharged!</h3><div class="ar">شارجيت في ثواني</div><p>500 DA added · 23:59</p></div>
+          <div class="tap" id="tap"></div></div></div>
+        ${endCard('حمّل Mizaniya Pay', 'Recharge any time. Even at midnight.')}`,
+      taps: [[4.1, 'market'], [5.9, 'c5'], [7.4, 'b3']],
+      labels: [[2.9, 4.8, '1. Mobile recharge', 'فليكسي'], [4.8, 7.8, '2. Pick an amount', 'اختار المبلغ'], [7.8, 9.6, '3. Done', 'شارجيت!']],
+      screens: [['s1', 2.6, 4.8], ['s3', 4.8, 7.8], ['s4', 7.8, 99]],
+      CUES: [[0.15, 'pulse', 0], [0.6, 'tick', 0], [1.0, 'pop', 1], [2.7, 'swish', 0], [4.1, 'click', 0], [4.8, 'swish', 0], [5.9, 'click', 0], [7.4, 'click', 0],
+             [7.85, 'ding', 0], [9.6, 'whoosh', 0], [9.9, 'impact', 0], [10.4, 'pop', 4]],
+      extra(t) {
+        document.getElementById('clock').textContent = t < 1.6 ? '23:58' : '23:59';
+        document.getElementById('c5').classList.toggle('on', t > 5.9);
+      },
+    },
+    outro: {
+      DURATION: 3.5, theme: '',
+      html: endCard('حمّل Mizaniya Pay', 'Pay, send and recharge in seconds.'),
+      taps: [], labels: [], screens: [],
+      CUES: [[0.05, 'whoosh', 0], [0.35, 'impact', 0], [0.9, 'pop', 4]],
+    },
+  };
+
+  const R = REELS[id];
+  const root = document.getElementById('reel');
+  root.className = R.theme;
+  root.innerHTML = R.html;
+  const $ = (x) => document.getElementById(x);
+  const endAt = id === 'outro' ? 0 : 9.6;
+
+  function render(t) {
+    if ($('hook')) {
+      const h = show(t, 0.1, 2.5, 0.4);
+      $('hook').style.opacity = h; $('hook').style.transform = `translateY(${(1 - h) * 60}px) scale(${0.96 + 0.04 * h})`;
+    }
+    if ($('clock')) { const c = show(t, 0.05, 2.5, 0.3); $('clock').style.opacity = c; $('clock').style.transform = `scale(${0.8 + 0.2 * back(k(t, 0.05, 0.6))})`; }
+    if ($('phone')) {
+      const p = out3(k(t, 2.5, 3.1)) * (1 - k(t, endAt - 0.1, endAt + 0.3));
+      $('phone').style.opacity = p; $('phone').style.transform = `translateY(${(1 - p) * 500}px) rotate(${(1 - p) * -6}deg)`;
+      for (const [sid, a, b] of R.screens) {
+        const v = clamp(Math.min(k(t, a, a + 0.25), 1 - k(t, b, b + 0.25)));
+        $(sid).style.opacity = v; $(sid).style.transform = `translateX(${(1 - k(t, a, a + 0.25)) * 80}px)`;
+      }
+      const lab = R.labels.find(([a, b]) => t >= a && t < b);
+      $('lab').innerHTML = lab ? `${lab[2]}<span class="ar">${lab[3]}</span>` : '';
+      $('lab').style.opacity = lab ? show(t, lab[0], lab[1] - 0.2, 0.2) : 0;
+      // Tap ring over the tapped element, positioned within the screen.
+      const tap = R.taps.find(([at]) => t >= at - 0.25 && t < at + 0.35);
+      if (tap) {
+        const scr = $('phone').querySelector('.screen').getBoundingClientRect();
+        const target = tap[1] === 'qr' ? $('s1').querySelector('.act.hi') : tap[1] === 'market' ? $('s1').querySelector('.tile') : $(tap[1]);
+        const r = target.getBoundingClientRect(); const s = 1 - Math.abs(t - tap[0]) / 0.35;
+        Object.assign($('tap').style, { opacity: Math.max(0, s), left: (r.left - scr.left + r.width / 2) + 'px', top: (r.top - scr.top + r.height / 2) + 'px', transform: `scale(${0.6 + 0.5 * s})` });
+      } else $('tap').style.opacity = 0;
+      if (R.extra) R.extra(t);
+    }
+    const e = out3(k(t, endAt, endAt + 0.45));
+    $('end').style.opacity = e;
+    $('endlogo').style.transform = `scale(${0.7 + 0.3 * back(k(t, endAt + 0.2, endAt + 0.8))})`;
+    for (const [x, d] of [['endh', 0.5], ['endp', 0.7], ['ends', 0.9]]) {
+      const v = out3(k(t, endAt + d, endAt + d + 0.4)); $(x).style.opacity = v; $(x).style.transform = `translateY(${(1 - v) * 40}px)`;
+    }
+  }
+
+  window.REEL = { render, DURATION: R.DURATION, CUES: R.CUES, MUSIC: { start: 0, end: R.DURATION - 0.6, bpm: 118 } };
+  // In a normal browser tab, play it on a loop.
+  if (!navigator.webdriver) { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % R.DURATION); requestAnimationFrame(loop); }; loop(); }
+  else render(0);
+})();
+</script>
