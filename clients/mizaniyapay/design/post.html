@@ -40,6 +40,26 @@
   .nov h1.ar { text-align: center; font-size: 84px; }
   .nov .line { width: 120px; height: 8px; border-radius: 4px; background: var(--yellow); }
   .star { width: 96px; height: 96px; color: var(--yellow); }
+  /* Myth vs fact */
+  .mf { display: grid; gap: 26px; }
+  .mf .box { border-radius: 34px; padding: 38px 42px; }
+  .mf .myth { background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.14); }
+  .mf .fact { background: var(--yellow); color: var(--navy); }
+  .mf .tagl { display: inline-flex; align-items: center; gap: 12px; font: 700 28px/1 Poppins; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
+  .mf .myth .tagl { color: #FF9C8A; }
+  .mf .q { font: 700 52px/1.3 'Plex Arabic', 'Poppins'; direction: rtl; text-align: right; }
+  .mf .myth .q { text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: rgba(255,156,138,.8); }
+  .mf .e { font: 500 34px/1.4 Poppins; margin-top: 14px; }
+  .mf .myth .e { color: #C9D7E0; }
+  h1.en-h { font: 700 96px/1.12 Poppins; letter-spacing: -1px; }
+  .feat { display: grid; gap: 20px; }
+  .feat .step b { display: grid; place-items: center; }
+  /* Saved cards visual */
+  .cards { position: relative; height: 330px; }
+  .bank { position: absolute; width: 470px; height: 290px; border-radius: 30px; padding: 34px; color: #fff; box-shadow: 0 30px 60px rgba(0,0,0,.35); font: 600 30px Poppins; }
+  .bank .chipc { width: 70px; height: 52px; border-radius: 10px; background: linear-gradient(135deg, #F8E91C, #D9C400); margin: 26px 0 30px; }
+  .bank .num { font: 600 34px Poppins; letter-spacing: 4px; }
+  .bank .nm { position: absolute; right: 34px; top: 34px; font: 700 30px Poppins; letter-spacing: 2px; }
 </style>
 <div id="post"></div>
 <script src="mp.js"></script>
@@ -120,6 +140,49 @@
         <h1 class="ar" style="color:var(--navy)">افتح حسابك<br>Partner اليوم</h1>
         <div class="chips"><span class="chip">No hardware</span><span class="chip">No setup fee</span><span class="chip">Live in under 24h</span></div>
         <div class="url" style="color:var(--navy)">partner.mizaniyapay.dz</div></div>`, end: 'Link in bio' },
+
+    // Mon 9 Nov: myth vs fact (trust)
+    'safe-1': { theme: 'navy', n: '1/6', body: `<div class="body">
+        <div class="badge">${I('shield', 76)}</div>
+        <div class="kicker">Myth or fact?</div>
+        <h1 class="ar big">الخلاص أونلاين<br><span class="hl">ماشي آمن؟</span></h1>
+        <div class="en">4 things people believe about paying online, and the truth.</div></div>`, swipe: true },
+    'safe-2': { theme: 'deep', n: '2/6', body: `<div class="body">
+        <div class="mf"><div class="box myth"><div class="tagl">✕ Myth</div><div class="q">الخلاص أونلاين ماشي آمن</div><div class="e">"Paying online isn't safe."</div></div>
+        <div class="box fact"><div class="tagl">✓ Fact</div><div class="q">كل خلاص يتعدّى على الشبكة الوطنية للدفع</div><div class="e">Payments run on Algeria's payment network, and nothing goes out until you confirm it.</div></div></div></div>`, swipe: true },
+    'safe-3': { theme: 'navy', n: '3/6', body: `<div class="body">
+        <div class="mf"><div class="box myth"><div class="tagl">✕ Myth</div><div class="q">لازم نكتب معلومات الكارطة كل مرة</div><div class="e">"I have to type my card details every time."</div></div>
+        <div class="box fact"><div class="tagl">✓ Fact</div><div class="q">سجّل كارطتك مرة وحدة وخلّص بضغطة</div><div class="e">Save your CIB or Edahabia card once and pay in one tap.</div></div></div></div>`, swipe: true },
+    'safe-4': { theme: 'deep', n: '4/6', body: `<div class="body">
+        <div class="mf"><div class="box myth"><div class="tagl">✕ Myth</div><div class="q">باش نبعث الدراهم لازم الـRIP</div><div class="e">"To send money I need their RIP."</div></div>
+        <div class="box fact"><div class="tagl">✓ Fact</div><div class="q">سكاني الـQR وخلاص</div><div class="e">Scan their QR code. No phone numbers or account details to share.</div></div></div></div>`, swipe: true },
+    'safe-5': { theme: 'navy', n: '5/6', body: `<div class="body">
+        <div class="mf"><div class="box myth"><div class="tagl">✕ Myth</div><div class="q">الدفع الإلكتروني غير للشركات الكبار</div><div class="e">"Digital payments are only for big companies."</div></div>
+        <div class="box fact"><div class="tagl">✓ Fact</div><div class="q">حتى الحانوت الصغير يقدر يقبل الخلاص</div><div class="e">Any shop can accept payments with a QR code: no hardware, no setup fee.</div></div></div></div>`, swipe: true },
+    'safe-6': { theme: 'light', n: '6/6', body: `<div class="body">
+        <div class="kicker">One rule to remember</div>
+        <h1 class="ar" style="color:var(--navy)">ما تعطي الكود<br>لحتى واحد</h1>
+        <div class="en">Never share your PIN or verification codes with anyone, even someone who says they work for Mizaniya Pay.</div>
+        ${STORES}</div>`, end: 'Link in bio' },
+
+    // Wed 11 Nov: LinkedIn, payment gateway (English only)
+    'gateway': { theme: 'deep', body: `<div class="body">
+        <div class="kicker">For e-commerce &amp; platforms</div>
+        <h1 class="en-h">Accept online payments<br><span class="hl">in one integration.</span></h1>
+        <div class="chips"><span class="chip y">CIB</span><span class="chip y">Edahabia</span><span class="chip y">Mizaniya Pay app</span></div>
+        <div class="feat">
+          <div class="step"><b>${I('bolt', 44)}</b><div class="t">REST API, webhooks &amp; SDKs</div></div>
+          <div class="step"><b>${I('chart', 44)}</b><div class="t">Real-time revenue dashboard</div></div>
+          <div class="step"><b>${I('shield', 44)}</b><div class="t">Connected to Algeria's payment network</div></div></div></div>`, end: 'mizaniyapay.dz/partner' },
+
+    // Sat 14 Nov: save your card
+    'cards': { theme: 'navy', body: `<div class="body">
+        <div class="cards">
+          <div class="bank" style="left:0;top:40px;z-index:2;background:linear-gradient(135deg,#2E7D5B,#1B5A40)"><span class="nm">EDAHABIA</span><div class="chipc"></div><div class="num">•••• •••• •••• 2048</div></div>
+          <div class="bank" style="left:380px;top:0;background:linear-gradient(135deg,#2A6584,#183B4E);border:3px solid rgba(255,255,255,.2)"><span class="nm">CIB</span><div class="chipc"></div><div class="num">•••• •••• •••• 7310</div></div></div>
+        <h1 class="ar">سجّل كارطتك<br><span class="hl">مرة وحدة</span></h1>
+        <div class="en">Save your CIB or Edahabia card and pay in one tap. No retyping, every time.</div>
+        <div class="chips"><span class="chip">Top up</span><span class="chip">Bills</span><span class="chip">Recharge</span></div></div>`, end: 'Link in bio' },
   };
 
   const id = new URLSearchParams(location.search).get('id') || 'app-1';

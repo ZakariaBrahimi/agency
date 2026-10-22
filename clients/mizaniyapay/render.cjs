@@ -22,6 +22,11 @@ const JOBS = [
   { name: 'week-1/02-mon-qr-reel', url: D('reel.html?id=qr'), reel: true },
   { name: 'week-1/07-sat-recharge-reel', url: D('reel.html?id=recharge'), reel: true },
   { name: 'week-1/04-wed-cafe-reel-outro', url: D('reel.html?id=outro'), reel: true },
+  ...[1, 2, 3, 4, 5, 6].map((i) => post(`week-2/02-mon-safe-carousel/slide-${i}`, `safe-${i}`)),
+  post('week-2/04-wed-linkedin-gateway', 'gateway'),
+  post('week-2/07-sat-save-card', 'cards'),
+  { name: 'week-2/01-sun-signup-reel', url: D('reel.html?id=signup'), reel: true },
+  { name: 'week-2/05-thu-partner-reel', url: D('reel.html?id=partner'), reel: true },
 ];
 
 async function renderReel(browser, j) {

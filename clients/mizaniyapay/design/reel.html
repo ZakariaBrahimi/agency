@@ -61,6 +61,36 @@
   .store { background: #000; color: #fff; border-radius: 22px; padding: 22px 34px; font: 600 38px/1.1 Poppins; text-align: left; }
   .store small { display: block; font: 400 22px/1 Poppins; opacity: .8; margin-bottom: 6px; }
   .handle { font: 600 36px Poppins; opacity: .8; }
+  .linkpill { font: 600 46px Poppins; background: #fff; color: var(--navy); border-radius: 999px; padding: 24px 44px; }
+  /* Steps list (partner reel) */
+  .steps2 { top: 330px; padding: 0 90px; display: grid; gap: 28px; }
+  .steps2 .kick { font: 600 34px Poppins; letter-spacing: 4px; text-transform: uppercase; color: var(--yellow); text-align: center; margin-bottom: 16px; }
+  .st { display: flex; align-items: center; gap: 32px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.16); border-radius: 34px; padding: 34px 38px; }
+  .st b { flex: none; width: 100px; height: 100px; border-radius: 50%; background: var(--yellow); color: var(--navy); font: 700 48px/100px Poppins; text-align: center; }
+  .st .t { font: 600 46px/1.25 Poppins; }
+  .st .t span { display: block; font: 600 40px 'Plex Arabic', 'Poppins'; color: #D6E4EC; margin-top: 8px; }
+  /* Sign-up screens */
+  .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 30px; background: var(--navy); color: #fff; }
+  .welcome h3 { font: 700 46px/1.25 Poppins; }
+  .welcome p { font: 500 26px Poppins; opacity: .8; }
+  .welcome .btn { background: var(--yellow); color: var(--navy); }
+  .code { display: flex; gap: 14px; margin-top: 26px; }
+  .code i { flex: 1; height: 96px; border-radius: 20px; background: #fff; display: grid; place-items: center; font: 700 44px Poppins; font-style: normal; color: var(--navy); border: 3px solid #D3DFE6; }
+  .idcard { margin-top: 30px; border-radius: 28px; background: linear-gradient(135deg, #DCE7EE, #F7FAFB); border: 3px dashed #9FB6C4; height: 300px; position: relative; }
+  .idcard .ph { position: absolute; left: 34px; top: 50px; width: 150px; height: 190px; border-radius: 18px; background: #B9CCD8; }
+  .idcard .ln { position: absolute; left: 220px; height: 22px; border-radius: 11px; background: #B9CCD8; }
+  .chk { display: flex; align-items: center; gap: 18px; margin-top: 22px; font: 600 28px Poppins; color: var(--navy); }
+  .chk i { width: 56px; height: 56px; border-radius: 50%; background: var(--yellow); color: var(--navy); display: grid; place-items: center; }
+  /* Partner dashboard */
+  .rev { margin-top: 26px; border-radius: 34px; padding: 34px; color: #fff; background: linear-gradient(135deg, var(--navy), var(--deep)); }
+  .rev small { font: 500 22px Poppins; opacity: .8; }
+  .rev div { font: 700 58px/1.2 Poppins; margin-top: 8px; }
+  .pay { display: flex; align-items: center; gap: 18px; background: #fff; border-radius: 24px; padding: 22px; margin-top: 16px; box-shadow: 0 4px 14px rgba(15,37,51,.07); }
+  .pay i { width: 70px; height: 70px; border-radius: 20px; background: #E6EEF2; color: var(--navy); display: grid; place-items: center; }
+  .pay div { flex: 1; font: 600 26px Poppins; color: var(--navy); }
+  .pay small { display: block; font: 400 20px Poppins; color: #5D7381; margin-top: 4px; }
+  .pay b { font: 700 28px Poppins; color: #1E7B4F; }
+  .tag { font: 600 20px Poppins; background: var(--yellow); color: var(--navy); border-radius: 999px; padding: 8px 18px; }
 </style>
 <div id="reel"></div>
 <script src="mp.js"></script>
@@ -98,10 +128,12 @@
     <div class="tile ${hi === 'market' ? 'hi' : ''}" style="${hi === 'market' ? 'outline:4px solid var(--yellow)' : ''}"><i>${I('phone', 44)}</i><div>Mobile recharge<small>All operators</small></div></div>
     <div class="tile"><i>${I('wifi', 44)}</i><div>Internet<small>Top up your line</small></div></div>
     <div class="tile"><i>${I('bill', 44)}</i><div>Bills<small>Pay without the queue</small></div></div>`;
-  const endCard = (cta, sub) => `<div class="abs end" id="end">
+  // The last card: logo, call to action, then store buttons (or `bottom`, e.g. a link for merchants).
+  const STORES = `<div class="stores" id="ends"><div class="store"><small>GET IT ON</small>Google Play</div><div class="store"><small>Download on the</small>App Store</div></div>`;
+  const endCard = (cta, sub, bottom) => `<div class="abs end" id="end">
       <div id="endlogo">${MP.logo({ height: 210, tone: 'dark' })}</div>
       <h2 id="endh">${cta}</h2><p id="endp">${sub}</p>
-      <div class="stores" id="ends"><div class="store"><small>GET IT ON</small>Google Play</div><div class="store"><small>Download on the</small>App Store</div></div>
+      ${bottom ? `<div id="ends">${bottom}</div>` : STORES}
       <div class="handle">@mizaniya_pay</div></div>`;
 
   const REELS = {
@@ -159,6 +191,71 @@
         document.getElementById('c5').classList.toggle('on', t > 5.9);
       },
     },
+    signup: {
+      DURATION: 12.5, theme: '',
+      html: `
+        <div class="abs hook" id="hook"><h1>حساب في دقايق<br><span class="hl">من دارك</span></h1><p>Open your account in minutes. No branch visit.</p></div>
+        <div class="abs label" id="lab"></div>
+        <div class="phone" id="phone"><div class="screen"><div class="notch"></div>
+          <div class="scr welcome" id="s1">${MP.mark({ size: 300 })}<h3>Welcome to<br>Mizaniya Pay</h3><p>Pay, send and recharge in seconds.</p><div class="btn" id="b1">Open your account</div></div>
+          <div class="scr" id="s2">${appTop}<div class="h2">Your phone number</div>
+            <div class="field"><small>Mobile number</small><span id="num">0</span></div>
+            <div class="sec">Enter the code we sent you</div>
+            <div class="code"><i id="d1"></i><i id="d2"></i><i id="d3"></i><i id="d4"></i></div>
+            <div class="btn" id="b2">Continue</div></div>
+          <div class="scr" id="s3">${appTop}<div class="h2">Verify your identity</div>
+            <div class="idcard"><div class="ph"></div><div class="ln" style="top:70px;width:260px"></div><div class="ln" style="top:120px;width:200px"></div><div class="ln" style="top:170px;width:230px"></div></div>
+            <div class="chk" id="k1"><i>${I('check', 34)}</i>ID card scanned</div>
+            <div class="chk" id="k2"><i>${I('check', 34)}</i>Selfie matched</div></div>
+          <div class="scr done" id="s4"><div class="ok">${I('check', 140)}</div><h3>You're in!</h3><div class="ar">حسابك واجد</div><p>Your Mizaniya account is ready</p></div>
+          <div class="tap" id="tap"></div></div></div>
+        ${endCard('حمّل Mizaniya Pay', 'Your account, ready in minutes.')}`,
+      taps: [[4.0, 'b1'], [5.85, 'b2']],
+      labels: [[2.9, 4.4, '1. Open the app', 'افتح التطبيق'], [4.4, 6.2, '2. Your number', 'رقم تيليفونك'], [6.2, 7.9, '3. Verify your ID', 'أكّد هويتك'], [7.9, 9.6, '4. Ready!', 'واجد!']],
+      screens: [['s1', 2.6, 4.4], ['s2', 4.4, 6.2], ['s3', 6.2, 7.9], ['s4', 7.9, 99]],
+      CUES: [[0.15, 'whoosh', 0], [0.5, 'pop', 3], [2.7, 'swish', 0], [4.0, 'click', 0], [4.4, 'swish', 0], [4.7, 'tick', 0], [4.9, 'tick', 0], [5.1, 'tick', 0],
+             [5.3, 'tick', 0], [5.85, 'click', 0], [6.2, 'swish', 0], [6.7, 'pop', 2], [7.3, 'pop', 4], [7.95, 'ding', 0], [9.6, 'whoosh', 0], [9.9, 'impact', 0], [10.4, 'pop', 4]],
+      extra(t) {
+        if (!$('num')) return;
+        const full = '05 •• •• •• ••'; $('num').textContent = full.slice(0, 2 + Math.round(12 * k(t, 4.55, 5.0))) || '0';
+        [1, 2, 3, 4].forEach((i) => { $('d' + i).textContent = t > 5.1 + i * 0.15 ? '•' : ''; });
+        $('k1').style.opacity = out3(k(t, 6.6, 6.9)); $('k2').style.opacity = out3(k(t, 7.2, 7.5));
+      },
+    },
+    partner: {
+      DURATION: 13.5, theme: '', phoneIn: 7.0, endAt: 10.6,
+      html: `
+        <div class="abs hook" id="hook"><h1 style="font-size:92px">حانوتك يقبل الخلاص<br><span class="hl">في أقل من 24 ساعة</span></h1><p>Start accepting digital payments today.</p></div>
+        <div class="abs steps2" id="steps"><div class="kick">How to be a Mizaniya Partner</div>
+          <div class="st" id="st1"><b>1</b><div class="t">Create your Partner account<span>افتح حسابك</span></div></div>
+          <div class="st" id="st2"><b>2</b><div class="t">Get your dashboard &amp; POS access<span>خذ لوحة التحكم</span></div></div>
+          <div class="st" id="st3"><b>3</b><div class="t">Accept QR, CIB &amp; Edahabia<span>استقبل الخلاص</span></div></div>
+          <div class="st" id="st4"><b>4</b><div class="t">Get paid instantly<span>دراهمك توصلك</span></div></div></div>
+        <div class="abs label" id="lab"></div>
+        <div class="phone" id="phone"><div class="screen"><div class="notch"></div>
+          <div class="scr" id="s1"><div class="app-top">${MP.logo({ height: 58, tone: 'light' })}<span class="tag">Partner</span></div>
+            <div class="rev"><small>Today's revenue</small><div><span id="rev">40,800</span> DZD</div></div>
+            <div class="sec">Latest payments</div>
+            <div class="pay" id="p3"><i>${I('card', 40)}</i><div>Edahabia card<small>just now</small></div><b>+1,200</b></div>
+            <div class="pay" id="p2"><i>${I('card', 40)}</i><div>CIB card<small>1 min ago</small></div><b>+4,500</b></div>
+            <div class="pay" id="p1"><i>${I('qr', 40)}</i><div>QR · Mizaniya Pay app<small>2 min ago</small></div><b>+2,000</b></div></div>
+          <div class="tap" id="tap"></div></div></div>
+        ${endCard('افتح حسابك Partner', 'No hardware · No setup fee', '<div class="linkpill">partner.mizaniyapay.dz</div>')}`,
+      taps: [], labels: [[7.4, 10.5, 'Get paid instantly', 'دراهمك توصلك في الحين']],
+      screens: [['s1', 7.0, 99]],
+      CUES: [[0.15, 'whoosh', 0], [0.5, 'pop', 2], [2.75, 'swish', 0], [3.0, 'pop', 0], [3.9, 'pop', 1], [4.8, 'pop', 2], [5.7, 'pop', 4], [6.9, 'swish', 0],
+             [8.2, 'ding', 0], [8.9, 'pluck', 3], [9.6, 'pluck', 5], [10.6, 'whoosh', 0], [10.9, 'impact', 0], [11.4, 'pop', 4]],
+      extra(t) {
+        const g = clamp(Math.min(k(t, 2.7, 3.0), 1 - k(t, 6.8, 7.1)));
+        $('steps').style.opacity = g;
+        [1, 2, 3, 4].forEach((i) => { const v = out3(k(t, 2.1 + i * 0.9, 2.5 + i * 0.9)); $('st' + i).style.opacity = v; $('st' + i).style.transform = `translateX(${(1 - v) * -120}px)`; });
+        // Payments arrive bottom-up (oldest first) and the revenue counts up with them.
+        const arr = [[8.2, 'p1', 2000], [8.9, 'p2', 4500], [9.6, 'p3', 1200]];
+        let rev = 40800;
+        for (const [at, pid, amt] of arr) { const v = out3(k(t, at, at + 0.35)); $(pid).style.opacity = v; $(pid).style.transform = `translateY(${(1 - v) * -30}px)`; rev += amt * v; }
+        $('rev').textContent = (Math.round(rev / 100) * 100).toLocaleString('en-US');
+      },
+    },
     outro: {
       DURATION: 3.5, theme: '',
       html: endCard('حمّل Mizaniya Pay', 'Pay, send and recharge in seconds.'),
@@ -172,7 +269,8 @@
   root.className = R.theme;
   root.innerHTML = R.html;
   const $ = (x) => document.getElementById(x);
-  const endAt = id === 'outro' ? 0 : 9.6;
+  const endAt = R.endAt ?? (id === 'outro' ? 0 : 9.6);
+  const phoneIn = R.phoneIn ?? 2.5;
 
   function render(t) {
     if ($('hook')) {
@@ -181,7 +279,7 @@
     }
     if ($('clock')) { const c = show(t, 0.05, 2.5, 0.3); $('clock').style.opacity = c; $('clock').style.transform = `scale(${0.8 + 0.2 * back(k(t, 0.05, 0.6))})`; }
     if ($('phone')) {
-      const p = out3(k(t, 2.5, 3.1)) * (1 - k(t, endAt - 0.1, endAt + 0.3));
+      const p = out3(k(t, phoneIn, phoneIn + 0.6)) * (1 - k(t, endAt - 0.1, endAt + 0.3));
       $('phone').style.opacity = p; $('phone').style.transform = `translateY(${(1 - p) * 500}px) rotate(${(1 - p) * -6}deg)`;
       for (const [sid, a, b] of R.screens) {
         const v = clamp(Math.min(k(t, a, a + 0.25), 1 - k(t, b, b + 0.25)));
@@ -198,8 +296,8 @@
         const r = target.getBoundingClientRect(); const s = 1 - Math.abs(t - tap[0]) / 0.35;
         Object.assign($('tap').style, { opacity: Math.max(0, s), left: (r.left - scr.left + r.width / 2) + 'px', top: (r.top - scr.top + r.height / 2) + 'px', transform: `scale(${0.6 + 0.5 * s})` });
       } else $('tap').style.opacity = 0;
-      if (R.extra) R.extra(t);
     }
+    if (R.extra) R.extra(t);
     const e = out3(k(t, endAt, endAt + 0.45));
     $('end').style.opacity = e;
     $('endlogo').style.transform = `scale(${0.7 + 0.3 * back(k(t, endAt + 0.2, endAt + 0.8))})`;
