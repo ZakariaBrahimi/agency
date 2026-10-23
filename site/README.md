@@ -114,7 +114,7 @@ To change any wording, edit `assets/js/i18n.js`. Each key exists in `ar`, `en` a
 
 ## Before going live
 
-- `assets/js/main.js` → `SITE`: the real contact email (currently `hello@nawa.studio`) and the
+- `assets/js/main.js` → `SITE`: the fallback contact email (the live one is edited in admin «الإعدادات» and read from `GET /api/brief`) and the
   social profile links.
 - **Custom domain:** add `nawa.studio` in Vercel (Project → Settings → Domains), then replace
   `https://nawa-studio-six.vercel.app` in `index.html`, `robots.txt` and `sitemap.xml`.

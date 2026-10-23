@@ -15,7 +15,7 @@ const UI = {
     prev: 'السابق', next: 'التالي', submit: 'أرسل الطلب', sending: 'جارٍ الإرسال…',
     required: 'هذا الحقل مطلوب', email: 'أدخل بريدًا إلكترونيًا صحيحًا', whatsapp: 'أضف رقم واتساب لنتواصل معك عليه',
     pickOne: 'اختر خدمة واحدة على الأقل', fix: 'راجع الحقول المعلّمة ثم أكمل.',
-    failed: 'تعذّر إرسال الطلب. تحقّق من الاتصال وحاول مرة أخرى، أو راسلنا على hello@nawa.studio',
+    failed: 'تعذّر إرسال الطلب. تحقّق من الاتصال وحاول مرة أخرى، أو راسلنا على {email}',
     tooFast: 'لحظة من فضلك، ثم أعد المحاولة.', limited: 'أرسلت عدة طلبات خلال وقت قصير. حاول بعد قليل.',
     doneT: 'وصلنا طلبك. شكرًا!', doneL: 'سيراجعه فريقنا ونتواصل معك خلال يومي عمل.', ref: 'رقم الطلب:',
     home: 'العودة إلى الموقع', again: 'إرسال طلب آخر',
@@ -33,7 +33,7 @@ const UI = {
     prev: 'Back', next: 'Next', submit: 'Send request', sending: 'Sending…',
     required: 'This field is required', email: 'Enter a valid email address', whatsapp: 'Add a WhatsApp number so we can reach you there',
     pickOne: 'Pick at least one service', fix: 'Check the highlighted fields, then continue.',
-    failed: 'We couldn’t send your request. Check your connection and try again, or email hello@nawa.studio',
+    failed: 'We couldn’t send your request. Check your connection and try again, or email {email}',
     tooFast: 'One moment please, then try again.', limited: 'Several requests were sent in a short time. Please try again shortly.',
     doneT: 'We got your request. Thank you!', doneL: 'Our team will review it and get back to you within two working days.', ref: 'Request number:',
     home: 'Back to the site', again: 'Send another request',
@@ -51,7 +51,7 @@ const UI = {
     prev: 'Retour', next: 'Suivant', submit: 'Envoyer la demande', sending: 'Envoi…',
     required: 'Ce champ est obligatoire', email: 'Saisissez une adresse e-mail valide', whatsapp: 'Ajoutez un numéro WhatsApp pour que nous puissions vous joindre',
     pickOne: 'Choisissez au moins un service', fix: 'Vérifiez les champs signalés, puis continuez.',
-    failed: 'Impossible d’envoyer votre demande. Vérifiez votre connexion et réessayez, ou écrivez à hello@nawa.studio',
+    failed: 'Impossible d’envoyer votre demande. Vérifiez votre connexion et réessayez, ou écrivez à {email}',
     tooFast: 'Un instant, puis réessayez.', limited: 'Plusieurs demandes ont été envoyées en peu de temps. Réessayez bientôt.',
     doneT: 'Demande bien reçue. Merci !', doneL: 'Notre équipe l’étudie et vous répond sous deux jours ouvrés.', ref: 'Numéro de demande :',
     home: 'Retour au site', again: 'Envoyer une autre demande',
@@ -83,7 +83,10 @@ const startedAt = Date.now();
 
 try { const d = JSON.parse(localStorage.getItem(STORE) || 'null'); if (d && Array.isArray(d.services)) state = { ...state, ...d, currency: CURRENCIES.includes(d.currency) ? d.currency : DEFAULT_CURRENCY }; } catch {}
 const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
-const ui = (k) => UI[lang][k] ?? UI.ar[k] ?? '';
+// the contact email is set in admin «الإعدادات»; this default shows until it loads
+let contactEmail = 'nawa.studio.ai@gmail.com';
+fetch('/api/brief').then((r) => r.json()).then((d) => { if (d.contact?.email) contactEmail = d.contact.email; }).catch(() => {});
+const ui = (k) => (UI[lang][k] ?? UI.ar[k] ?? '').replace('{email}', contactEmail);
 
 // ---------- field rendering ----------
 

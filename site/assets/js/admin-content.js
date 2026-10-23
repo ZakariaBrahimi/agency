@@ -3,8 +3,9 @@
 // Runs in two places with the same tools:
 // - /admin  (window.NAWA_CT unset): Nawa's own content, or any client's (the switcher at the top)
 // - /portal (window.NAWA_CT = { api: '/api/portal', mode: 'client' }): a client's own content
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261023a';
-import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261023a';
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261023b';
+import { COPY_ICON } from './portal-schema.js?v=20261023b';
+import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261023b';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -390,7 +391,7 @@ function drawEditor(p) {
       ${p.folderUrl ? `<p class="muted">الملفات في <a href="${esc(p.folderUrl)}" target="_blank" rel="noopener">مجلد المنشور على Drive ↗</a>. أي ملف تضيفه هناك يظهر هنا.</p>` : ''}
     </section>
 
-    <section class="ct-sec"><div class="ct-sec-head"><h3>النص</h3><button type="button" class="link-btn" id="ceCopy">نسخ النص</button></div>
+    <section class="ct-sec"><div class="ct-sec-head"><h3>النص</h3><button type="button" class="copy-ico" id="ceCopy" aria-label="نسخ النص" title="نسخ النص">${COPY_ICON}</button></div>
       <div class="ct-captabs" role="tablist">
         <button type="button" role="tab" data-cap="all" aria-selected="true">النص العام</button>
         ${PLATFORM_IDS.map((pf) => `<button type="button" role="tab" data-cap="${pf}" aria-selected="false">${PLATFORMS[pf].name}${(p.captions?.[pf] || '').trim() ? ' •' : ''}</button>`).join('')}
@@ -417,7 +418,7 @@ function drawEditor(p) {
     capTab = b.dataset.cap; drawCaption(p2);
   }));
   $('ceCaption').addEventListener('input', countCaption);
-  $('ceCopy').onclick = () => copy(capTab === 'all' ? $('ceCaption').value : ($('ceCaption').value.trim() || current().captions?.all || ''));
+  $('ceCopy').onclick = (e) => copy(e.currentTarget, capTab === 'all' ? $('ceCaption').value : ($('ceCaption').value.trim() || current().captions?.all || ''));
   $('ceSave').onclick = () => save();
   $('ceClose').onclick = close;
   $('ceFiles').onchange = (e) => upload([...e.target.files]);
@@ -445,8 +446,11 @@ function countCaption() {
   c.classList.toggle('over', n > limits);
 }
 
-async function copy(text) {
-  try { await navigator.clipboard.writeText(text); toast('نُسخ النص.'); } catch { toast('تعذّر النسخ. حدّد النص وانسخه يدويًا.', true); }
+async function copy(btn, text) {
+  try {
+    await navigator.clipboard.writeText(text); toast('نُسخ النص.');
+    btn.classList.add('done'); clearTimeout(btn._t); btn._t = setTimeout(() => btn.classList.remove('done'), 1600);
+  } catch { toast('تعذّر النسخ. حدّد النص وانسخه يدويًا.', true); }
 }
 
 async function save(quiet = false) {
@@ -562,7 +566,7 @@ function drawSchedule(p) {
           ${direct && s && st === 'scheduled' ? `<button type="button" class="link-btn" data-auto="${pf}" data-v="${s.auto === false}">${s.auto === false ? 'تفعيل النشر التلقائي' : 'إيقاف النشر التلقائي'}</button>` : ''}
           ${s && !(direct && (st !== 'published' || s.remote)) ? `<button type="button" class="btn btn-ghost-dark" data-pub="${pf}" data-v="${st !== 'published'}">${st === 'published' ? 'إلغاء «منشور»' : 'تم النشر ✓'}</button>` : ''}
           ${s && st !== 'published' ? `<button type="button" class="link-btn ct-danger" data-un="${pf}">إلغاء الجدولة</button>` : ''}
-          <button type="button" class="link-btn" data-copy="${pf}">نسخ نص ${PLATFORMS[pf].name}</button>
+          <button type="button" class="copy-ico" data-copy="${pf}" aria-label="نسخ نص ${PLATFORMS[pf].name}" title="نسخ نص ${PLATFORMS[pf].name}">${COPY_ICON}</button>
         </span>
         ${direct ? `<span class="ct-metas">${metaLine(p, pf)}</span>` : ''}
       </li>`;
@@ -582,7 +586,7 @@ function drawSchedule(p) {
   }));
   box.querySelectorAll('[data-un]').forEach((b) => b.addEventListener('click', () => run(() => act('unschedule', { id: p.id, platforms: [b.dataset.un] }), 'أُلغيت الجدولة وحُذف الحدث من التقويم.')));
   box.querySelectorAll('[data-pub]').forEach((b) => b.addEventListener('click', () => run(() => act('published', { id: p.id, platform: b.dataset.pub, value: b.dataset.v === 'true' }), b.dataset.v === 'true' ? 'سُجّل كمنشور.' : 'أُعيد إلى «مجدول».')));
-  box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(captionFor({ ...current(), captions: formPatch().captions }, b.dataset.copy))));
+  box.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(b, captionFor({ ...current(), captions: formPatch().captions }, b.dataset.copy))));
   box.querySelectorAll('[data-auto]').forEach((b) => b.addEventListener('click', () => run(() => act('auto', { id: p.id, platform: b.dataset.auto, value: b.dataset.v === 'true' }), b.dataset.v === 'true' ? 'سيُنشر تلقائيًا في موعده.' : 'أُوقف النشر التلقائي لهذه المنصة.')));
   box.querySelectorAll('[data-now]').forEach((b) => b.addEventListener('click', async () => {
     const pf = b.dataset.now;

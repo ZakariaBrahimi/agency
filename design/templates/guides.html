@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nawa · platform guide illustrations</title>
+<!--
+  The pictures beside each activation step in the client portal (/portal → platforms).
+  Simplified drawings of the real screens, not screenshots: the real UI changes often and differs by language.
+  ?g=facebook-1 shows one; scripts/render-guides.cjs renders them all to site/assets/guides/*.webp (720×450 @2x).
+-->
+<style>
+  :root { --hl: #C6F432; --violet: #5B4BFF; --ink: #0B1220; --paper: #F5F4EF; --line: #E3E5EA; --mut: #6B7385; --fb: #1877F2; --li: #0A66C2; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 720px; height: 450px; overflow: hidden; }
+  body { background: var(--paper); font: 14px/1.35 "Segoe UI", Helvetica, Arial, sans-serif; color: #1C2333; display: grid; place-items: center; position: relative; }
+  body::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px 300px at 85% 0%, #ECEAFF, transparent 70%), radial-gradient(420px 260px at 0% 100%, #EEF9D2, transparent 70%); }
+  .stage { position: relative; width: 680px; height: 410px; }
+
+  /* browser window */
+  .win { position: absolute; inset: 0; background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgb(11 18 32 / .14), 0 0 0 1px rgb(11 18 32 / .06); overflow: hidden; display: flex; flex-direction: column; }
+  .bar { height: 34px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: #F1F2F5; border-bottom: 1px solid var(--line); }
+  .dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: #D5D8DF; }
+  .url { flex: 1; height: 22px; border-radius: 6px; background: #fff; border: 1px solid var(--line); font-size: 12px; color: var(--mut); display: flex; align-items: center; padding: 0 10px; }
+  .page { flex: 1; display: flex; min-height: 0; position: relative; }
+  .side { width: 200px; flex: none; border-inline-end: 1px solid var(--line); padding: 14px 10px; display: grid; align-content: start; gap: 2px; background: #FBFBFC; }
+  .side h4 { font-size: 15px; padding: 2px 8px 10px; }
+  .side .grp { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--mut); padding: 10px 8px 4px; font-weight: 600; }
+  .side a { display: block; padding: 7px 10px; border-radius: 8px; color: #2A3142; font-size: 13.5px; }
+  .side a.on { background: #E7F0FE; color: var(--fb); font-weight: 600; }
+  .main { flex: 1; padding: 18px 22px; display: grid; align-content: start; gap: 12px; min-width: 0; }
+  .main h3 { font-size: 19px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .sp { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; background: #EEF0F4; color: #1C2333; white-space: nowrap; }
+  .btn.p { background: var(--fb); color: #fff; } .btn.li { background: var(--li); color: #fff; border-radius: 999px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; background: #fff; }
+  .ghost { height: 10px; border-radius: 5px; background: #ECEEF2; }
+  .muted { color: var(--mut); font-size: 12.5px; }
+
+  /* modal */
+  .dim { position: absolute; inset: 0; background: rgb(11 18 32 / .38); display: grid; place-items: center; }
+  .modal { width: 440px; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgb(0 0 0 / .25); padding: 18px 20px; display: grid; gap: 12px; }
+  .modal.wide { width: 580px; }
+  .modal h3 { font-size: 17px; }
+  .field { display: grid; gap: 6px; } .field label { font-size: 12.5px; font-weight: 600; color: #3A4254; }
+  .input { height: 38px; border: 1.5px solid #CBD0DA; border-radius: 8px; display: flex; align-items: center; padding: 0 12px; font: 600 15px ui-monospace, Menlo, Consolas, monospace; letter-spacing: .04em; }
+  .foot { display: flex; justify-content: flex-end; gap: 8px; }
+  .tog { width: 34px; height: 20px; border-radius: 10px; background: #D5D8DF; position: relative; flex: none; }
+  .tog::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .tog.on { background: var(--fb); } .tog.on::after { inset-inline-start: 17px; }
+  .chk { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #B9BFCB; flex: none; display: grid; place-items: center; }
+  .chk.on { background: var(--fb); border-color: var(--fb); } .chk.on::after { content: "✓"; color: #fff; font-size: 11px; font-weight: 700; }
+  .radio { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #B9BFCB; flex: none; }
+  .radio.on { border: 5px solid var(--li); }
+  .menu { position: absolute; background: #fff; border-radius: 10px; box-shadow: 0 12px 34px rgb(11 18 32 / .18), 0 0 0 1px rgb(11 18 32 / .06); padding: 6px; display: grid; gap: 2px; min-width: 220px; z-index: 3; }
+  .menu a { padding: 8px 12px; border-radius: 7px; font-size: 13.5px; display: block; }
+
+  /* phone */
+  .phone { position: absolute; top: 8px; inset-inline-end: 70px; width: 216px; height: 394px; border-radius: 34px; background: #111; padding: 9px; box-shadow: 0 18px 50px rgb(11 18 32 / .22); }
+  .screen { width: 100%; height: 100%; border-radius: 26px; background: #fff; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .screen.dark { background: #121212; color: #F1F1F1; }
+  .notch { height: 26px; flex: none; display: flex; justify-content: center; align-items: center; }
+  .notch i { width: 70px; height: 18px; border-radius: 10px; background: #111; }
+  .ptitle { display: flex; align-items: center; gap: 8px; padding: 8px 14px 10px; font-weight: 700; font-size: 15px; border-bottom: 1px solid var(--line); }
+  .dark .ptitle { border-color: #2A2A2A; }
+  .li-row { display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #F0F1F4; }
+  .dark .li-row { border-color: #222; }
+  .li-row .ico { width: 18px; height: 18px; border-radius: 5px; background: #E6E8EE; flex: none; }
+  .dark .li-row .ico { background: #2E2E2E; }
+  .li-row.blue { color: #1D6FE8; font-weight: 600; }
+  .li-row .chev { margin-inline-start: auto; color: #A7ADBA; }
+
+  /* the side caption next to a phone */
+  .path { position: absolute; inset-inline-start: 36px; top: 70px; width: 330px; display: grid; gap: 12px; }
+  .path .crumb { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; color: #2A3142; }
+  .path .crumb b { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; flex: none; }
+  .path .crumb.last { color: var(--ink); }
+  .path .crumb.last b { background: var(--hl); color: var(--ink); }
+  .path .app { font-size: 13px; color: var(--mut); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+
+  /* the highlight: lime ring + pointer */
+  .hl { position: relative; border-radius: 9px; box-shadow: 0 0 0 3px var(--hl), 0 0 0 7px rgb(198 244 50 / .35); z-index: 2; }
+  .ptr { position: absolute; width: 30px; height: 30px; z-index: 5; filter: drop-shadow(0 3px 4px rgb(0 0 0 / .3)); }
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+  const PTR = `<svg class="ptr" id="ptr" viewBox="0 0 24 24"><path d="M5 3l14 8.2-6.1 1.4 3.6 6.6-2.6 1.4-3.6-6.6L5.7 18z" fill="#fff" stroke="#0B1220" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+  const browser = (url, body) => `<div class="win"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">${url}</span></div><div class="page">${body}</div></div>`;
+  const ghost = (n, w = [90, 70, 80]) => Array.from({ length: n }, (_, i) => `<div class="ghost" style="width:${w[i % w.length]}%"></div>`).join('');
+  const fbSide = (on) => `<div class="side"><h4>Business settings</h4>
+    <span class="grp">Users</span><a>People</a><a class="${on ? 'on' : ''}${on === 'mark' ? ' hl' : ''}">Partners</a><a>System users</a>
+    <span class="grp">Accounts</span><a>Pages</a><a>Ad accounts</a><a>Instagram accounts</a></div>`;
+  const phone = (body, dark) => `<div class="phone"><div class="screen${dark ? ' dark' : ''}"><div class="notch"><i></i></div>${body}</div></div>`;
+  const path = (app, steps) => `<div class="path"><span class="app">${app}</span>${steps.map((s, i) => `<span class="crumb${i === steps.length - 1 ? ' last' : ''}"><b>${i + 1}</b>${s}</span>`).join('')}</div>`;
+
+  const G = {
+    'facebook-1': () => browser('business.facebook.com/settings', `${fbSide('mark')}
+      <div class="main"><div class="row"><h3>Partners</h3><span class="sp"></span><span class="btn p">+ Add ▾</span></div>
+      <div class="card"><b>Share assets with partners</b><span class="muted">Businesses you give access to your Pages and accounts appear here.</span>${ghost(3)}</div>
+      <div class="card">${ghost(2)}</div></div>`),
+
+    'facebook-2': () => browser('business.facebook.com/settings/partners', `${fbSide('partners')}
+      <div class="main"><div class="row"><h3>Partners</h3><span class="sp"></span><span class="btn p">+ Add ▾</span></div><div class="card">${ghost(3)}</div></div>
+      <div class="dim"><div class="modal"><h3>Give a partner access to your assets</h3>
+        <span class="muted">Enter the business ID of the partner you want to share assets with.</span>
+        <div class="field"><label>Partner business ID</label><div class="input hl">1151568320532118</div></div>
+        <div class="foot"><span class="btn">Cancel</span><span class="btn p">Next</span></div></div></div>`),
+
+    'facebook-3': () => browser('business.facebook.com/settings/partners', `${fbSide('partners')}<div class="main">${ghost(4)}</div>
+      <div class="dim"><div class="modal wide"><h3>Select assets and permissions</h3>
+        <div class="row" style="align-items:stretch;gap:14px">
+          <div style="width:130px;display:grid;gap:4px;align-content:start;font-size:13px"><span class="muted">Asset type</span><a class="btn" style="background:#E7F0FE;color:#1877F2">Pages</a><a class="btn" style="background:none">Ad accounts</a><a class="btn" style="background:none">Instagram</a></div>
+          <div style="width:150px;display:grid;gap:8px;align-content:start;font-size:13px"><span class="muted">Your Pages</span><span class="row"><i class="chk on"></i><b>Your Page</b></span><span class="row muted"><i class="chk"></i>Other Page</span></div>
+          <div style="flex:1;display:grid;gap:9px;align-content:start;font-size:13px"><span class="muted">Partial access</span>
+            <div class="hl" style="display:grid;gap:9px;padding:8px;margin:-8px">
+              <span class="row"><b class="sp">Content</b><i class="tog on"></i></span>
+              <span class="row"><b class="sp">Messages</b><i class="tog on"></i></span></div>
+            <span class="row"><span class="sp">Community activity</span><i class="tog"></i></span>
+            <span class="row"><span class="sp">Insights</span><i class="tog"></i></span>
+            <span class="row"><span class="sp">Full control</span><i class="tog"></i></span></div>
+        </div>
+        <div class="foot"><span class="btn">Back</span><span class="btn p">Save</span></div></div></div>`),
+
+    'instagram-1': () => path('Instagram app', ['Profile → ☰ Menu', 'Account type and tools', 'Switch to professional account']) + phone(`
+      <div class="ptitle">‹ Account type and tools</div>
+      <div class="li-row"><i class="ico"></i>Branded content<span class="chev">›</span></div>
+      <div class="li-row"><i class="ico"></i>Verification<span class="chev">›</span></div>
+      <div class="li-row"><i class="ico"></i>Monetisation status<span class="chev">›</span></div>
+      <div class="li-row blue hl">Switch to professional account</div>
+      <div class="li-row" style="color:#A7ADBA">Add new professional account</div>`),
+
+    'instagram-2': () => browser('facebook.com/settings · Your Page', `<div class="side"><h4>Settings & privacy</h4>
+      <span class="grp">Your Page</span><a>Page setup</a><a>Privacy</a><a class="on hl">Linked accounts</a><a>Notifications</a><a>Page access</a></div>
+      <div class="main"><h3>Linked accounts</h3><span class="muted">Connect your Instagram account to post and manage it with your Page.</span>
+        <div class="card"><div class="row"><span style="width:38px;height:38px;border-radius:10px;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)"></span><div><b>Instagram</b><div class="muted">Not connected</div></div><span class="sp"></span><span class="btn p hl">Connect account</span></div></div>
+        <div class="card"><div class="row"><span style="width:38px;height:38px;border-radius:10px;background:#25D366"></span><div><b>WhatsApp</b><div class="muted">Optional</div></div></div></div></div>`),
+
+    'linkedin-1': () => browser('linkedin.com/company/your-company/admin', `<div class="main" style="padding:0">
+      <div style="height:70px;background:linear-gradient(90deg,#DCE6F2,#EEF2F8)"></div>
+      <div style="padding:0 22px;display:grid;gap:10px;margin-top:-26px">
+        <div class="row"><span style="width:62px;height:62px;border-radius:10px;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;font-weight:800;color:#0A66C2">YC</span></div>
+        <div class="row"><div><h3>Your company</h3><span class="muted">Admin view</span></div><span class="sp"></span><span class="btn">View as member</span><span class="btn li hl">Admin tools ▾</span></div>
+        ${ghost(3)}</div>
+      <div class="menu" style="top:178px;right:22px"><a>Edit Page</a><a>Post a job</a><a style="background:#EEF3FB;color:#0A66C2;font-weight:600" class="hl">Manage admins</a><a>Page settings</a></div></div>`),
+
+    'linkedin-2': () => browser('linkedin.com/company/your-company/admin/settings/manage-admins', `<div class="main">${ghost(5)}</div>
+      <div class="dim"><div class="modal"><h3>Add admin</h3>
+        <div class="field"><label>Search for a member</label><div class="input" style="font:500 14px inherit;letter-spacing:0">Nawa</div></div>
+        <div class="row" style="font-size:13px"><span style="width:30px;height:30px;border-radius:50%;background:#5B4BFF"></span><b>Nawa</b><span class="muted">· the account we send you</span></div>
+        <div style="display:grid;gap:9px;font-size:13.5px"><span class="muted">Page admin role</span>
+          <span class="row"><i class="radio"></i>Super admin</span>
+          <span class="row hl" style="padding:6px;margin:-6px"><i class="radio on"></i><b>Content admin</b><span class="muted">post and manage content</span></span>
+          <span class="row"><i class="radio"></i>Analyst</span></div>
+        <div class="foot"><span class="btn" style="border-radius:999px">Cancel</span><span class="btn li">Save</span></div></div></div>`),
+
+    'tiktok-1': () => path('TikTok app', ['Profile → ☰ Menu', 'Settings and privacy → Account', 'Switch to Business Account']) + phone(`
+      <div class="ptitle">‹ Account</div>
+      <div class="li-row"><i class="ico"></i>User information<span class="chev">›</span></div>
+      <div class="li-row"><i class="ico"></i>Password<span class="chev">›</span></div>
+      <div class="li-row"><i class="ico"></i>Download your data<span class="chev">›</span></div>
+      <div class="li-row hl" style="font-weight:600"><i class="ico" style="background:#FE2C55"></i>Switch to Business Account<span class="chev">›</span></div>
+      <div class="li-row" style="color:#888"><i class="ico"></i>Deactivate or delete</div>`, true),
+
+    'tiktok-2': () => path('TikTok app', ['Inbox', 'System notifications', 'Accept Nawa’s request']) + phone(`
+      <div class="ptitle">‹ System notifications</div>
+      <div style="padding:12px;display:grid;gap:10px">
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;display:grid;gap:8px;font-size:12.5px">
+          <span class="row" style="gap:8px"><span style="width:26px;height:26px;border-radius:7px;background:#FE2C55"></span><b>TikTok Business Center</b></span>
+          <span><b>Nawa</b> wants to manage your TikTok account through Business Center.</span>
+          <span class="row" style="gap:8px"><span class="btn" style="background:#2E2E2E;color:#eee;flex:1;justify-content:center">Decline</span><span class="btn hl" style="background:#FE2C55;color:#fff;flex:1;justify-content:center">Accept</span></span></div>
+        <div style="background:#1A1A1A;border-radius:12px;height:58px"></div><div style="background:#1A1A1A;border-radius:12px;height:58px"></div></div>`, true),
+  };
+
+  window.GUIDES = Object.keys(G);
+  const g = new URLSearchParams(location.search).get('g') || 'facebook-1';
+  const stage = document.getElementById('stage');
+  stage.innerHTML = (G[g] || G['facebook-1'])() + PTR;
+  // the pointer sits on the last highlighted element, a little past its middle
+  const hl = [...stage.querySelectorAll('.hl')].pop(), box = stage.getBoundingClientRect(), r = hl.getBoundingClientRect();
+  Object.assign(document.getElementById('ptr').style, { left: `${r.left - box.left + Math.min(r.width * 0.62, r.width - 14)}px`, top: `${r.top - box.top + r.height * 0.55}px` });
+</script>
+</body>
+</html>

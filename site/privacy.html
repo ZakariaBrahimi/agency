@@ -110,7 +110,7 @@
       </ul>
 
       <h2>7. حقوقك</h2>
-      <p>يمكنك أن تطلب نسخة من بياناتك أو تصحيحها أو حذفها في أي وقت، عبر <a href="/start">نموذج التواصل</a> أو عبر مسؤول حسابك لدى نواة.</p>
+      <p>يمكنك أن تطلب نسخة من بياناتك أو تصحيحها أو حذفها في أي وقت، بمراسلتنا على <a class="ct-mail" href="mailto:nawa.studio.ai@gmail.com" dir="ltr">nawa.studio.ai@gmail.com</a>، أو عبر <a href="/start">نموذج التواصل</a>، أو عبر مسؤول حسابك لدى نواة.</p>
 
       <h2>8. التغييرات</h2>
       <p>إن غيّرنا هذه السياسة، سننشر النسخة الجديدة هنا مع تاريخ التحديث.</p>
@@ -179,7 +179,7 @@
       </ul>
 
       <h2>7. Your rights</h2>
-      <p>You can ask for a copy of your data, a correction, or its deletion at any time, through our <a href="/start">contact form</a> or your account manager at Nawa.</p>
+      <p>You can ask for a copy of your data, a correction, or its deletion at any time, by emailing <a class="ct-mail" href="mailto:nawa.studio.ai@gmail.com" dir="ltr">nawa.studio.ai@gmail.com</a>, through our <a href="/start">contact form</a>, or via your account manager at Nawa.</p>
 
       <h2>8. Changes</h2>
       <p>If we change this policy, we will publish the new version here with its date.</p>
@@ -248,7 +248,7 @@
       </ul>
 
       <h2>7. Vos droits</h2>
-      <p>Vous pouvez demander à tout moment une copie, une correction ou la suppression de vos données, via notre <a href="/start">formulaire de contact</a> ou votre responsable de compte chez Nawa.</p>
+      <p>Vous pouvez demander à tout moment une copie, une correction ou la suppression de vos données, en écrivant à <a class="ct-mail" href="mailto:nawa.studio.ai@gmail.com" dir="ltr">nawa.studio.ai@gmail.com</a>, via notre <a href="/start">formulaire de contact</a>, ou auprès de votre responsable de compte chez Nawa.</p>
 
       <h2>8. Modifications</h2>
       <p>Si nous modifions cette politique, nous publierons la nouvelle version ici avec sa date.</p>
@@ -271,6 +271,11 @@
       document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
     }
     show(pick());
+    // the contact email is edited in admin «الإعدادات»
+    fetch('/api/brief').then(function (r) { return r.json(); }).then(function (d) {
+      var e = d.contact && d.contact.email; if (!e) return;
+      document.querySelectorAll('.ct-mail').forEach(function (a) { a.textContent = e; a.href = 'mailto:' + e; });
+    }).catch(function () {});
     window.addEventListener('hashchange', function () { show(pick()); scrollTo(0, 0); });
   })();
 </script>

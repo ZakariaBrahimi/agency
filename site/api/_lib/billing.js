@@ -5,18 +5,22 @@
 // a month's bill is the average stored over the month × the price (2 GB for half the month then
 // 4 GB for the other half = 3 GB), rounded to the nearest dinar. Invoices keep the price they were issued with.
 //
-// Settings live in app_state «billing», never in the code: { cost_usd, fee_usd, rate_dzd, payment: {...} }.
+// Settings live in app_state «billing», never in the code: { cost_usd, fee_usd, rate_dzd, payment: {...},
+// contact: { email } }. Only `contact` is public (the site reads it through GET /api/brief).
 import { kv, sb } from './supabase.js';
 
 export const DEFAULTS = { cost_usd: 0.015, fee_usd: 0.5, rate_dzd: 250 };
 export const PAYMENT_FIELDS = ['baridimob_rip', 'ccp_name', 'ccp_account', 'ccp_key', 'redotpay_uid', 'redotpay_email'];
+export const CONTACT_DEFAULTS = { email: 'nawa.studio.ai@gmail.com' };
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GB = 1e9;
 const enc = encodeURIComponent;
 
 export async function getSettings() {
   const s = (await kv.get('billing').catch(() => null)) || {};
   const payment = Object.fromEntries(PAYMENT_FIELDS.map((k) => [k, String(s.payment?.[k] ?? '')]));
-  return { ...DEFAULTS, ...pick(s, Object.keys(DEFAULTS)), payment };
+  const contact = { ...CONTACT_DEFAULTS, ...Object.fromEntries(Object.entries(s.contact || {}).filter(([k, v]) => k in CONTACT_DEFAULTS && v)) };
+  return { ...DEFAULTS, ...pick(s, Object.keys(DEFAULTS)), payment, contact };
 }
 const pick = (o, keys) => Object.fromEntries(keys.filter((k) => typeof o?.[k] === 'number').map((k) => [k, o[k]]));
 
@@ -31,6 +35,11 @@ export async function saveSettings(input) {
     next[k] = v;
   }
   if (input.payment) for (const k of PAYMENT_FIELDS) if (input.payment[k] !== undefined) next.payment[k] = String(input.payment[k]).trim().slice(0, 120);
+  if (input.contact?.email !== undefined) {
+    const email = String(input.contact.email).trim().toLowerCase().slice(0, 120);
+    if (!EMAIL.test(email)) throw Object.assign(new Error('bad_email'), { code: 'bad_email', field: 'email' });
+    next.contact = { ...next.contact, email };
+  }
   await kv.set('billing', next);
   return next;
 }

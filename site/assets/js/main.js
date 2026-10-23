@@ -1,7 +1,7 @@
 (() => {
-  // Site settings: replace with the real addresses before going live.
+  // Site settings. The contact email is edited in admin «الإعدادات» and loaded below; this is the fallback.
   const SITE = {
-    email: 'hello@nawa.studio',
+    email: 'nawa.studio.ai@gmail.com',
     socials: [
       ['Instagram', 'https://instagram.com/nawa.studio'],
       ['Facebook', 'https://facebook.com/nawa.studio'],
@@ -36,6 +36,7 @@
     html.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.title = t['meta.title'];
     document.querySelectorAll('[data-i]').forEach((el) => { if (t[el.dataset.i] != null) el.textContent = t[el.dataset.i]; });
+    document.querySelectorAll('[data-i-label]').forEach((el) => { if (t[el.dataset.iLabel] != null) { el.setAttribute('aria-label', t[el.dataset.iLabel]); el.title = t[el.dataset.iLabel]; } });
     document.querySelectorAll('[data-i-html]').forEach((el) => { if (t[el.dataset.iHtml] != null) el.innerHTML = t[el.dataset.iHtml]; });
     document.querySelectorAll('[data-step]').forEach((el) => { el.innerHTML = `<b dir="ltr">${el.dataset.step}</b>${t['step.of']}`; });
     document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
@@ -64,6 +65,10 @@
   document.querySelectorAll('[data-need]').forEach((b) => b.addEventListener('click', () => { need = need === b.dataset.need ? null : b.dataset.need; renderContact(); }));
 
   $('mail').textContent = SITE.email;
+  fetch('/api/brief').then((r) => r.json()).then((d) => {
+    if (!d.contact?.email || d.contact.email === SITE.email) return;
+    SITE.email = d.contact.email; $('mail').textContent = SITE.email; renderContact();
+  }).catch(() => {});
   SITE.socials.forEach(([name, url]) => { const a = document.createElement('a'); a.href = url; a.textContent = name; a.rel = 'noopener'; $('socials').appendChild(a); });
 
   // «من مدار»: the newest article, tip and episode. Titles stay Arabic; the labels follow the language.
@@ -82,8 +87,12 @@
     $('fromMadar').hidden = false;
   }).catch(() => {});
 
+  let copyT;
   $('copyMail').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(SITE.email); $('copied').textContent = T[lang]['cta.copied']; }
+    try {
+      await navigator.clipboard.writeText(SITE.email); $('copied').textContent = T[lang]['cta.copied'];
+      $('copyMail').classList.add('done'); clearTimeout(copyT); copyT = setTimeout(() => $('copyMail').classList.remove('done'), 1800);
+    }
     catch (e) {
       const r = document.createRange(); r.selectNodeContents($('mail'));
       const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);

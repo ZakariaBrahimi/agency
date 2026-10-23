@@ -468,3 +468,23 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .pt-payrow span { color: var(--muted); min-inline-size: 7em; }
 .pt-payrow b { font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; overflow-wrap: anywhere; }
 .pt-msg { margin: 0 0 12px; background: #EEFBE8; border-color: #CBEBB8; font-weight: 600; }
+
+/* Copy-to-clipboard icon button (swaps to a tick once copied) */
+.copy-ico { flex: none; display: inline-grid; place-items: center; inline-size: 34px; block-size: 34px; padding: 0; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; vertical-align: middle; transition: background .15s, color .15s; }
+.copy-ico:hover { background: var(--paper); color: inherit; }
+.copy-ico:focus-visible { outline: 2px solid var(--violet, #5B4BFF); outline-offset: 2px; }
+.copy-ico .i-done, .copy-ico.done .i-copy { display: none; }
+.copy-ico.done .i-done { display: block; }
+.copy-ico.done { color: #1E9E6A; border-color: #1E9E6A; }
+.pt-copyval { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: 4px; }
+
+/* Step pictures */
+.pt-steps li > .pt-shot { display: block; margin: 10px 0 4px; padding: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--paper); cursor: zoom-in; inline-size: min(100%, 420px); }
+.pt-shot img { display: block; inline-size: 100%; block-size: auto; }
+.pt-shot:focus-visible { outline: 2px solid var(--violet, #5B4BFF); outline-offset: 2px; }
+.pt-shotnote { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+.pt-shotview { border: 0; padding: 0; background: transparent; max-inline-size: min(960px, 94vw); }
+.pt-shotview::backdrop { background: rgb(11 18 32 / .78); }
+.pt-shotview img { display: block; inline-size: 100%; block-size: auto; border-radius: 16px; }
+.pt-shotview button { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; inline-size: 38px; block-size: 38px; border-radius: 50%; border: 0; background: rgb(11 18 32 / .7); color: #fff; font-size: 16px; cursor: pointer; }
+

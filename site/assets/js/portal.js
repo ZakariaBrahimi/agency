@@ -2,7 +2,7 @@
 // of Facebook, Instagram, LinkedIn and TikTok, and manage content with Nawa's own tools
 // (assets/js/admin-content.js, loaded by the page in client mode).
 // Arabic by default; English and French from the switcher (remembered on this device).
-import { PLATFORMS, PLATFORM_ORDER, STATUS, LANGS, L, icon } from './portal-schema.js?v=20261023a';
+import { PLATFORMS, PLATFORM_ORDER, STATUS, LANGS, L, icon, copyButton } from './portal-schema.js?v=20261023b';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -71,7 +71,7 @@ const TS = {
     invMonth: 'الشهر', invGb: 'متوسط التخزين', invAmount: 'المبلغ', invStatus: 'الحالة', paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة',
     payTitle: 'طرق الدفع', payLead: 'ادفع بإحدى الطرق التالية، ثم أرسل لنا وصل الدفع مع رقم الشهر.',
     baridimob: 'بريدي موب (RIP)', ccp: 'الحساب البريدي الجاري (CCP)', ccpName: 'الاسم', ccpAccount: 'رقم الحساب', ccpKey: 'المفتاح', redotpay: 'RedotPay', uid: 'UID', email2: 'البريد',
-    copy: 'نسخ', copied: 'نُسخ', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
+    copy: 'نسخ', copied: 'نُسخ', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
   },
   en: {
     tabStorage: 'Storage', stTitle: 'Where your photos and videos are kept', stLead: 'We keep your files in your own Google Drive for free, up to 15 GB. Once it’s full, new files go to “Nawa storage” if you turn it on; older files stay where they are.',
@@ -92,7 +92,7 @@ const TS = {
     invMonth: 'Month', invGb: 'Average stored', invAmount: 'Amount', invStatus: 'Status', paid: 'Paid', unpaid: 'Unpaid', void: 'Void',
     payTitle: 'How to pay', payLead: 'Pay with one of these, then send us the payment receipt with the month.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Postal account (CCP)', ccpName: 'Name', ccpAccount: 'Account number', ccpKey: 'Key', redotpay: 'RedotPay', uid: 'UID', email2: 'Email',
-    copy: 'Copy', copied: 'Copied', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
+    copy: 'Copy', copied: 'Copied', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
   },
   fr: {
     tabStorage: 'Stockage', stTitle: 'Où sont gardées vos photos et vidéos', stLead: 'Nous gardons vos fichiers dans votre propre Google Drive gratuitement, jusqu’à 15 Go. Une fois plein, les nouveaux fichiers vont dans « Stockage Nawa » si vous l’activez ; les anciens restent en place.',
@@ -113,7 +113,7 @@ const TS = {
     invMonth: 'Mois', invGb: 'Stockage moyen', invAmount: 'Montant', invStatus: 'Statut', paid: 'Payée', unpaid: 'Non payée', void: 'Annulée',
     payTitle: 'Comment payer', payLead: 'Payez avec l’un de ces moyens, puis envoyez-nous le reçu avec le mois concerné.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Compte postal (CCP)', ccpName: 'Nom', ccpAccount: 'Numéro de compte', ccpKey: 'Clé', redotpay: 'RedotPay', uid: 'UID', email2: 'E-mail',
-    copy: 'Copier', copied: 'Copié', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
+    copy: 'Copier', copied: 'Copié', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
   },
 };
 for (const l of Object.keys(TS)) Object.assign(T[l], TS[l]);
@@ -223,16 +223,43 @@ function drawPlatforms() {
         </div>
         ${s.note ? `<p class="pt-note"><b>${esc(t('nawaNote'))}:</b> ${esc(s.note)}</p>` : ''}
         <details${done ? '' : ' open'}><summary>${esc(t('stepsTitle'))}</summary>
-          <ol class="pt-steps">${L(p.steps, lang).map((x) => `<li>${x}</li>`).join('')}</ol>
+          <ol class="pt-steps">${L(p.steps, lang).map((x, i) => {
+            const shot = p.shots?.[i];
+            const alt = `${L(p.name, lang)} · ${i + 1}`;
+            return `<li>${x}${shot ? `<button type="button" class="pt-shot" data-shot="/assets/guides/${shot}.webp" data-alt="${esc(alt)}" aria-label="${esc(t('shotOpen'))}: ${esc(alt)}"><img src="/assets/guides/${shot}.webp" alt="${esc(alt)}" width="720" height="450" loading="lazy" decoding="async"></button>` : ''}</li>`;
+          }).join('')}</ol>
+          ${p.shots?.some(Boolean) ? `<p class="pt-shotnote">${esc(t('shotNote'))}</p>` : ''}
           <p class="muted">${esc(t(p.auto ? 'autoNote' : 'manualNote'))}</p>
         </details>
       </li>`;
     }).join('')}</ul>`;
+  labelCopies($('ptPlatforms'));
   $('ptCheck').onclick = async (e) => {
     e.target.disabled = true;
     try { state.me = await call('me&fresh=1'); drawPlatforms(); } catch {}
   };
 }
+
+// Copy icons (Nawa's business ID, payment details): one handler for the whole page.
+function labelCopies(root) { root.querySelectorAll('[data-clip]').forEach((b) => { b.setAttribute('aria-label', t('copy')); b.title = t('copy'); }); }
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-clip]'); if (!b) return;
+  try {
+    await navigator.clipboard.writeText(b.dataset.clip);
+    b.classList.add('done'); b.title = t('copied'); b.setAttribute('aria-label', t('copied'));
+    clearTimeout(b._t); b._t = setTimeout(() => { b.classList.remove('done'); b.title = t('copy'); b.setAttribute('aria-label', t('copy')); }, 1600);
+  } catch {}
+});
+
+// Step pictures open larger in a dialog.
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-shot]'); if (!b) return;
+  const d = $('ptShotView');
+  d.querySelector('img').src = b.dataset.shot; d.querySelector('img').alt = b.dataset.alt;
+  d.querySelector('button').setAttribute('aria-label', t('close'));
+  d.showModal();
+});
+$('ptShotView').addEventListener('click', (e) => { if (e.target === e.currentTarget || e.target.closest('button')) e.currentTarget.close(); });
 
 // ---------- storage ----------
 const fmtGb = (bytes) => { const gb = bytes / 1e9; return `${gb < 10 ? gb.toFixed(gb < 1 ? 2 : 1) : Math.round(gb)} ${lang === 'en' ? 'GB' : lang === 'fr' ? 'Go' : 'غ.ب'}`; };
@@ -254,7 +281,7 @@ function drawStorage(msg = '') {
   const room = Math.max(0, Math.min(d.cap - d.bytes, accountRoom ?? Infinity));
   const full = d.connected && room < PHOTO;
   const pctDrive = Math.min(100, (d.bytes / d.cap) * 100);
-  const row = (label, value) => `<div class="pt-payrow"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b><button type="button" class="link-btn" data-copy="${esc(value)}">${esc(t('copy'))}</button></div>`;
+  const row = (label, value) => `<div class="pt-payrow"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b>${copyButton(esc(value))}</div>`;
   const pay = s.payment || {};
   $('ptStorage').innerHTML = `
     ${msg ? `<p class="ct-card pt-msg">${esc(msg)}</p>` : ''}
@@ -310,9 +337,7 @@ function drawStorage(msg = '') {
       ${pay.redotpay_uid || pay.redotpay_email ? `<div class="pt-paybox"><b>${esc(t('redotpay'))}</b>${pay.redotpay_uid ? row(t('uid'), pay.redotpay_uid) : ''}${pay.redotpay_email ? row(t('email2'), pay.redotpay_email) : ''}</div>` : ''}
     </section>`;
 
-  $('ptStorage').querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = t('copied'); setTimeout(() => (b.textContent = t('copy')), 1500); } catch {}
-  }));
+  labelCopies($('ptStorage'));
   const arm = (b, label, fn) => b && b.addEventListener('click', async () => {
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = label; b.classList.add('armed'); return; }
     b.disabled = true;

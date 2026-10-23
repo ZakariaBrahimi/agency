@@ -1,7 +1,9 @@
 // POST /api/brief: receives a project brief from /start, saves it and notifies on Telegram.
+// GET  /api/brief: the site's public contact details ({ contact: { email } }), set in admin «الإعدادات».
 import crypto from 'node:crypto';
 import { json, readJson, siteUrl } from './_lib/http.js';
 import { insertBrief, admin } from './_lib/supabase.js';
+import { getSettings, CONTACT_DEFAULTS } from './_lib/billing.js';
 import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
 import { validateBrief, summarize, serviceById, t, formatAnswer, PROJECT, CONTACT } from '../assets/js/brief-schema.js';
 
@@ -40,6 +42,13 @@ function telegramText(id, b) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    const contact = await getSettings().then((s) => s.contact).catch(() => CONTACT_DEFAULTS);
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+    return res.end(JSON.stringify({ ok: true, contact }));
+  }
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method_not_allowed' });
 
   let body;

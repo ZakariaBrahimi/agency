@@ -1,4 +1,4 @@
-// /admin → «الإعدادات»: what clients pay for «تخزين نواة» and how they pay.
+// /admin → «الإعدادات»: the site's contact email, what clients pay for «تخزين نواة» and how they pay.
 // Clients only ever see the DZD price and the payment details; the dollar figures stay here.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -38,6 +38,14 @@ async function load() {
 function render() {
   const s = state.settings;
   $('stBody').innerHTML = `
+    <form class="ct-card st-card" id="stContact">
+      <h2>معلومات التواصل</h2>
+      <p class="muted">البريد الذي يظهر للزوار في الموقع (زر «راسلنا» ونسخ البريد)، وفي نموذج الطلب وسياسة الخصوصية.</p>
+      <div class="st-grid"><label class="ct-field"><span>بريد التواصل</span><input name="email" type="email" dir="ltr" maxlength="120" required value="${esc(s.contact?.email || '')}"></label></div>
+      <p class="muted st-small">قد يستغرق ظهور التغيير في الموقع حتى 5 دقائق.</p>
+      <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ البريد</button></div>
+    </form>
+
     <form class="ct-card st-card" id="stPrice">
       <h2>التخزين والأسعار</h2>
       <p class="muted">سعر «تخزين نواة» للعميل لكل غيغابايت في الشهر = (تكلفة التخزين + رسومك) × سعر الصرف، مقرّبًا إلى الدينار. يرى العميل السعر بالدينار فقط.</p>
@@ -71,6 +79,11 @@ function render() {
     e.preventDefault();
     try { state.settings = (await call(Object.fromEntries(['cost_usd', 'fee_usd', 'rate_dzd'].map((k) => [k, Number(form[k].value)])))).settings; render(); toast('حُفظت الأسعار.'); }
     catch (err) { toast(err.code === 'bad_number' ? 'تحقّق من الأرقام.' : 'تعذّر الحفظ.', true); }
+  };
+  $('stContact').onsubmit = async (e) => {
+    e.preventDefault();
+    try { state.settings = (await call({ contact: { email: $('stContact').email.value } })).settings; render(); toast('حُفظ بريد التواصل.'); }
+    catch (err) { toast(err.code === 'bad_email' ? 'تحقّق من البريد.' : 'تعذّر الحفظ.', true); }
   };
   $('stPay').onsubmit = async (e) => {
     e.preventDefault();

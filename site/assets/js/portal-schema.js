@@ -22,10 +22,15 @@ export const STATUS = {
 /** The statuses Nawa can set by hand (LinkedIn, TikTok). */
 export const MANUAL_STATUS = ['not_started', 'waiting_client', 'in_review', 'active', 'issue'];
 
-const ID = `<code dir="ltr">${NAWA_BUSINESS_ID}</code>`;
+/** Copy icon (swaps to a tick once copied); the page sets each button's label in its language. */
+export const COPY_ICON = '<svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-done" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+export const copyButton = (value) => `<button type="button" class="copy-ico" data-clip="${value}" aria-label="Copy" title="Copy">${COPY_ICON}</button>`;
+
+const ID = `<span class="pt-copyval"><code dir="ltr">${NAWA_BUSINESS_ID}</code>${copyButton(NAWA_BUSINESS_ID)}</span>`;
 export const PLATFORMS = {
   facebook: {
     color: '#1877F2', auto: true,
+    shots: ['facebook-1', 'facebook-2', 'facebook-3', null], // illustrations in /assets/guides/<name>.webp, one per step
     name: { ar: 'فيسبوك', en: 'Facebook', fr: 'Facebook' },
     steps: {
       ar: [
@@ -50,6 +55,7 @@ export const PLATFORMS = {
   },
   instagram: {
     color: '#E1306C', auto: true,
+    shots: ['instagram-1', 'instagram-2', null], // illustrations in /assets/guides/<name>.webp, one per step
     name: { ar: 'إنستغرام', en: 'Instagram', fr: 'Instagram' },
     steps: {
       ar: [
@@ -71,6 +77,7 @@ export const PLATFORMS = {
   },
   linkedin: {
     color: '#0A66C2', auto: false,
+    shots: ['linkedin-1', 'linkedin-2', null], // illustrations in /assets/guides/<name>.webp, one per step
     name: { ar: 'لينكدإن', en: 'LinkedIn', fr: 'LinkedIn' },
     steps: {
       ar: [
@@ -92,6 +99,7 @@ export const PLATFORMS = {
   },
   tiktok: {
     color: '#111111', auto: false,
+    shots: ['tiktok-1', 'tiktok-2', null], // illustrations in /assets/guides/<name>.webp, one per step
     name: { ar: 'تيك توك', en: 'TikTok', fr: 'TikTok' },
     steps: {
       ar: [
