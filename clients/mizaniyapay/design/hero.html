@@ -59,7 +59,7 @@
   }[lang];
   const EN = ['Still waiting in line?', 'Send money in a second.', 'Scan the QR and pay.', 'Recharge your phone and internet.', 'Pay your bills from home.', 'Everything in one app.'];
   // Voice-over: one line per scene, starting just after each cut (files are listed in ../voiceover.md).
-  const VO_AT = [0.25, 3.35, 6.35, 9.35, 12.35, 15.6];
+  const VO_AT = [0.3, 3.4, 6.4, 9.4, 12.3, 15.6];
   const VOICE = q.get('vo') ? VO_AT.map((at, i) => [at, `vo/${lang}-${i + 1}.mp3`]) : [];
 
   const words = (html) => html.split('<br>').map((line) => line.split(' ').map((w) => `<span class="w">${w}</span>`).join(' ')).join('<br>');
@@ -209,7 +209,9 @@
     [11.85, 'whoosh', 0], [12.2, 'swish', 0], [12.4, 'swish', 0], [12.6, 'swish', 0], [13.5, 'impact', 0],
     [14.95, 'whoosh', 0], [15.3, 'boom', 0], [15.55, 'chime', 0], [16.0, 'pop', 2], [16.4, 'pop', 4], [16.7, 'pop', 5], [16.9, 'pluck', 6],
   ];
-  window.REEL = { render, DURATION: 20, CUES, MUSIC: { start: 2.85, end: 19.4, bpm: 124 }, VOICE };
+  // The voice-over versions hold the end card a little longer so the last line can finish.
+  const DURATION = VOICE.length ? 21.2 : 20;
+  window.REEL = { render, DURATION, CUES, MUSIC: { start: 2.85, end: DURATION - 0.6, bpm: 124 }, VOICE };
   if (!navigator.webdriver) { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % 20); requestAnimationFrame(loop); }; loop(); }
   else render(0);
 })();
