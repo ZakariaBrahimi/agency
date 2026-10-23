@@ -1,0 +1,216 @@
+<title>Mizaniya Pay hero reel</title>
+<!-- 20 s hero reel, 1080x1920. ?lang=dz (Darija text, default) | ar (Modern Standard Arabic text)
+     &vo=1 adds the voice-over lines from vo/<lang>-<n>.mp3 (see ../voiceover.md). Rendered by ../render.cjs. -->
+<link rel="stylesheet" href="mp.css">
+<style>
+  #reel { position: relative; width: 1080px; height: 1920px; overflow: hidden; color: #fff;
+    background: radial-gradient(120% 75% at 75% 0%, #2B6787 0%, var(--navy) 38%, var(--deep) 70%, #0B1C27 100%); }
+  .abs { position: absolute; }
+  .bgcoin { opacity: .1; }
+  .cap { left: 70px; right: 70px; top: 300px; text-align: center; }
+  .cap h1 { font: 700 112px/1.22 'Plex Arabic', 'Poppins'; direction: rtl; }
+  .cap h1 span { display: inline-block; white-space: pre; }
+  .cap p { font: 500 50px/1.3 Poppins; color: #D6E4EC; margin-top: 26px; }
+  .stage { left: 0; right: 0; top: 840px; height: 820px; }
+  .wipe { top: -200px; width: 520px; height: 2400px; background: var(--yellow); transform-origin: center; z-index: 20; }
+  .wipe.b { background: #fff; width: 160px; }
+  .person { width: 110px; height: 230px; }
+  .tile { width: 300px; height: 300px; border-radius: 70px; background: var(--yellow); color: var(--navy); display: grid; place-items: center; box-shadow: 0 30px 60px rgba(0,0,0,.3); }
+  .bar { left: 190px; width: 700px; height: 54px; border-radius: 27px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--yellow); border-radius: 27px; }
+  .pct { left: 0; right: 0; text-align: center; font: 800 120px/1 Poppins; color: var(--yellow); }
+  .bill { width: 520px; height: 300px; left: 280px; border-radius: 30px; background: #fff; color: var(--navy); padding: 40px; box-shadow: 0 30px 60px rgba(0,0,0,.35); font: 700 40px Poppins; }
+  .bill small { display: block; font: 500 28px Poppins; color: #5D7381; margin-top: 10px; }
+  .bill .ln { height: 18px; border-radius: 9px; background: #DCE6EC; margin-top: 22px; }
+  .stamp { left: 240px; top: 280px; width: 600px; text-align: center; font: 800 150px/1 Poppins; color: var(--yellow); border: 14px solid var(--yellow); border-radius: 36px; padding: 20px 0; letter-spacing: 8px; z-index: 5; background: rgba(12,21,39,.88); }
+  .pill { font: 700 64px Poppins; background: var(--yellow); color: var(--navy); border-radius: 999px; padding: 22px 50px; }
+  .qr { left: 270px; top: 60px; width: 540px; height: 540px; }
+  .qr .in { position: absolute; inset: 70px; background: #fff; border-radius: 20px; padding: 26px; }
+  .qr .c { position: absolute; width: 120px; height: 120px; border: 16px solid var(--yellow); }
+  .qr .line { position: absolute; left: 30px; right: 30px; height: 10px; border-radius: 5px; background: var(--yellow); box-shadow: 0 0 40px var(--yellow); }
+  .ok { width: 300px; height: 300px; border-radius: 50%; background: var(--yellow); color: var(--navy); display: grid; place-items: center; box-shadow: 0 0 0 30px rgba(248,233,28,.2); }
+  .end { left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 50px; text-align: center; }
+  .end h2 { font: 700 104px/1.2 'Plex Arabic', 'Poppins'; direction: rtl; }
+  .end p { font: 600 50px Poppins; color: var(--yellow); }
+  .stores { display: flex; gap: 24px; }
+  .store { background: #000; color: #fff; border-radius: 24px; padding: 24px 38px; font: 600 40px/1.1 Poppins; text-align: left; }
+  .store small { display: block; font: 400 24px/1 Poppins; opacity: .8; margin-bottom: 6px; }
+  .cta { font: 800 60px 'Plex Arabic', 'Poppins'; background: var(--yellow); color: var(--navy); border-radius: 999px; padding: 20px 60px; direction: rtl; }
+  .spark { width: 70px; height: 52px; }
+</style>
+<div id="reel"></div>
+<script src="mp.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  const lang = q.get('lang') === 'ar' ? 'ar' : 'dz';
+  const I = MP.icon;
+  const clamp = (x) => Math.max(0, Math.min(1, x));
+  const k = (t, a, b) => clamp((t - a) / (b - a));
+  const out3 = (x) => 1 - Math.pow(1 - x, 3);
+  const inout = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const back = (x) => { const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+
+  // Scenes: [start, end]. Wipes cover each cut. Copy per language; English line stays the same.
+  const S = [[0, 3.1], [3.1, 6.1], [6.1, 9.1], [9.1, 12.1], [12.1, 15.2], [15.2, 20]];
+  const TEXT = {
+    dz: ['مازال تحبس<br>في الصف؟', 'ابعث الدراهم<br>في ثانية', 'سكاني<br>وخلّص', 'شارجي التيليفون<br>والانترنت', 'الفواتير؟<br>خلّصهم من دارك', 'كلش في<br>تطبيق واحد', 'حمّلو دركا!'],
+    ar: ['هل ما زلت تنتظر<br>في الطابور؟', 'أرسل أموالك<br>في ثانية', 'امسح<br>وادفع', 'اشحن هاتفك<br>وأنترنتك', 'فواتيرك؟<br>ادفعها من بيتك', 'كل شيء في<br>تطبيق واحد', 'حمّله الآن!'],
+  }[lang];
+  const EN = ['Still waiting in line?', 'Send money in a second.', 'Scan the QR and pay.', 'Recharge your phone and internet.', 'Pay your bills from home.', 'Everything in one app.'];
+  // Voice-over: one line per scene, starting just after each cut (files are listed in ../voiceover.md).
+  const VO_AT = [0.25, 3.35, 6.35, 9.35, 12.35, 15.6];
+  const VOICE = q.get('vo') ? VO_AT.map((at, i) => [at, `vo/${lang}-${i + 1}.mp3`]) : [];
+
+  const words = (html) => html.split('<br>').map((line) => line.split(' ').map((w) => `<span class="w">${w}</span>`).join(' ')).join('<br>');
+  const coinSVG = (s) => `<svg viewBox="-4 -4 208 128" width="${s}" height="${s * 0.64}">${MP.coin(100, 50, 96, 50, 22)}</svg>`;
+  const person = (c) => `<svg class="person" viewBox="0 0 110 230"><circle cx="55" cy="45" r="38" fill="${c}"/><path d="M8 230V140q0-46 47-46t47 46v90Z" fill="${c}"/></svg>`;
+
+  const root = document.getElementById('reel');
+  root.innerHTML = `
+    <div class="abs bgcoin" id="bg1" style="left:-260px;top:1250px">${MP.mark({ size: 900, face: 'none', rim: '#FFFFFF' })}</div>
+    <div class="abs bgcoin" id="bg2" style="right:-300px;top:-80px">${MP.mark({ size: 760, face: 'none', rim: '#FFFFFF' })}</div>
+    ${TEXT.slice(0, 5).map((h, i) => `<div class="abs cap" id="cap${i}"><h1>${words(h)}</h1><p>${EN[i]}</p></div>`).join('')}
+
+    <div class="abs stage" id="sc0">
+      <div class="abs" id="clock" style="left:440px;top:0;color:var(--yellow)">${I('clock', 200)}</div>
+      ${[0, 1, 2, 3, 4, 5].map((i) => `<div class="abs" id="p${i}" style="left:${70 + i * 160}px;top:300px">${person(i === 5 ? '#F8E91C' : 'rgba(255,255,255,.55)')}</div>`).join('')}
+    </div>
+
+    <div class="abs stage" id="sc1">
+      <div class="abs" id="plane" style="left:0;top:0;color:var(--yellow)">${I('send', 300)}</div>
+      ${[0, 1, 2, 3, 4].map((i) => `<div class="abs" id="tc${i}">${coinSVG(110)}</div>`).join('')}
+      <div class="abs pill" id="amt" style="left:330px;top:560px">+2,000 DZD</div>
+    </div>
+
+    <div class="abs stage" id="sc2">
+      <div class="abs qr" id="qr"><div class="in">${qrSVG()}</div>
+        <div class="c" style="left:0;top:0;border-right:0;border-bottom:0;border-radius:44px 0 0 0"></div><div class="c" style="right:0;top:0;border-left:0;border-bottom:0;border-radius:0 44px 0 0"></div>
+        <div class="c" style="left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 44px"></div><div class="c" style="right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 44px 0"></div>
+        <div class="line" id="qline"></div></div>
+      <div class="abs ok" id="qok" style="left:390px;top:180px">${I('check', 190)}</div>
+    </div>
+
+    <div class="abs stage" id="sc3">
+      <div class="abs tile" id="t1" style="left:170px;top:20px">${I('phone', 180)}</div>
+      <div class="abs tile" id="t2" style="left:610px;top:20px">${I('wifi', 180)}</div>
+      <div class="abs bar" style="top:420px"><i id="fill"></i></div>
+      <div class="abs pct" id="pct" style="top:520px">0%</div>
+    </div>
+
+    <div class="abs stage" id="sc4">
+      ${[0, 1, 2].map((i) => `<div class="abs bill" id="b${i}" style="top:${100 + i * 70}px">Bill #${3 - i}<small>Due this month</small><div class="ln" style="width:80%"></div><div class="ln" style="width:55%"></div></div>`).join('')}
+      <div class="abs stamp" id="stamp">PAID ✓</div>
+    </div>
+
+    <div class="abs end" id="sc5">
+      ${Array.from({ length: 14 }, (_, i) => `<div class="abs" id="bc${i}" style="left:490px;top:820px">${coinSVG(100)}</div>`).join('')}
+      <div id="elogo">${MP.logo({ height: 230, tone: 'dark' })}</div>
+      <h2 id="eh">${TEXT[5]}</h2><p id="ep">${EN[5]}</p>
+      <div class="stores" id="es"><div class="store"><small>GET IT ON</small>Google Play</div><div class="store"><small>Download on the</small>App Store</div></div>
+      <div class="cta" id="ecta">${TEXT[6]}</div>
+    </div>
+
+    <div class="abs wipe" id="wa"></div><div class="abs wipe b" id="wb"></div>`;
+
+  function qrSVG() {
+    let r = ''; let seed = 11;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
+      if ((x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13)) continue;
+      if (rnd() > 0.52) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+    }
+    const f = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+    return `<svg viewBox="0 0 21 21" width="100%" height="100%" fill="#0C1527" shape-rendering="crispEdges">${r}${f(0, 0)}${f(14, 0)}${f(0, 14)}</svg>`;
+  }
+
+  const $ = (x) => document.getElementById(x);
+  const set = (el, o, tf) => { el.style.opacity = o; el.style.transform = tf || ''; };
+  // Scene visibility: hidden outside its window (the wipe covers the swap).
+  const vis = (t, i) => (t >= S[i][0] && t < S[i][1] ? 1 : 0);
+
+  function render(t) {
+    // Background coins drift.
+    $('bg1').style.transform = `rotate(${t * 4}deg) translateY(${Math.sin(t * .8) * 20}px)`;
+    $('bg2').style.transform = `rotate(${-t * 3}deg)`;
+
+    // Captions: words pop in one by one, then the block lifts out before the cut.
+    for (let i = 0; i < 5; i++) {
+      const [a, b] = S[i]; const cap = $('cap' + i);
+      if (!vis(t, i)) { cap.style.opacity = 0; continue; }
+      cap.style.opacity = 1;
+      const lift = k(t, b - 0.35, b);
+      cap.style.transform = `translateY(${-lift * 80}px)`;
+      cap.querySelectorAll('.w').forEach((w, j) => { const v = back(k(t, a + 0.15 + j * 0.09, a + 0.45 + j * 0.09)); w.style.opacity = clamp(v * 1.5); w.style.transform = `scale(${0.4 + 0.6 * v}) translateY(${(1 - v) * 40}px)`; });
+      const p = cap.querySelector('p'); const pv = out3(k(t, a + 0.6, a + 1.0)); set(p, pv * (1 - lift), `translateY(${(1 - pv) * 30}px)`);
+    }
+
+    // 0: queue, clock spins, people shuffle and get impatient.
+    set($('sc0'), vis(t, 0));
+    $('clock').style.transform = `rotate(${Math.sin(t * 9) * 12}deg) scale(${0.6 + 0.4 * back(k(t, 0.1, 0.6))})`;
+    for (let i = 0; i < 6; i++) {
+      const v = out3(k(t, 0.2 + i * 0.1, 0.6 + i * 0.1)); const shake = t > 1.8 ? Math.sin(t * 40 + i) * 6 * k(t, 1.8, 2.2) : 0;
+      set($('p' + i), v, `translateY(${(1 - v) * 200 + Math.abs(Math.sin(t * 3 + i)) * -8}px) translateX(${shake}px)`);
+    }
+
+    // 1: the plane flies across with a trail of coins, then the amount lands.
+    set($('sc1'), vis(t, 1));
+    { const a = S[1][0]; const f = inout(k(t, a + 0.2, a + 1.5));
+      const x = -300 + f * 1000, y = 520 - f * 460 - Math.sin(f * Math.PI) * 120;
+      $('plane').style.transform = `translate(${x}px, ${y}px) rotate(${-10 - 20 * Math.sin(f * Math.PI)}deg)`;
+      for (let i = 0; i < 5; i++) { const g = inout(k(t, a + 0.2 + i * 0.07, a + 1.5 + i * 0.07)); const lag = g - 0.1 * (i + 1);
+        const cx = -300 + lag * 1000 + 80, cy = 600 - lag * 460 - Math.sin(Math.max(0, lag) * Math.PI) * 120;
+        set($('tc' + i), clamp(lag * 3) * (1 - k(t, a + 1.6, a + 2.0)), `translate(${cx}px, ${cy}px) rotate(${t * 200 + i * 40}deg) scale(${0.5 + 0.1 * i})`); }
+      const pv = back(k(t, a + 1.5, a + 1.9)); set($('amt'), clamp(pv * 1.4), `scale(${pv})`); }
+
+    // 2: scan line sweeps, flash, big check.
+    set($('sc2'), vis(t, 2));
+    { const a = S[2][0]; const qv = back(k(t, a + 0.1, a + 0.5));
+      $('qr').style.transform = `scale(${0.5 + 0.5 * qv})`; $('qr').style.opacity = 1 - k(t, a + 1.7, a + 1.9);
+      $('qline').style.top = (30 + 470 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * k(t, a + 0.4, a + 1.7)))) + 'px';
+      const ov = back(k(t, a + 1.8, a + 2.2)); set($('qok'), clamp(ov * 1.5), `scale(${ov})`); }
+
+    // 3: two tiles drop in, the bar fills to 100%.
+    set($('sc3'), vis(t, 3));
+    { const a = S[3][0]; const t1 = back(k(t, a + 0.1, a + 0.5)), t2 = back(k(t, a + 0.3, a + 0.7));
+      set($('t1'), clamp(t1 * 1.5), `scale(${t1}) rotate(${(1 - t1) * -20}deg)`); set($('t2'), clamp(t2 * 1.5), `scale(${t2}) rotate(${(1 - t2) * 20}deg)`);
+      const f = inout(k(t, a + 0.8, a + 2.2)); $('fill').style.width = (f * 100) + '%'; $('pct').textContent = Math.round(f * 100) + '%';
+      $('pct').style.transform = `scale(${1 + 0.25 * Math.max(0, 1 - Math.abs(t - (a + 2.25)) / 0.2)})`; }
+
+    // 4: bills fall in, then the PAID stamp slams down.
+    set($('sc4'), vis(t, 4));
+    { const a = S[4][0];
+      for (let i = 0; i < 3; i++) { const v = out3(k(t, a + 0.1 + i * 0.2, a + 0.45 + i * 0.2)); set($('b' + i), v, `translateY(${(1 - v) * -600}px) rotate(${(i - 1) * 5 + (1 - v) * 30}deg)`); }
+      const s = k(t, a + 1.2, a + 1.4); const s2 = out3(s); set($('stamp'), s > 0 ? 1 : 0, `scale(${2.2 - 1.2 * s2}) rotate(-12deg)`);
+      const shake = Math.max(0, 1 - Math.abs(t - (a + 1.4)) / 0.25); $('sc4').style.transform = `translate(${Math.sin(t * 90) * 14 * shake}px, ${Math.cos(t * 70) * 10 * shake}px)`; }
+
+    // 5: logo slam with a coin burst, then CTA.
+    { const a = S[5][0]; set($('sc5'), t >= a ? 1 : 0);
+      const lv = back(k(t, a + 0.15, a + 0.7)); set($('elogo'), clamp(lv * 1.5), `scale(${0.3 + 0.7 * lv})`);
+      for (let i = 0; i < 14; i++) { const ang = (i / 14) * Math.PI * 2 + 0.3; const d = out3(k(t, a + 0.35, a + 1.4)); const r = 120 + d * 620;
+        set($('bc' + i), (t > a + 0.35 ? 1 : 0) * (1 - k(t, a + 1.0, a + 1.6)), `translate(${Math.cos(ang) * r}px, ${Math.sin(ang) * r - 200}px) rotate(${t * 300 + i * 30}deg) scale(${0.5 + 0.5 * d})`); }
+      for (const [id, d] of [['eh', 0.8], ['ep', 1.0], ['es', 1.2], ['ecta', 1.5]]) { const v = id === 'ecta' ? back(k(t, a + d, a + d + 0.45)) : out3(k(t, a + d, a + d + 0.4)); set($(id), clamp(v * 1.3), id === 'ecta' ? `scale(${v})` : `translateY(${(1 - v) * 50}px)`); }
+      if (t > a + 2.2) $('ecta').style.transform = `scale(${1 + 0.05 * Math.sin((t - a - 2.2) * 6)})`; }
+
+    // Wipes: a yellow bar and a thin white bar sweep across each cut.
+    let w = -1;
+    for (let i = 1; i < S.length; i++) if (t > S[i][0] - 0.3 && t < S[i][0] + 0.3) w = i;
+    if (w < 0) { $('wa').style.opacity = 0; $('wb').style.opacity = 0; }
+    else { const p = inout(k(t, S[w][0] - 0.3, S[w][0] + 0.3)); const x = -900 + p * 2600;
+      $('wa').style.opacity = 1; $('wa').style.transform = `translateX(${x}px) rotate(14deg)`;
+      $('wb').style.opacity = 1; $('wb').style.transform = `translateX(${x - 260}px) rotate(14deg)`; }
+  }
+
+  const CUES = [
+    [0.1, 'pulse', 0], [0.3, 'tick', 0], [0.6, 'tick', 0], [0.9, 'tick', 0], [1.2, 'tick', 0], [1.9, 'pop', 1],
+    [2.85, 'whoosh', 0], [3.3, 'swish', 0], [4.6, 'pop', 3], [4.65, 'ding', 0],
+    [5.85, 'whoosh', 0], [6.2, 'pop', 2], [7.0, 'tick', 0], [7.9, 'hit', 0], [7.95, 'pop', 5],
+    [8.85, 'whoosh', 0], [9.2, 'pop', 1], [9.4, 'pop', 3], [9.9, 'riser', 0], [11.35, 'ding', 0],
+    [11.85, 'whoosh', 0], [12.2, 'swish', 0], [12.4, 'swish', 0], [12.6, 'swish', 0], [13.5, 'impact', 0],
+    [14.95, 'whoosh', 0], [15.3, 'boom', 0], [15.55, 'chime', 0], [16.0, 'pop', 2], [16.4, 'pop', 4], [16.7, 'pop', 5], [16.9, 'pluck', 6],
+  ];
+  window.REEL = { render, DURATION: 20, CUES, MUSIC: { start: 2.85, end: 19.4, bpm: 124 }, VOICE };
+  if (!navigator.webdriver) { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % 20); requestAnimationFrame(loop); }; loop(); }
+  else render(0);
+})();
+</script>

@@ -32,6 +32,10 @@ const JOBS = [
   { name: 'week-3/01-sun-internet-reel', url: D('reel.html?id=internet'), reel: true },
   { name: 'week-3/03-tue-shop-owner-outro', url: D('reel.html?id=outro-partner'), reel: true },
   { name: 'week-3/07-sat-request-reel', url: D('reel.html?id=request'), reel: true },
+  // Hero reel: no voice-over, then one per language once design/vo/<lang>-<n>.mp3 exist (voiceover.md).
+  { name: 'hero/hero-no-voiceover', url: D('hero.html?lang=dz'), reel: true },
+  { name: 'hero/hero-voiceover-darija', url: D('hero.html?lang=dz&vo=1'), reel: true },
+  { name: 'hero/hero-voiceover-arabic', url: D('hero.html?lang=ar&vo=1'), reel: true },
 ];
 
 async function renderReel(browser, j) {
@@ -40,7 +44,15 @@ async function renderReel(browser, j) {
   await page.goto(j.url);
   await page.waitForLoadState('networkidle');
   await page.evaluate(async () => { await document.fonts.ready; await Promise.all([...document.fonts].map((f) => f.load())); });
-  const R = await page.evaluate(() => ({ DURATION: REEL.DURATION, CUES: REEL.CUES, MUSIC: REEL.MUSIC }));
+  const R = await page.evaluate(() => ({ DURATION: REEL.DURATION, CUES: REEL.CUES, MUSIC: REEL.MUSIC, VOICE: REEL.VOICE || [] }));
+  // Voice-over files are listed relative to the design folder; skip the job if any is missing.
+  const voice = R.VOICE.map(([at, f]) => [at, path.join(__dirname, 'design', f)]);
+  const missing = voice.filter(([, f]) => !fs.existsSync(f));
+  if (missing.length) {
+    await page.close(); fs.rmSync(dir, { recursive: true, force: true });
+    console.log('…', j.name, `skipped: missing ${missing.map(([, f]) => path.relative(__dirname, f)).join(', ')}`);
+    return;
+  }
   const el = await page.$('#reel');
   const n = Math.round(R.DURATION * 30);
   for (let i = 0; i < n; i++) {
@@ -50,9 +62,20 @@ async function renderReel(browser, j) {
   await page.close();
   fs.writeFileSync(path.join(dir, 'cues.json'), JSON.stringify({ duration: R.DURATION, cues: R.CUES, music: R.MUSIC }));
   execFileSync('python3', [path.join(ROOT, 'scripts/showreel-sound.py'), path.join(dir, 'cues.json'), path.join(dir, 'sound.wav')], { stdio: 'inherit' });
+  let sound = path.join(dir, 'sound.wav');
+  if (voice.length) {
+    // Voice lines on top; the music and effects duck under them.
+    const lines = voice.map(([at], i) => `[${i + 1}:a]aresample=44100,pan=stereo|c0=c0|c1=c0,adelay=${Math.round(at * 1000)}:all=1[v${i}]`);
+    const filter = [...lines,
+      `${voice.map((_, i) => `[v${i}]`).join('')}amix=inputs=${voice.length}:normalize=0,volume=1.7,apad=whole_dur=${R.DURATION},asplit[vo][key]`,
+      '[0:a][key]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=350[bed]',
+      '[bed][vo]amix=inputs=2:normalize=0,alimiter=limit=0.79[out]'].join(';');
+    execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', sound, ...voice.flatMap(([, f]) => ['-i', f]), '-filter_complex', filter, '-map', '[out]', '-t', String(R.DURATION), path.join(dir, 'mix.wav')], { stdio: 'inherit' });
+    sound = path.join(dir, 'mix.wav');
+  }
   const out = path.join(OUT, j.name + '.mp4');
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-framerate', '30', '-i', path.join(dir, 'f%04d.png'), '-i', path.join(dir, 'sound.wav'),
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-framerate', '30', '-i', path.join(dir, 'f%04d.png'), '-i', sound,
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', out], { stdio: 'inherit' });
   // A cover frame for the feed grid, taken from the hook.
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', path.join(dir, `f${String(Math.min(n - 1, 45)).padStart(4, '0')}.png`), out.replace(/\.mp4$/, '-cover.jpg')]);
