@@ -71,7 +71,7 @@ const TS = {
     invMonth: 'الشهر', invGb: 'متوسط التخزين', invAmount: 'المبلغ', invStatus: 'الحالة', paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة',
     payTitle: 'طرق الدفع', payLead: 'ادفع بإحدى الطرق التالية، ثم أرسل لنا وصل الدفع مع رقم الشهر.',
     baridimob: 'بريدي موب (RIP)', ccp: 'الحساب البريدي الجاري (CCP)', ccpName: 'الاسم', ccpAccount: 'رقم الحساب', ccpKey: 'المفتاح', redotpay: 'RedotPay', uid: 'UID', email2: 'البريد',
-    copy: 'نسخ', copied: 'نُسخ', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
+    copy: 'نسخ', copied: 'نُسخ', mark: (n) => `علّم الخطوة ${n} كمنجزة`, unmark: (n) => `ألغِ إنجاز الخطوة ${n}`, stepsCount: (a, b) => `${a} من ${b} خطوات منجزة`, afterFb: 'يُفعَّل إنستغرام عبر صفحتك على فيسبوك، فابدأ بفيسبوك أولًا.', afterFbShort: 'بعد فيسبوك', goFb: 'اذهب إلى فيسبوك', tellLead: 'أنهيت الخطوات؟ أخبرنا لنتحقق ونفعّل المنصة.', tellNawa: 'أنهيت، أخبر نواة', reviewing: 'وصلنا إشعارك ✓ نتحقق الآن ونفعّل المنصة قريبًا.', activeLine: (n) => `${n} مفعّل`, stepsAgain: 'عرض الخطوات من جديد', allSetTitle: 'كل منصاتك جاهزة 🎉', goContent: 'اذهب إلى «المحتوى»', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
   },
   en: {
     tabStorage: 'Storage', stTitle: 'Where your photos and videos are kept', stLead: 'We keep your files in your own Google Drive for free, up to 15 GB. Once it’s full, new files go to “Nawa storage” if you turn it on; older files stay where they are.',
@@ -92,7 +92,7 @@ const TS = {
     invMonth: 'Month', invGb: 'Average stored', invAmount: 'Amount', invStatus: 'Status', paid: 'Paid', unpaid: 'Unpaid', void: 'Void',
     payTitle: 'How to pay', payLead: 'Pay with one of these, then send us the payment receipt with the month.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Postal account (CCP)', ccpName: 'Name', ccpAccount: 'Account number', ccpKey: 'Key', redotpay: 'RedotPay', uid: 'UID', email2: 'Email',
-    copy: 'Copy', copied: 'Copied', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
+    copy: 'Copy', copied: 'Copied', mark: (n) => `Mark step ${n} as done`, unmark: (n) => `Mark step ${n} as not done`, stepsCount: (a, b) => `${a} of ${b} steps done`, afterFb: 'Instagram is activated through your Facebook Page, so start with Facebook first.', afterFbShort: 'After Facebook', goFb: 'Go to Facebook', tellLead: 'Finished the steps? Let us know and we’ll check and turn it on.', tellNawa: 'I’m done, tell Nawa', reviewing: 'We got your note ✓ We’re checking and will turn it on soon.', activeLine: (n) => `${n} is active`, stepsAgain: 'Show the steps again', allSetTitle: 'All your platforms are ready 🎉', goContent: 'Go to “Content”', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
   },
   fr: {
     tabStorage: 'Stockage', stTitle: 'Où sont gardées vos photos et vidéos', stLead: 'Nous gardons vos fichiers dans votre propre Google Drive gratuitement, jusqu’à 15 Go. Une fois plein, les nouveaux fichiers vont dans « Stockage Nawa » si vous l’activez ; les anciens restent en place.',
@@ -113,7 +113,7 @@ const TS = {
     invMonth: 'Mois', invGb: 'Stockage moyen', invAmount: 'Montant', invStatus: 'Statut', paid: 'Payée', unpaid: 'Non payée', void: 'Annulée',
     payTitle: 'Comment payer', payLead: 'Payez avec l’un de ces moyens, puis envoyez-nous le reçu avec le mois concerné.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Compte postal (CCP)', ccpName: 'Nom', ccpAccount: 'Numéro de compte', ccpKey: 'Clé', redotpay: 'RedotPay', uid: 'UID', email2: 'E-mail',
-    copy: 'Copier', copied: 'Copié', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
+    copy: 'Copier', copied: 'Copié', mark: (n) => `Marquer l’étape ${n} comme faite`, unmark: (n) => `Marquer l’étape ${n} comme non faite`, stepsCount: (a, b) => `${a} étapes faites sur ${b}`, afterFb: 'Instagram s’active via votre Page Facebook : commencez par Facebook.', afterFbShort: 'Après Facebook', goFb: 'Aller à Facebook', tellLead: 'Étapes terminées ? Prévenez-nous, nous vérifions et activons la plateforme.', tellNawa: 'C’est fait, prévenir Nawa', reviewing: 'Bien reçu ✓ Nous vérifions et activons la plateforme bientôt.', activeLine: (n) => `${n} est activé`, stepsAgain: 'Revoir les étapes', allSetTitle: 'Toutes vos plateformes sont prêtes 🎉', goContent: 'Aller à « Contenu »', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
   },
 };
 for (const l of Object.keys(TS)) Object.assign(T[l], TS[l]);
@@ -202,42 +202,106 @@ function drawHello() {
   $('ptUser').textContent = t('hello', user.name || user.email);
 }
 
+// One platform at a time: tiles on top, the chosen platform's steps below. Clients tick steps off
+// (remembered on this device); LinkedIn/TikTok end with "tell Nawa", which sets «قيد المراجعة».
+// Instagram goes through the Facebook Page, so it waits for Facebook.
+const ticksKey = () => `nawa.steps.${state.me?.user?.email || ''}`;
+const getTicks = () => { try { return JSON.parse(localStorage.getItem(ticksKey()) || '{}'); } catch { return {}; } };
+const setTick = (k, i, on) => { const all = getTicks(); (all[k] ||= [])[i] = on; try { localStorage.setItem(ticksKey(), JSON.stringify(all)); } catch {} };
+const blockedBy = (k, st) => (k === 'instagram' && st.facebook?.status !== 'active' ? 'facebook' : null);
+const nextPlatform = (st) => PLATFORM_ORDER.find((k) => st[k]?.status !== 'active' && !blockedBy(k, st)) || null;
+
+function stepList(k, p, interactive) {
+  const ticks = getTicks()[k] || [];
+  return `<ol class="pt-steps">${L(p.steps, lang).map((x, i) => {
+    const shot = p.shots?.[i];
+    const alt = `${L(p.name, lang)} · ${i + 1}`;
+    const on = Boolean(ticks[i]);
+    const num = interactive
+      ? `<button type="button" class="pt-num${on ? ' on' : ''}" data-tick="${i}" aria-pressed="${on}" aria-label="${esc(t(on ? 'unmark' : 'mark', i + 1))}" title="${esc(t(on ? 'unmark' : 'mark', i + 1))}"><span>${i + 1}</span></button>`
+      : `<span class="pt-num"><span>${i + 1}</span></span>`;
+    return `<li class="${on && interactive ? 'ticked' : ''}">${num}<div class="pt-stepbody">${x}${shot ? `<button type="button" class="pt-shot" data-shot="/assets/guides/${shot}.webp" data-alt="${esc(alt)}" aria-label="${esc(t('shotOpen'))}: ${esc(alt)}"><img src="/assets/guides/${shot}.webp" alt="${esc(alt)}" width="720" height="450" loading="lazy" decoding="async"></button>` : ''}</div></li>`;
+  }).join('')}</ol>${p.shots?.some(Boolean) ? `<p class="pt-shotnote">${esc(t('shotNote'))}</p>` : ''}`;
+}
+
 function drawPlatforms() {
   const st = state.me.status;
   const active = PLATFORM_ORDER.filter((k) => st[k]?.status === 'active').length;
+  const allActive = active === PLATFORM_ORDER.length;
   const pct = Math.round((active / PLATFORM_ORDER.length) * 100);
+  if (!PLATFORM_ORDER.includes(state.pf)) state.pf = nextPlatform(st);
+  const k = state.pf, p = k && PLATFORMS[k], s = k ? st[k] || { status: 'not_started' } : null;
+
+  let panel;
+  if (!k) {
+    panel = `<div class="ct-card pt-panel pt-allset"><b>${esc(t('allSetTitle'))}</b><p class="muted">${esc(t('allActive'))}</p><button type="button" class="btn btn-lime" data-go="content">${esc(t('goContent'))}</button></div>`;
+  } else if (s.status === 'active') {
+    panel = `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}
+      <p class="pt-doneline">✓ ${esc(t('activeLine', L(p.name, lang)))}${s.name ? ` · <a href="${esc(s.url)}" target="_blank" rel="noopener" dir="ltr">${esc(s.name)} ↗</a>` : ''}</p>
+      <details><summary>${esc(t('stepsAgain'))}</summary>${stepList(k, p, false)}</details>
+    </div>`;
+  } else {
+    const blocker = blockedBy(k, st);
+    const n = L(p.steps, lang).length, ticked = (getTicks()[k] || []).filter(Boolean).length;
+    const manualDone = !p.auto && ['in_review'].includes(s.status);
+    panel = `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}
+      ${blocker ? `<div class="pt-wait"><span>${esc(t('afterFb'))}</span><button type="button" class="btn btn-ghost-dark" data-pf="${blocker}">${esc(t('goFb'))}</button></div>` : ''}
+      <div class="${blocker ? 'pt-faded' : ''}">
+        <div class="pt-stepcount"><b>${esc(t('stepsTitle'))}</b><span class="muted">${esc(t('stepsCount', ticked, n))}</span></div>
+        ${stepList(k, p, !blocker)}
+      </div>
+      ${p.auto ? `<p class="muted pt-foot">${esc(t('autoNote'))}</p>`
+        : manualDone ? `<p class="pt-reviewing">${esc(t('reviewing'))}</p>`
+        : `<div class="pt-tell${ticked >= n ? ' ready' : ''}"><p class="muted">${esc(t('tellLead'))}</p><button type="button" class="btn ${ticked >= n ? 'btn-lime' : 'btn-ghost-dark'}" id="ptTell"><span class="btn-label">${esc(t('tellNawa'))}</span></button></div>`}
+    </div>`;
+  }
+
   $('ptPlatforms').innerHTML = `
     <div class="ct-card pt-progress">
       <div class="pt-progress-top"><b>${esc(t('progress', active, PLATFORM_ORDER.length))}</b><button type="button" class="link-btn" id="ptCheck">${esc(t('checkNow'))}</button></div>
       <div class="pt-bar" role="progressbar" aria-valuenow="${active}" aria-valuemin="0" aria-valuemax="${PLATFORM_ORDER.length}"><i style="inline-size:${pct}%"></i></div>
-      <p class="muted">${esc(active === PLATFORM_ORDER.length ? t('allActive') : t('platformsLead'))}</p>
+      <p class="muted">${esc(allActive ? t('allActive') : t('platformsLead'))}</p>
     </div>
-    <ul class="pt-cards">${PLATFORM_ORDER.map((k) => {
-      const s = st[k] || { status: 'not_started' }; const p = PLATFORMS[k]; const done = s.status === 'active';
-      const tone = STATUS[s.status]?.tone || 'idle';
-      return `<li class="pt-card${done ? ' done' : ''}">
-        <div class="pt-card-head">
-          <i class="pt-logo" style="--c:${p.color}">${icon(k, 22)}</i>
-          <div><b>${esc(L(p.name, lang))}</b>${s.name ? `<a class="muted" href="${esc(s.url)}" target="_blank" rel="noopener" dir="ltr">${esc(s.name)} ↗</a>` : ''}</div>
-          <span class="cl-st tone-${tone}">${esc(L(STATUS[s.status]?.label, lang))}</span>
-        </div>
-        ${s.note ? `<p class="pt-note"><b>${esc(t('nawaNote'))}:</b> ${esc(s.note)}</p>` : ''}
-        <details${done ? '' : ' open'}><summary>${esc(t('stepsTitle'))}</summary>
-          <ol class="pt-steps">${L(p.steps, lang).map((x, i) => {
-            const shot = p.shots?.[i];
-            const alt = `${L(p.name, lang)} · ${i + 1}`;
-            return `<li>${x}${shot ? `<button type="button" class="pt-shot" data-shot="/assets/guides/${shot}.webp" data-alt="${esc(alt)}" aria-label="${esc(t('shotOpen'))}: ${esc(alt)}"><img src="/assets/guides/${shot}.webp" alt="${esc(alt)}" width="720" height="450" loading="lazy" decoding="async"></button>` : ''}</li>`;
-          }).join('')}</ol>
-          ${p.shots?.some(Boolean) ? `<p class="pt-shotnote">${esc(t('shotNote'))}</p>` : ''}
-          <p class="muted">${esc(t(p.auto ? 'autoNote' : 'manualNote'))}</p>
-        </details>
-      </li>`;
-    }).join('')}</ul>`;
+    <div class="pt-tiles" role="tablist" aria-label="${esc(t('tabPlatforms'))}">${PLATFORM_ORDER.map((x) => {
+      const xs = st[x] || { status: 'not_started' }; const tone = STATUS[xs.status]?.tone || 'idle';
+      const waiting = blockedBy(x, st) && xs.status !== 'active';
+      return `<button type="button" role="tab" class="pt-tile${x === k ? ' on' : ''}${waiting ? ' waiting' : ''}" data-pf="${x}" aria-selected="${x === k}">
+        <i class="pt-logo" style="--c:${PLATFORMS[x].color}">${icon(x, 20)}</i>
+        <b>${esc(L(PLATFORMS[x].name, lang))}</b>
+        <span class="pt-dot tone-${tone}">${esc(waiting ? t('afterFbShort') : L(STATUS[xs.status]?.label, lang))}</span>
+      </button>`;
+    }).join('')}</div>
+    ${panel}`;
+
   labelCopies($('ptPlatforms'));
+  $('ptPlatforms').querySelectorAll('[data-pf]').forEach((b) => b.addEventListener('click', () => { state.pf = b.dataset.pf; drawPlatforms(); }));
+  $('ptPlatforms').querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => document.querySelector(`[data-tab="${b.dataset.go}"]`)?.click()));
+  $('ptPlatforms').querySelectorAll('[data-tick]').forEach((b) => b.addEventListener('click', () => {
+    setTick(k, Number(b.dataset.tick), b.getAttribute('aria-pressed') !== 'true'); drawPlatforms();
+    $('ptPlatforms').querySelector(`[data-tick="${b.dataset.tick}"]`)?.focus();
+  }));
+  const tell = $('ptTell');
+  if (tell) tell.onclick = async () => {
+    tell.disabled = true;
+    try { state.me.status = (await call('platform-done', { platform: k })).status; drawPlatforms(); }
+    catch { tell.disabled = false; }
+  };
   $('ptCheck').onclick = async (e) => {
     e.target.disabled = true;
     try { state.me = await call('me&fresh=1'); drawPlatforms(); } catch {}
   };
+}
+
+function panelHead(k, p, s) {
+  const tone = STATUS[s.status]?.tone || 'idle';
+  return `<div class="pt-card-head">
+      <i class="pt-logo" style="--c:${p.color}">${icon(k, 22)}</i>
+      <div><b>${esc(L(p.name, lang))}</b>${s.name && s.status !== 'active' ? `<a class="muted" href="${esc(s.url)}" target="_blank" rel="noopener" dir="ltr">${esc(s.name)} ↗</a>` : ''}</div>
+      <span class="cl-st tone-${tone}">${esc(L(STATUS[s.status]?.label, lang))}</span>
+    </div>
+    ${s.note ? `<p class="pt-note"><b>${esc(t('nawaNote'))}:</b> ${esc(s.note)}</p>` : ''}`;
 }
 
 // Copy icons (Nawa's business ID, payment details): one handler for the whole page.

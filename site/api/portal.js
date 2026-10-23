@@ -12,6 +12,7 @@
 // GET  ?action=drive-connect                 connects the client's own Google Drive (free storage)
 // POST ?action=drive-disconnect
 // POST ?action=cloud       { enabled }      «تخزين نواة» (paid per GB-month) on/off
+// POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram
 // anything else            -> the content API for this client's own posts (list, create, update, upload,
 //                             schedule, publish… exactly like /api/admin/content)
 import { json, readJson } from './_lib/http.js';
@@ -21,6 +22,7 @@ import { clientStore, driveConnection } from './_lib/storage.js';
 import * as B from './_lib/billing.js';
 import { clientSession, clearClientSession, requestCode, verifyCode, signedIn, normEmail, validEmail, mailConfigured } from './_lib/clients.js';
 import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin.js';
+import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
 import { sb } from './_lib/supabase.js';
 
 export default async function handler(req, res) {
@@ -66,6 +68,23 @@ export default async function handler(req, res) {
         client: { name: client.name, industry: client.industry, city: client.city, website: client.website },
         status: platformStatus(client, pages),
       });
+    }
+
+    // ---- a manual platform's steps are done: Nawa checks and turns it on
+    if (action === 'platform-done' && req.method === 'POST') {
+      const k = (await readJson(req)).platform;
+      if (!['linkedin', 'tiktok'].includes(k)) return json(res, 400, { ok: false, error: 'bad_platform' });
+      const cur = client.platforms?.[k] || {};
+      if (!['active', 'in_review'].includes(cur.status)) {
+        const platforms = { ...(client.platforms || {}), [k]: { ...cur, status: 'in_review', client_done_at: new Date().toISOString() } };
+        await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { platforms, updated_at: new Date().toISOString() });
+        client.platforms = platforms;
+        if (telegramReady()) {
+          const name = k === 'linkedin' ? 'LinkedIn' : 'TikTok';
+          await sendMessage(`🔔 <b>${escapeHtml(client.name)}</b> أنهى خطوات تفعيل <b>${name}</b>.\nتحقّق من الوصول ثم فعّل المنصة من «العملاء».`).catch((e) => console.error('telegram', e.message));
+        }
+      }
+      return json(res, 200, { ok: true, status: platformStatus(client, await pagesOrNull(false)) });
     }
 
     // ---- storage
