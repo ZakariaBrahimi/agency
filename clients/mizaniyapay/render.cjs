@@ -33,6 +33,9 @@ const JOBS = [
   { name: 'week-3/03-tue-shop-owner-outro', url: D('reel.html?id=outro-partner'), reel: true },
   { name: 'week-3/07-sat-request-reel', url: D('reel.html?id=request'), reel: true },
   // Hero reel: no voice-over, then one per language once design/vo/<lang>-<n>.mp3 exist (voiceover.md).
+  // Instagram highlights: covers for every suggested highlight, stories for the ones that have them.
+  ...['start', 'qr', 'recharge', 'bills', 'partners', 'safety', 'faq', 'offers'].map((h) => ({ name: `highlights/covers/${h}`, url: D(`stories.html?s=${h}&cover=1`), w: 1080, h: 1920 })),
+  ...[1, 2, 3, 4, 5, 6].map((i) => ({ name: `highlights/start/story-${i}`, url: D(`stories.html?s=start&n=${i}`), w: 1080, h: 1920 })),
   { name: 'hero/hero-no-voiceover', url: D('hero.html?lang=dz'), reel: true },
   { name: 'hero/hero-voiceover-darija', url: D('hero.html?lang=dz&vo=1'), reel: true },
   { name: 'hero/hero-voiceover-arabic', url: D('hero.html?lang=ar&vo=1'), reel: true },

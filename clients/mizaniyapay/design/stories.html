@@ -1,0 +1,119 @@
+<title>Mizaniya Pay stories</title>
+<!-- Instagram stories (1080x1920) and highlight covers.
+     ?s=<highlight>&n=<1..count> renders one story; ?s=<highlight>&cover=1 its highlight cover.
+     Key content stays between y=260 and y=1600: Instagram covers the top and bottom with its own UI. -->
+<link rel="stylesheet" href="mp.css">
+<style>
+  #st { position: relative; width: 1080px; height: 1920px; overflow: hidden; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(120% 70% at 80% 0%, #2B6787 0%, var(--navy) 40%, var(--deep) 75%, #0B1C27 100%); padding: 260px 80px 330px; text-align: center; }
+  #st.light { background: linear-gradient(180deg, #FFFFFF 0%, var(--mist) 100%); color: var(--ink); }
+  .deco { position: absolute; left: -240px; bottom: -60px; width: 900px; opacity: .1; }
+  .light .deco { opacity: .08; }
+  .kick { font: 600 34px/1 Poppins; letter-spacing: 5px; text-transform: uppercase; color: var(--yellow); }
+  .light .kick { color: var(--navy); }
+  h1 { font: 700 104px/1.22 'Plex Arabic', 'Poppins'; direction: rtl; margin-top: 40px; }
+  .light h1 { color: var(--navy); }
+  .en { font: 500 46px/1.35 Poppins; color: #D6E4EC; margin-top: 28px; }
+  .light .en { color: #3B5566; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; width: 100%; margin-top: 70px; }
+  .cell { background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.16); border-radius: 36px; padding: 40px 10px 30px; font: 600 32px/1.25 Poppins; }
+  .cell svg { display: block; margin: 0 auto 18px; color: var(--yellow); }
+  .cell span { display: block; font: 600 30px 'Plex Arabic'; color: #D6E4EC; margin-top: 6px; }
+  .steps { display: grid; gap: 24px; width: 100%; margin-top: 70px; text-align: left; }
+  .step { display: flex; align-items: center; gap: 30px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.16); border-radius: 34px; padding: 32px 36px; }
+  .step b { flex: none; width: 96px; height: 96px; border-radius: 50%; background: var(--yellow); color: var(--navy); font: 700 46px/96px Poppins; text-align: center; }
+  .step .t { font: 600 42px/1.25 Poppins; }
+  .step .t span { display: block; font: 600 36px 'Plex Arabic', 'Poppins'; color: #D6E4EC; margin-top: 6px; direction: rtl; text-align: left; unicode-bidi: plaintext; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 50px; }
+  .chip { font: 600 36px/1 Poppins; padding: 24px 34px; border-radius: 999px; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.2); }
+  .chip.y { background: var(--yellow); color: var(--navy); border-color: var(--yellow); }
+  .light .chip { background: #fff; color: var(--navy); border-color: #CBD9E2; }
+  .big { margin-top: 90px; }
+  .stores { display: flex; gap: 22px; margin-top: 60px; }
+  .store { background: #000; color: #fff; border-radius: 24px; padding: 24px 36px; font: 600 40px/1.1 Poppins; text-align: left; }
+  .store small { display: block; font: 400 24px/1 Poppins; opacity: .8; margin-bottom: 6px; }
+  .sticker { margin-top: 70px; width: 680px; height: 170px; border: 5px dashed var(--yellow); border-radius: 40px; display: grid; place-items: center; font: 600 34px Poppins; color: var(--yellow); }
+  .light .sticker { border-color: var(--navy); color: var(--navy); }
+  .bank { position: relative; width: 560px; height: 340px; border-radius: 34px; padding: 40px; color: #fff; text-align: left; box-shadow: 0 30px 60px rgba(0,0,0,.35); font: 600 34px Poppins; }
+  .bank .chipc { width: 84px; height: 62px; border-radius: 12px; background: linear-gradient(135deg, #F8E91C, #D9C400); margin: 30px 0 36px; }
+  .bank .num { font: 600 38px Poppins; letter-spacing: 4px; }
+  .bank .nm { position: absolute; right: 40px; top: 40px; font: 700 34px Poppins; letter-spacing: 2px; }
+  .page { position: absolute; top: 120px; left: 80px; right: 80px; display: flex; gap: 10px; }
+  .page i { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,.25); }
+  .page i.on { background: var(--yellow); }
+  .light .page i { background: #CBD9E2; } .light .page i.on { background: var(--navy); }
+  .handle { position: absolute; bottom: 330px; left: 0; right: 0; font: 600 34px Poppins; opacity: .7; }
+  /* Highlight cover: Instagram crops it to a small circle, so the icon stays in the middle. */
+  #st.cover { padding: 0; justify-content: center; background: var(--navy); }
+  .ring { width: 760px; height: 760px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #2B6787, var(--navy) 60%, var(--deep)); border: 18px solid var(--yellow); display: grid; place-items: center; color: var(--yellow); }
+</style>
+<div id="st"></div>
+<script src="mp.js"></script>
+<script>
+  const I = MP.icon;
+  const STORES = `<div class="stores"><div class="store"><small>GET IT ON</small>Google Play</div><div class="store"><small>Download on the</small>App Store</div></div>`;
+  const step = (n, en, ar) => `<div class="step"><b>${n}</b><div class="t">${en}<span>${ar}</span></div></div>`;
+  const cell = (icon, en, ar) => `<div class="cell">${I(icon, 96)}${en}<span>${ar}</span></div>`;
+
+  // Every suggested highlight has a cover icon; "start" also has its stories.
+  // A cover can also be a short word instead of an icon (coverText).
+  window.STORIES = {
+    start: { name: 'ابدأ هنا', icon: 'bolt', stories: [
+      { body: `<div>${MP.logo({ height: 230, tone: 'dark' })}</div>
+        <h1 style="margin-top:90px">مرحبا بيك<br><span class="hl">في Mizaniya Pay</span></h1>
+        <div class="en">Digital payments made simple. Built for Algeria.</div>
+        <div class="chips"><span class="chip">Tap to see more →</span></div>` },
+      { body: `<div class="kick">What is Mizaniya Pay?</div>
+        <h1>كلش في<br><span class="hl">تطبيق واحد</span></h1>
+        <div class="grid">
+          ${cell('send', 'Send', 'ابعث')}${cell('request', 'Request', 'اطلب')}${cell('qr', 'Scan &amp; pay', 'سكاني')}
+          ${cell('phone', 'Recharge', 'شارجي')}${cell('wifi', 'Internet', 'انترنت')}${cell('bill', 'Bills', 'فواتير')}</div>` },
+      { body: `<div class="kick">Open your account</div>
+        <h1>حسابك<br><span class="hl">في دقايق</span></h1>
+        <div class="steps">
+          ${step(1, 'Download the app', 'حمّل التطبيق')}
+          ${step(2, 'Enter your phone number', 'دخّل رقم تيليفونك')}
+          ${step(3, 'Verify your identity', 'أكّد هويتك')}
+          ${step(4, "You're ready", 'واجد!')}</div>` },
+      { body: `<div class="kick">Save your card once</div>
+        <h1>سجّل كارطتك<br><span class="hl">مرة وحدة</span></h1>
+        <div class="big" style="position:relative;width:860px;height:440px">
+          <div class="bank" style="position:absolute;left:300px;top:0;background:linear-gradient(135deg,#2A6584,#183B4E);border:3px solid rgba(255,255,255,.2)"><span class="nm">CIB</span><div class="chipc"></div><div class="num">•••• 7310</div></div>
+          <div class="bank" style="position:absolute;left:0;top:90px;background:linear-gradient(135deg,#2E7D5B,#1B5A40)"><span class="nm">EDAHABIA</span><div class="chipc"></div><div class="num">•••• 2048</div></div></div>
+        <div class="en">Top up and pay in one tap with your CIB or Edahabia card.</div>` },
+      { body: `<div class="kick">Own a shop?</div>
+        <h1>حانوتك يقبل<br><span class="hl">الخلاص بالـQR</span></h1>
+        <div class="en">Accept CIB, Edahabia and app payments. Track every dinar from your dashboard.</div>
+        <div class="chips"><span class="chip y">No hardware</span><span class="chip y">No setup fee</span><span class="chip y">Live in under 24h</span></div>
+        <div class="sticker">Link sticker: partner.mizaniyapay.dz</div>` },
+      { theme: 'light', body: `<div class="kick">Get started</div>
+        <h1>حمّل<br>Mizaniya Pay</h1>
+        <div class="en">Free on Android and iPhone.</div>
+        ${STORES}
+        <div class="sticker">Link sticker: download the app</div>` },
+    ] },
+    qr: { name: 'QR', icon: 'qr' },
+    recharge: { name: 'فليكسي', icon: 'phone' },
+    bills: { name: 'الفواتير', icon: 'bill' },
+    partners: { name: 'Partners', icon: 'shop' },
+    safety: { name: 'الأمان', icon: 'shield' },
+    faq: { name: 'FAQ', coverText: '?' },
+    offers: { name: 'Offers', coverText: '%' },
+  };
+  for (const s of Object.values(window.STORIES)) s.count = (s.stories || []).length;
+
+  const q = new URLSearchParams(location.search);
+  const set = window.STORIES[q.get('s') || 'start'];
+  const el = document.getElementById('st');
+  if (q.get('cover')) {
+    el.className = 'cover';
+    el.innerHTML = `<div class="ring">${set.coverText ? `<span style="font:800 360px/1 Poppins">${set.coverText}</span>` : I(set.icon, 380)}</div>`;
+  } else {
+    const n = Math.max(1, Math.min(set.count, +(q.get('n') || 1)));
+    const story = set.stories[n - 1];
+    el.className = story.theme || '';
+    const dark = story.theme !== 'light';
+    el.innerHTML = `<div class="deco">${MP.mark({ size: 900, face: 'none', rim: dark ? '#FFFFFF' : '#1F4E67' })}</div>
+      ${story.body}<div class="handle">@mizaniya_pay</div>`;
+  }
+</script>
