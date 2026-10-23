@@ -11,7 +11,7 @@ const API = '/api/portal';
 const T = {
   ar: {
     title: 'مساحة العميل | نواة', tag: 'مساحة العميل', logout: 'تسجيل الخروج', loading: 'جارٍ التحميل…',
-    loginTitle: 'تسجيل الدخول', loginLead: 'أدخل البريد الذي سجّلته لدى نواة، ونرسل لك رمز دخول.', email: 'البريد الإلكتروني',
+    loginTitle: 'تسجيل الدخول', privacy: 'سياسة الخصوصية', loginLead: 'أدخل البريد الذي سجّلته لدى نواة، ونرسل لك رمز دخول.', email: 'البريد الإلكتروني',
     sendCode: 'أرسل الرمز', or: 'أو', google: 'المتابعة بحساب Google', codeTitle: 'أدخل الرمز', codeLead: 'إذا كان البريد مسجّلًا لدى نواة، أرسلنا رمزًا من 6 أرقام إلى',
     code: 'الرمز', signIn: 'دخول', resend: 'إعادة الإرسال', changeEmail: 'تغيير البريد', sending: 'جارٍ الإرسال…', checking: 'جارٍ التحقق…',
     tabPlatforms: 'المنصات', tabContent: 'المحتوى', calendar: 'التقويم', list: 'القائمة', newPost: '+ منشور جديد',
@@ -24,7 +24,7 @@ const T = {
   },
   en: {
     title: 'Client space | Nawa', tag: 'Client space', logout: 'Sign out', loading: 'Loading…',
-    loginTitle: 'Sign in', loginLead: 'Enter the email you registered with Nawa and we’ll send you a sign-in code.', email: 'Email',
+    loginTitle: 'Sign in', privacy: 'Privacy policy', loginLead: 'Enter the email you registered with Nawa and we’ll send you a sign-in code.', email: 'Email',
     sendCode: 'Send code', or: 'or', google: 'Continue with Google', codeTitle: 'Enter the code', codeLead: 'If this email is registered with Nawa, we sent a 6-digit code to',
     code: 'Code', signIn: 'Sign in', resend: 'Resend', changeEmail: 'Change email', sending: 'Sending…', checking: 'Checking…',
     tabPlatforms: 'Platforms', tabContent: 'Content', calendar: 'Calendar', list: 'List', newPost: '+ New post',
@@ -37,7 +37,7 @@ const T = {
   },
   fr: {
     title: 'Espace client | Nawa', tag: 'Espace client', logout: 'Se déconnecter', loading: 'Chargement…',
-    loginTitle: 'Connexion', loginLead: 'Saisissez l’e-mail enregistré chez Nawa et nous vous enverrons un code de connexion.', email: 'E-mail',
+    loginTitle: 'Connexion', privacy: 'Politique de confidentialité', loginLead: 'Saisissez l’e-mail enregistré chez Nawa et nous vous enverrons un code de connexion.', email: 'E-mail',
     sendCode: 'Envoyer le code', or: 'ou', google: 'Continuer avec Google', codeTitle: 'Saisissez le code', codeLead: 'Si cet e-mail est enregistré chez Nawa, nous avons envoyé un code à 6 chiffres à',
     code: 'Code', signIn: 'Se connecter', resend: 'Renvoyer', changeEmail: 'Changer d’e-mail', sending: 'Envoi…', checking: 'Vérification…',
     tabPlatforms: 'Plateformes', tabContent: 'Contenu', calendar: 'Calendrier', list: 'Liste', newPost: '+ Nouvelle publication',
@@ -131,6 +131,7 @@ function applyLang() {
   document.title = t('title');
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  $('ptPrivacy').href = `/privacy#${lang}`;
   if (state.me) { drawHello(); drawPlatforms(); drawStorage(); }
 }
 document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {

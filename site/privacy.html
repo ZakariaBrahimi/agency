@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سياسة الخصوصية | نواة</title>
-<meta name="description" content="كيف تجمع نواة البيانات وتستخدمها وتحميها. How Nawa collects, uses and protects data.">
+<title>سياسة الخصوصية | نواة · Privacy Policy | Nawa</title>
+<meta name="description" content="كيف تجمع نواة البيانات وتستخدمها وتحميها. How Nawa collects, uses and protects data. Comment Nawa collecte, utilise et protège les données.">
+<link rel="canonical" href="https://nawa-studio-six.vercel.app/privacy">
 <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;700&family=Instrument+Sans:wght@400;600;700&display=swap">
 <style>
@@ -12,101 +13,266 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--ink); color: var(--fg); font-family: "Thmanyah Sans", "IBM Plex Sans Arabic", Tahoma, sans-serif; line-height: 1.8; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 40px max(20px, env(safe-area-inset-right)) 80px max(20px, env(safe-area-inset-left)); }
-  header { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
-  header a { display: flex; align-items: center; gap: 12px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 20px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+  header > a { display: flex; align-items: center; gap: 12px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 20px; }
   header svg { width: 40px; height: 40px; }
+  .langs { display: flex; gap: 6px; }
+  .langs a { color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px; font: 600 14px "Instrument Sans", "IBM Plex Sans Arabic", sans-serif; }
+  .langs a[aria-current="true"] { color: var(--ink); background: var(--lime); border-color: var(--lime); }
   h1 { font-size: 34px; line-height: 1.3; margin: 0 0 6px; }
   h2 { font-size: 21px; margin: 32px 0 8px; color: var(--lime); }
+  h3 { font-size: 17px; margin: 18px 0 4px; }
   p, li { color: var(--fg); }
   .muted { color: var(--muted); }
   ul { padding-inline-start: 22px; }
-  section[lang="en"] { font-family: "Instrument Sans", Arial, sans-serif; border-top: 1px solid var(--line); margin-top: 56px; padding-top: 40px; }
-  section[lang="en"] h1 { font-size: 30px; }
+  section[lang="en"], section[lang="fr"] { font-family: "Instrument Sans", Arial, sans-serif; }
+  /* without JS every language shows, one after another */
+  section + section { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 40px; }
+  .js section[hidden] { display: none; }
+  .js section + section { border-top: 0; margin-top: 0; padding-top: 0; }
   a { color: var(--lime); }
   .note { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
 </style>
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <a href="/"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>نواة</a>
+    <a href="/"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="120" fill="#5B4BFF"/><path d="M146 236 A110 110 0 0 0 366 236" fill="none" stroke="#FFFFFF" stroke-width="62" stroke-linecap="round"/><circle cx="256" cy="148" r="40" fill="#C6F432"/></svg>نواة · Nawa</a>
+    <nav class="langs" aria-label="Language">
+      <a href="#ar" data-l="ar" lang="ar">العربية</a>
+      <a href="#en" data-l="en" lang="en">English</a>
+      <a href="#fr" data-l="fr" lang="fr">Français</a>
+    </nav>
   </header>
 
   <main>
-    <section lang="ar">
+    <section lang="ar" id="ar">
       <h1>سياسة الخصوصية</h1>
-      <p class="muted">آخر تحديث: 16 أكتوبر 2026</p>
+      <p class="muted">آخر تحديث: 23 أكتوبر 2026</p>
 
-      <p>تشرح هذه الصفحة ما تجمعه نواة («نحن») من بيانات عبر موقعنا وأدواتنا، ولماذا، وكيف نحميها.</p>
+      <p>تشرح هذه الصفحة ما تجمعه نواة («نحن») من بيانات عبر موقعنا nawa-studio-six.vercel.app ومنصّة العملاء (/portal) وأدواتنا الداخلية، ولماذا، وكيف نحميها.</p>
 
-      <h2>ما الذي نجمعه</h2>
+      <h2>1. زوّار الموقع</h2>
       <ul>
-        <li><b>نموذج طلب المشروع (/start):</b> الاسم، ووسيلة التواصل التي تختارها (بريد إلكتروني أو هاتف أو واتساب)، واسم شركتك إن ذكرته، وتفاصيل مشروعك والخدمات والميزانية التي تختارها.</li>
+        <li><b>نموذج طلب المشروع (/start):</b> الاسم، ووسيلة التواصل التي تختارها (بريد أو هاتف أو واتساب)، واسم شركتك إن ذكرته، وتفاصيل مشروعك والخدمات والميزانية التي تختارها.</li>
         <li><b>بيانات تقنية محدودة:</b> عنوان IP لمنع الرسائل المزعجة فقط، ولا نستخدمه لتتبّعك.</li>
-        <li>لا نستخدم ملفات تعريف الارتباط (cookies) للإعلانات أو التتبّع. يحفظ متصفحك مسودة النموذج ولغتك المفضّلة على جهازك فقط.</li>
+        <li>لا نستخدم ملفات تعريف الارتباط للإعلانات أو التتبّع. يحفظ متصفحك مسودة النموذج ولغتك المفضّلة على جهازك فقط.</li>
       </ul>
 
-      <h2>كيف نستخدمها</h2>
+      <h2>2. عملاء نواة (منصّة العملاء)</h2>
+      <p>منصّة العملاء مخصّصة لعملاء نواة فقط، ونحن من ننشئ الحسابات؛ لا يمكن التسجيل الذاتي.</p>
+      <h3>الحساب وتسجيل الدخول</h3>
       <ul>
-        <li>لقراءة طلبك والرد عليك وإعداد عرض لمشروعك.</li>
-        <li>لا نبيع بياناتك ولا نشاركها مع أي جهة لأغراض تسويقية.</li>
+        <li>اسم الشركة وبيانات التواصل التي تزوّدنا بها، والبريد الإلكتروني لكل مستخدم.</li>
+        <li><b>الدخول برمز عبر البريد:</b> نرسل رمزًا من 6 أرقام صالحًا 10 دقائق. لا نحفظ الرمز نفسه، بل بصمة مشفّرة منه.</li>
+        <li><b>الدخول بحساب Google:</b> نطلب فقط اسمك وبريدك (openid, email, profile) لنتأكد أن البريد مسجّل لدينا. لا نصل إلى أي شيء آخر في حسابك.</li>
+        <li>بعد الدخول نضع ملف تعريف ارتباط أساسيًا واحدًا لإبقائك متصلًا (30 يومًا)، ولا يُستخدم لأي غرض آخر.</li>
       </ul>
-
-      <h2>أين تُحفظ</h2>
+      <h3>حسابات التواصل الاجتماعي</h3>
       <ul>
-        <li>تُحفظ الطلبات في قاعدة بيانات آمنة لدى Supabase، ولا يطّلع عليها إلا فريق نواة.</li>
-        <li>نتلقّى إشعارًا مختصرًا بكل طلب جديد عبر Telegram.</li>
-        <li>نحتفظ بالطلب ما دام ذلك ضروريًا للتواصل معك، ونحذفه عند طلبك.</li>
+        <li>نحفظ معرّفات صفحة Facebook وحساب Instagram التي تمنحنا صلاحية إدارتها عبر Meta Business، ونقرأ حالتها للتحقق من الربط.</li>
+        <li>لا ننشر إلا المنشورات التي تعتمدها أنت أو فريقك، في المواعيد التي تحدّدونها.</li>
+      </ul>
+      <h3>المحتوى والملفات</h3>
+      <ul>
+        <li>نحفظ نصوص المنشورات ومواعيدها وحالة اعتمادها في قاعدة بياناتنا.</li>
+        <li><b>إن ربطت Google Drive الخاص بك:</b> نطلب صلاحية <code dir="ltr">drive.file</code> فقط، أي أن المنصّة لا ترى إلا الملفات التي ترفعها هي داخل مجلد «نواة» في حسابك، ولا تستطيع رؤية أي ملف آخر. نقرأ أيضًا المساحة المتاحة لعرض الاستهلاك. ملفاتك تبقى ملكك في حسابك.</li>
+        <li><b>إن اخترت «تخزين نواة»:</b> تُحفظ ملفاتك بشكل خاص في تخزين سحابي آمن، ولا تُفتح إلا عبر روابط مؤقتة موقّعة.</li>
+        <li>نسجّل حجم التخزين المستخدم يوميًا لحساب الفواتير، ونحفظ الفواتير وحالة دفعها.</li>
       </ul>
 
-      <h2>أداة الإدارة الداخلية وخدمات Google</h2>
-      <p>يستخدم فريق نواة أداة داخلية خاصة («Nawa Admin») تتصل بحساب Google الخاص بنواة فقط، لحفظ تصاميمنا ومحتوانا في Google Drive وجدولة المنشورات المعتمدة في Google Calendar. لا تطلب الأداة أي بيانات من حسابات الزوار، ولا تصل إلا إلى الملفات التي تنشئها هي وإلى التقويم الذي تنشئه.</p>
-      <p class="note">يلتزم استخدام Nawa Admin للمعلومات التي يتلقاها من واجهات Google البرمجية بسياسة بيانات مستخدمي خدمات Google API، بما في ذلك متطلبات الاستخدام المحدود (Limited Use).</p>
+      <h2>3. أداة الإدارة الداخلية</h2>
+      <p>يستخدم فريق نواة أداة داخلية («Nawa Admin») تتصل بحساب Google الخاص بنواة فقط، لحفظ محتوى نواة في Google Drive وجدولة منشوراتها في Google Calendar. لا تُستخدم هذه الأداة لملفات العملاء، ولا تصل إلى حساباتهم.</p>
 
-      <h2>حقوقك</h2>
-      <p>يمكنك أن تطلب نسخة من بياناتك أو تصحيحها أو حذفها في أي وقت عبر مراسلتنا على <a href="mailto:hello@nawa.studio">hello@nawa.studio</a>.</p>
+      <h2>4. كيف نستخدم البيانات</h2>
+      <ul>
+        <li>لتقديم خدماتنا: الرد على الطلبات، وتشغيل منصّة العملاء، ونشر المحتوى المعتمد، والفوترة.</li>
+        <li>لا نبيع بياناتك، ولا نشاركها لأغراض تسويقية، ولا نستخدمها للإعلانات.</li>
+      </ul>
+      <p class="note">يلتزم استخدام نواة (منصّة العملاء وNawa Admin) للمعلومات التي تتلقاها من واجهات Google البرمجية ونقلها إلى أي تطبيق آخر بـ<a href="https://developers.google.com/terms/api-services-user-data-policy" lang="en">سياسة بيانات مستخدمي خدمات Google API</a>، بما في ذلك متطلبات الاستخدام المحدود (Limited Use). لا نستخدم بيانات Google لتطوير نماذج ذكاء اصطناعي عامة أو تدريبها، ولا يطّلع عليها أي شخص إلا بموافقتك أو لأسباب أمنية أو قانونية.</p>
 
-      <h2>التغييرات</h2>
+      <h2>5. أين تُحفظ ومن يعالجها</h2>
+      <ul>
+        <li><b>Supabase:</b> قاعدة البيانات (الطلبات، الحسابات، المنشورات، الفواتير).</li>
+        <li><b>Vercel:</b> استضافة الموقع والمنصّة.</li>
+        <li><b>Google:</b> تسجيل الدخول، وDrive الخاص بك إن ربطته، وإرسال رسائل رموز الدخول.</li>
+        <li><b>Meta:</b> النشر على Facebook وInstagram.</li>
+        <li><b>Cloudflare:</b> «تخزين نواة» المدفوع.</li>
+        <li><b>Telegram:</b> إشعار مختصر لفريق نواة بكل طلب مشروع جديد.</li>
+      </ul>
+      <p>تُنقل البيانات مشفّرة (HTTPS)، وتُحفظ صلاحيات الوصول (مثل ربط Drive) مشفّرة لدينا.</p>
+
+      <h2>6. الاحتفاظ والحذف</h2>
+      <ul>
+        <li>نحتفظ بالبيانات ما دامت ضرورية لتقديم الخدمة، ونحذفها عند طلبك أو عند إنهاء حسابك.</li>
+        <li>عند فصل Google Drive نحذف صلاحية الوصول المحفوظة فورًا. يمكنك أيضًا سحبها من <a href="https://myaccount.google.com/permissions" dir="ltr">myaccount.google.com/permissions</a>.</li>
+      </ul>
+
+      <h2>7. حقوقك</h2>
+      <p>يمكنك أن تطلب نسخة من بياناتك أو تصحيحها أو حذفها في أي وقت، عبر <a href="/start">نموذج التواصل</a> أو عبر مسؤول حسابك لدى نواة.</p>
+
+      <h2>8. التغييرات</h2>
       <p>إن غيّرنا هذه السياسة، سننشر النسخة الجديدة هنا مع تاريخ التحديث.</p>
     </section>
 
-    <section lang="en" dir="ltr">
+    <section lang="en" dir="ltr" id="en">
       <h1>Privacy Policy</h1>
-      <p class="muted">Last updated: October 16, 2026</p>
+      <p class="muted">Last updated: October 23, 2026</p>
 
-      <p>This page explains what data Nawa ("we") collects through our website and tools, why, and how we protect it.</p>
+      <p>This page explains what data Nawa ("we") collects through our website nawa-studio-six.vercel.app, our client portal (/portal) and our internal tools, why, and how we protect it.</p>
 
-      <h2>What we collect</h2>
+      <h2>1. Website visitors</h2>
       <ul>
         <li><b>Project request form (/start):</b> your name, the contact method you choose (email, phone or WhatsApp), your company name if you give it, and the project details, services and budget you select.</li>
         <li><b>Limited technical data:</b> your IP address, used only to block spam, never to track you.</li>
         <li>We don't use cookies for advertising or tracking. Your browser keeps a draft of the form and your language choice on your own device.</li>
       </ul>
 
-      <h2>How we use it</h2>
+      <h2>2. Nawa clients (client portal)</h2>
+      <p>The portal is for Nawa's clients only. We create the accounts; there is no self sign-up.</p>
+      <h3>Account and sign-in</h3>
       <ul>
-        <li>To read your request, reply to you, and prepare a proposal.</li>
-        <li>We never sell your data or share it with anyone for marketing.</li>
+        <li>The company name and contact details you give us, and each user's email address.</li>
+        <li><b>Email code sign-in:</b> we send a 6-digit code valid for 10 minutes. We never store the code itself, only a hashed fingerprint of it.</li>
+        <li><b>Sign in with Google:</b> we request only your name and email (openid, email, profile), to check the email is registered with us. We access nothing else in your account.</li>
+        <li>After you sign in we set one essential cookie to keep you signed in (30 days). It is used for nothing else.</li>
+      </ul>
+      <h3>Social media accounts</h3>
+      <ul>
+        <li>We store the IDs of the Facebook Page and Instagram account you give us access to through Meta Business, and read their status to check the connection.</li>
+        <li>We only publish posts that you or your team approve, at the times you set.</li>
+      </ul>
+      <h3>Content and files</h3>
+      <ul>
+        <li>We store your post texts, schedules and approval status in our database.</li>
+        <li><b>If you connect your own Google Drive:</b> we request only the <code>drive.file</code> scope, so the portal can see only the files it uploads itself, inside a "نواة" folder in your account, and no other file. We also read your available storage to show your usage. Your files stay yours, in your account.</li>
+        <li><b>If you choose Nawa Storage:</b> your files are stored privately in secure cloud storage and are opened only through short-lived signed links.</li>
+        <li>We record your stored size once a day to calculate invoices, and keep your invoices and their payment status.</li>
       </ul>
 
-      <h2>Where it is stored</h2>
+      <h2>3. Our internal admin tool</h2>
+      <p>The Nawa team uses a private internal tool ("Nawa Admin") that connects only to Nawa's own Google account, to store Nawa's content in Google Drive and schedule its posts in Google Calendar. It is never used for clients' files and never accesses their accounts.</p>
+
+      <h2>4. How we use data</h2>
       <ul>
-        <li>Requests are stored in a secured Supabase database that only the Nawa team can access.</li>
-        <li>We receive a short notification of each new request on Telegram.</li>
-        <li>We keep a request only as long as needed to work with you, and delete it when you ask.</li>
+        <li>To provide our services: replying to requests, running the client portal, publishing approved content, and billing.</li>
+        <li>We never sell your data, share it for marketing, or use it for advertising.</li>
+      </ul>
+      <p class="note">Nawa's (the client portal's and Nawa Admin's) use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. We do not use Google user data to develop, improve or train generalized AI or ML models, and no person reads it except with your consent or for security or legal reasons.</p>
+
+      <h2>5. Where it is stored and who processes it</h2>
+      <ul>
+        <li><b>Supabase:</b> our database (requests, accounts, posts, invoices).</li>
+        <li><b>Vercel:</b> hosting for the website and portal.</li>
+        <li><b>Google:</b> sign-in, your Drive if you connect it, and sending sign-in code emails.</li>
+        <li><b>Meta:</b> publishing to Facebook and Instagram.</li>
+        <li><b>Cloudflare:</b> paid Nawa Storage.</li>
+        <li><b>Telegram:</b> a short notice to the Nawa team for each new project request.</li>
+      </ul>
+      <p>Data is encrypted in transit (HTTPS), and access grants (such as a Drive connection) are stored encrypted on our side.</p>
+
+      <h2>6. Retention and deletion</h2>
+      <ul>
+        <li>We keep data only as long as needed to provide the service, and delete it when you ask or when your account ends.</li>
+        <li>When you disconnect Google Drive we delete the stored access grant immediately. You can also revoke it at <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
       </ul>
 
-      <h2>Our internal admin tool and Google services</h2>
-      <p>The Nawa team uses a private internal tool ("Nawa Admin") that connects only to Nawa's own Google account, to store our designs and content in Google Drive and to schedule approved posts in Google Calendar. It requests no data from visitors' accounts, and it can only access the files and the calendar it creates itself.</p>
-      <p class="note">Nawa Admin's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+      <h2>7. Your rights</h2>
+      <p>You can ask for a copy of your data, a correction, or its deletion at any time, through our <a href="/start">contact form</a> or your account manager at Nawa.</p>
 
-      <h2>Your rights</h2>
-      <p>You can ask for a copy of your data, a correction, or its deletion at any time by writing to <a href="mailto:hello@nawa.studio">hello@nawa.studio</a>.</p>
-
-      <h2>Changes</h2>
+      <h2>8. Changes</h2>
       <p>If we change this policy, we will publish the new version here with its date.</p>
+    </section>
+
+    <section lang="fr" dir="ltr" id="fr">
+      <h1>Politique de confidentialité</h1>
+      <p class="muted">Dernière mise à jour : 23 octobre 2026</p>
+
+      <p>Cette page explique quelles données Nawa (« nous ») collecte via son site nawa-studio-six.vercel.app, son espace client (/portal) et ses outils internes, pourquoi, et comment nous les protégeons.</p>
+
+      <h2>1. Visiteurs du site</h2>
+      <ul>
+        <li><b>Formulaire de demande de projet (/start) :</b> votre nom, le moyen de contact choisi (e-mail, téléphone ou WhatsApp), le nom de votre entreprise si vous l’indiquez, ainsi que les détails du projet, les services et le budget sélectionnés.</li>
+        <li><b>Données techniques limitées :</b> votre adresse IP, utilisée uniquement contre le spam, jamais pour vous suivre.</li>
+        <li>Nous n’utilisons pas de cookies publicitaires ni de suivi. Votre navigateur garde un brouillon du formulaire et votre langue sur votre appareil uniquement.</li>
+      </ul>
+
+      <h2>2. Clients de Nawa (espace client)</h2>
+      <p>L’espace client est réservé aux clients de Nawa. C’est nous qui créons les comptes ; il n’y a pas d’inscription libre.</p>
+      <h3>Compte et connexion</h3>
+      <ul>
+        <li>Le nom de l’entreprise et les coordonnées que vous nous donnez, et l’e-mail de chaque utilisateur.</li>
+        <li><b>Connexion par code e-mail :</b> nous envoyons un code à 6 chiffres valable 10 minutes. Nous ne stockons jamais le code, seulement une empreinte chiffrée.</li>
+        <li><b>Connexion avec Google :</b> nous demandons uniquement votre nom et votre e-mail (openid, email, profile), pour vérifier que l’e-mail est enregistré chez nous. Nous n’accédons à rien d’autre dans votre compte.</li>
+        <li>Après la connexion, un seul cookie essentiel vous garde connecté (30 jours). Il ne sert à rien d’autre.</li>
+      </ul>
+      <h3>Réseaux sociaux</h3>
+      <ul>
+        <li>Nous enregistrons les identifiants de la Page Facebook et du compte Instagram auxquels vous nous donnez accès via Meta Business, et lisons leur état pour vérifier la connexion.</li>
+        <li>Nous ne publions que les publications que vous ou votre équipe approuvez, aux dates que vous fixez.</li>
+      </ul>
+      <h3>Contenus et fichiers</h3>
+      <ul>
+        <li>Nous enregistrons les textes, le calendrier et l’état d’approbation de vos publications dans notre base de données.</li>
+        <li><b>Si vous connectez votre propre Google Drive :</b> nous demandons uniquement l’autorisation <code>drive.file</code> : l’espace client ne voit que les fichiers qu’il a lui-même importés, dans un dossier « نواة » de votre compte, et aucun autre fichier. Nous lisons aussi l’espace disponible pour afficher votre consommation. Vos fichiers restent à vous, dans votre compte.</li>
+        <li><b>Si vous choisissez le Stockage Nawa :</b> vos fichiers sont stockés de façon privée dans un stockage cloud sécurisé et ne s’ouvrent que via des liens signés temporaires.</li>
+        <li>Nous relevons chaque jour l’espace utilisé pour calculer les factures, et conservons vos factures et leur statut de paiement.</li>
+      </ul>
+
+      <h2>3. Notre outil d’administration interne</h2>
+      <p>L’équipe Nawa utilise un outil interne privé (« Nawa Admin ») connecté uniquement au compte Google de Nawa, pour stocker le contenu de Nawa dans Google Drive et planifier ses publications dans Google Agenda. Il n’est jamais utilisé pour les fichiers des clients et n’accède jamais à leurs comptes.</p>
+
+      <h2>4. Utilisation des données</h2>
+      <ul>
+        <li>Pour fournir nos services : répondre aux demandes, faire fonctionner l’espace client, publier les contenus approuvés et facturer.</li>
+        <li>Nous ne vendons jamais vos données, ne les partageons pas à des fins marketing et ne les utilisons pas pour la publicité.</li>
+      </ul>
+      <p class="note">L’utilisation par Nawa (espace client et Nawa Admin) des informations reçues des API Google, et leur transfert vers toute autre application, respectent la <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, y compris les exigences d’utilisation limitée (Limited Use). Nous n’utilisons pas les données Google pour développer, améliorer ou entraîner des modèles d’IA généralistes, et personne ne les consulte sauf avec votre accord ou pour des raisons de sécurité ou légales.</p>
+
+      <h2>5. Stockage et sous-traitants</h2>
+      <ul>
+        <li><b>Supabase :</b> notre base de données (demandes, comptes, publications, factures).</li>
+        <li><b>Vercel :</b> hébergement du site et de l’espace client.</li>
+        <li><b>Google :</b> connexion, votre Drive si vous le connectez, et envoi des e-mails de code.</li>
+        <li><b>Meta :</b> publication sur Facebook et Instagram.</li>
+        <li><b>Cloudflare :</b> Stockage Nawa payant.</li>
+        <li><b>Telegram :</b> une courte notification à l’équipe Nawa pour chaque nouvelle demande de projet.</li>
+      </ul>
+      <p>Les données sont chiffrées en transit (HTTPS), et les autorisations d’accès (comme la connexion Drive) sont stockées chiffrées chez nous.</p>
+
+      <h2>6. Conservation et suppression</h2>
+      <ul>
+        <li>Nous conservons les données le temps nécessaire au service, et les supprimons à votre demande ou à la fin de votre compte.</li>
+        <li>Quand vous déconnectez Google Drive, nous supprimons immédiatement l’autorisation enregistrée. Vous pouvez aussi la révoquer sur <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>.</li>
+      </ul>
+
+      <h2>7. Vos droits</h2>
+      <p>Vous pouvez demander à tout moment une copie, une correction ou la suppression de vos données, via notre <a href="/start">formulaire de contact</a> ou votre responsable de compte chez Nawa.</p>
+
+      <h2>8. Modifications</h2>
+      <p>Si nous modifions cette politique, nous publierons la nouvelle version ici avec sa date.</p>
     </section>
   </main>
 </div>
+<script>
+  // One language at a time: #en / ?lang=en, else the language chosen elsewhere on the site, else Arabic.
+  (function () {
+    var L = ['ar', 'en', 'fr'];
+    function pick() {
+      var h = location.hash.slice(1), q = new URLSearchParams(location.search).get('lang'), s = null;
+      try { s = localStorage.getItem('nawa.lang'); } catch (e) {}
+      return [h, q, s].filter(function (x) { return L.indexOf(x) >= 0; })[0] || 'ar';
+    }
+    function show(l) {
+      L.forEach(function (x) { document.getElementById(x).hidden = x !== l; });
+      document.querySelectorAll('[data-l]').forEach(function (a) { a.setAttribute('aria-current', String(a.dataset.l === l)); });
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+    }
+    show(pick());
+    window.addEventListener('hashchange', function () { show(pick()); scrollTo(0, 0); });
+  })();
+</script>
 </body>
 </html>

@@ -391,6 +391,8 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .portal-page .nav-end { display: flex; align-items: center; gap: 14px; }
 .pt-or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
 .pt-or::before, .pt-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.pt-privacy { color: var(--muted); font-size: 14px; margin-top: 14px; }
+.pt-privacy:hover { color: inherit; }
 .pt-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
 .pt-code { font: 700 28px/1 var(--font) !important; letter-spacing: .4em; text-align: center; }
 .pt-codeacts { display: flex; justify-content: space-between; gap: 12px; }
