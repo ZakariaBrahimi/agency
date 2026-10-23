@@ -202,8 +202,6 @@ function drawHello() {
   $('ptUser').textContent = t('hello', user.name || user.email);
 }
 
-// Steps start folded; the client opens the ones they need, and they stay open across redraws (language, re-check).
-const openSteps = new Set();
 function drawPlatforms() {
   const st = state.me.status;
   const active = PLATFORM_ORDER.filter((k) => st[k]?.status === 'active').length;
@@ -224,7 +222,7 @@ function drawPlatforms() {
           <span class="cl-st tone-${tone}">${esc(L(STATUS[s.status]?.label, lang))}</span>
         </div>
         ${s.note ? `<p class="pt-note"><b>${esc(t('nawaNote'))}:</b> ${esc(s.note)}</p>` : ''}
-        <details data-pf="${k}"${openSteps.has(k) ? ' open' : ''}><summary>${esc(t('stepsTitle'))}</summary>
+        <details${done ? '' : ' open'}><summary>${esc(t('stepsTitle'))}</summary>
           <ol class="pt-steps">${L(p.steps, lang).map((x, i) => {
             const shot = p.shots?.[i];
             const alt = `${L(p.name, lang)} · ${i + 1}`;
@@ -236,7 +234,6 @@ function drawPlatforms() {
       </li>`;
     }).join('')}</ul>`;
   labelCopies($('ptPlatforms'));
-  $('ptPlatforms').querySelectorAll('details[data-pf]').forEach((d) => d.addEventListener('toggle', () => { openSteps[d.open ? 'add' : 'delete'](d.dataset.pf); }));
   $('ptCheck').onclick = async (e) => {
     e.target.disabled = true;
     try { state.me = await call('me&fresh=1'); drawPlatforms(); } catch {}
