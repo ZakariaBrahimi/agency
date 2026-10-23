@@ -1,5 +1,5 @@
 // /admin: requests dashboard. Talks to /api/admin/* (session cookie set by /api/admin/login).
-import { SERVICES, PROJECT, CONTACT, CURRENCY_NAME, DEFAULT_CURRENCY, t, serviceById, formatAnswer } from './brief-schema.js?v=20261018a';
+import { SERVICES, PROJECT, CONTACT, CURRENCY_NAME, DEFAULT_CURRENCY, t, serviceById, formatAnswer } from './brief-schema.js?v=20261023a';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -15,7 +15,7 @@ const LANG_NAME = { ar: 'العربية', en: 'English', fr: 'Français' };
 
 let briefs = [];
 let filter = 'all';
-const SECTION_HASH = /^#(content|madar)/;
+const SECTION_HASH = /^#(content|madar|clients)/;
 let selected = (!SECTION_HASH.test(location.hash) && location.hash.slice(1)) || null;
 
 async function api(path, opts = {}) {
@@ -31,7 +31,7 @@ async function api(path, opts = {}) {
 function showLogin(msg = '') {
   $('booting').hidden = true;
   $('login').hidden = false; $('dash').hidden = true; $('logout').hidden = true; $('setup').hidden = true;
-  $('sections').hidden = true; $('content').hidden = true; $('madar').hidden = true;
+  $('sections').hidden = true; $('content').hidden = true; $('madar').hidden = true; $('clients').hidden = true;
   $('loginMsg').textContent = msg;
   setTimeout(() => $('pw').focus(), 50);
 }
@@ -89,9 +89,11 @@ function showSection(name) {
   $('setup').hidden = name !== 'requests' || !setupNeeded;
   $('content').hidden = name !== 'content';
   $('madar').hidden = name !== 'madar';
-  document.title = ({ content: 'المحتوى', madar: 'مدار' }[name] || 'الطلبات') + ' | نواة';
+  $('clients').hidden = name !== 'clients';
+  document.title = ({ content: 'المحتوى', madar: 'مدار', clients: 'العملاء' }[name] || 'الطلبات') + ' | نواة';
+  if (name === 'clients') window.dispatchEvent(new CustomEvent('nawa:clients-section'));
   if (name === 'content' || name === 'madar') window.dispatchEvent(new CustomEvent('nawa:' + name));
-  else if (SECTION_HASH.test(location.hash)) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
+  else if (name === 'requests' && SECTION_HASH.test(location.hash)) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
 }
 $('sections').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
   const s = b.dataset.section;

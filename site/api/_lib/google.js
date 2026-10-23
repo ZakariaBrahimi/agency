@@ -7,7 +7,12 @@
 // Storage in Drive:  "Nawa Content/"                folder (appProperties nawa=root)
 //                      nawa-content.json             index of every post + settings
 //                      <date> · <title>/             one folder per post, holding its media
-// Calendar: a separate "Nawa · Content" calendar; one event per scheduled time of a post.
+//                      عميل · <name>/                one folder per client (appProperties nawaClient=<id>),
+//                        nawa-content.json           holding that client's own index and post folders
+// Calendar: a separate "Nawa · Content" calendar (and one per client); one event per scheduled time.
+//
+// A "tenant" is whose content it is: { id: 'nawa' } or a client { id: <uuid>, name }.
+// Client sign-in to /portal also uses this Google app (openid email only, purpose 'client').
 import crypto from 'node:crypto';
 import { env, siteUrl } from './http.js';
 
@@ -69,22 +74,23 @@ export function clearConnection(res) {
 
 // ---------- sign-in ----------
 /** Starts the Google sign-in; the state ties the callback to this browser. */
-export function authUrl(res) {
+export function authUrl(res, purpose = 'admin') {
   const nonce = crypto.randomBytes(16).toString('base64url');
-  const state = seal({ nonce, exp: Date.now() + 10 * 60e3 });
+  const state = seal({ nonce, exp: Date.now() + 10 * 60e3, p: purpose });
   // Lax so the cookie survives the redirect back from accounts.google.com.
   addCookie(res, `${STATE_COOKIE}=${nonce}; Path=/api/admin/google; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
-  const q = new URLSearchParams({
-    client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code',
-    scope: SCOPES.join(' '), access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state,
-  });
+  // clients only prove who they are; the owner also grants Drive and Calendar
+  const q = new URLSearchParams(purpose === 'client'
+    ? { client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code', scope: 'openid email profile', prompt: 'select_account', state }
+    : { client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code', scope: SCOPES.join(' '), access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state });
   return `${ACCOUNTS}/o/oauth2/v2/auth?${q}`;
 }
 
+/** The verified state ({ nonce, exp, p }) or null. */
 export function checkState(req, state) {
   const s = open(state || '');
   const nonce = cookie(req, STATE_COOKIE);
-  return Boolean(s && nonce && s.nonce === nonce && s.exp > Date.now());
+  return s && nonce && s.nonce === nonce && s.exp > Date.now() ? s : null;
 }
 export const clearState = (res) => addCookie(res, `${STATE_COOKIE}=; Path=/api/admin/google; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
 
@@ -98,6 +104,19 @@ export async function exchangeCode(code) {
   let email = '';
   try { email = JSON.parse(Buffer.from(d.id_token.split('.')[1], 'base64url').toString()).email || ''; } catch {}
   return { refresh: d.refresh_token, email, access: d.access_token, exp: Date.now() + (d.expires_in - 60) * 1000 };
+}
+
+/** Client sign-in: the verified email of the Google account, or '' when Google hasn't verified it. */
+export async function exchangeLogin(code) {
+  const r = await fetch(`${OAUTH}/token`, {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ code, client_id: env('GOOGLE_CLIENT_ID'), client_secret: env('GOOGLE_CLIENT_SECRET'), redirect_uri: redirectUri(), grant_type: 'authorization_code' }),
+  });
+  const d = await r.json();
+  if (!r.ok || !d.id_token) throw new Error(`login exchange failed: ${d.error || r.status}`);
+  // the id_token comes straight from Google's token endpoint over TLS, so its claims can be read as is
+  const c = JSON.parse(Buffer.from(d.id_token.split('.')[1], 'base64url').toString());
+  return c.email_verified === true || c.email_verified === 'true' ? String(c.email || '').toLowerCase() : '';
 }
 
 export async function revoke(refresh) {
@@ -147,24 +166,37 @@ export function client(conn) {
 const FOLDER = 'application/vnd.google-apps.folder';
 const q = (s) => encodeURIComponent(s);
 const FILE_FIELDS = 'id,name,mimeType,size,thumbnailLink,webViewLink,imageMediaMetadata(width,height),videoMediaMetadata(width,height,durationMillis),createdTime';
-const ids = new Map(); // cacheKey -> { root, index }
+const ids = new Map(); // cacheKey|tenant -> { root, index }
+export const NAWA = { id: 'nawa' };
+const isClient = (t) => t && t.id !== 'nawa';
 
-export async function findOrCreateRoot(g) {
-  const cached = ids.get(g.cacheKey);
+async function findFolder(g, prop, value, parent) {
+  const found = await g.call(`/drive/v3/files?q=${q(`mimeType='${FOLDER}' and trashed=false and appProperties has { key='${prop}' and value='${value}' }${parent ? ` and '${parent}' in parents` : ''}`)}&fields=files(id)&pageSize=1`);
+  return found.files[0]?.id || null;
+}
+
+/** The tenant's content folder (Nawa's root, or a client folder inside it) and its index file. */
+export async function findOrCreateRoot(g, tenant = NAWA) {
+  const cacheId = `${g.cacheKey}|${tenant.id}`;
+  const cached = ids.get(cacheId);
   if (cached?.root) return cached;
-  const found = await g.call(`/drive/v3/files?q=${q(`mimeType='${FOLDER}' and trashed=false and appProperties has { key='nawa' and value='root' }`)}&fields=files(id)&pageSize=1`);
-  let root = found.files[0]?.id;
+  let root = await findFolder(g, 'nawa', 'root');
   if (!root) root = (await g.call('/drive/v3/files?fields=id', { method: 'POST', body: { name: ROOT_NAME, mimeType: FOLDER, appProperties: { nawa: 'root' } } })).id;
+  if (isClient(tenant)) {
+    const nawaRoot = root;
+    root = await findFolder(g, 'nawaClient', tenant.id, nawaRoot);
+    if (!root) root = (await g.call('/drive/v3/files?fields=id', { method: 'POST', body: { name: `عميل · ${tenant.name || tenant.id}`.slice(0, 200), mimeType: FOLDER, parents: [nawaRoot], appProperties: { nawa: 'client', nawaClient: tenant.id } } })).id;
+  }
   const idx = await g.call(`/drive/v3/files?q=${q(`name='${INDEX_NAME}' and '${root}' in parents and trashed=false`)}&fields=files(id)&pageSize=1`);
   const entry = { root, index: idx.files[0]?.id || null };
-  ids.set(g.cacheKey, entry);
+  ids.set(cacheId, entry);
   return entry;
 }
 
 const EMPTY = () => ({ version: 1, settings: {}, posts: [] });
 
-export async function readIndex(g) {
-  const loc = await findOrCreateRoot(g);
+export async function readIndex(g, tenant = NAWA) {
+  const loc = await findOrCreateRoot(g, tenant);
   if (!loc.index) return { loc, data: EMPTY() };
   try {
     return { loc, data: { ...EMPTY(), ...(await g.call(`/drive/v3/files/${loc.index}?alt=media`)) } };
@@ -211,12 +243,12 @@ export async function startUpload(g, { folder, name, mimeType, size, origin }) {
 }
 
 // ---------- Calendar ----------
-export async function ensureCalendar(g, settings) {
+export async function ensureCalendar(g, settings, name = CALENDAR_NAME) {
   if (settings.calendarId) {
     try { await g.call(`/calendar/v3/calendars/${encodeURIComponent(settings.calendarId)}`); return settings.calendarId; }
     catch (e) { if (e.status !== 404 && e.status !== 410) throw e; }
   }
-  const cal = await g.call('/calendar/v3/calendars', { method: 'POST', body: { summary: CALENDAR_NAME, timeZone: TZ, description: 'منشورات نواة المعتمدة · Nawa approved posts' } });
+  const cal = await g.call('/calendar/v3/calendars', { method: 'POST', body: { summary: name, timeZone: TZ, description: 'منشورات نواة المعتمدة · Nawa approved posts' } });
   settings.calendarId = cal.id;
   return cal.id;
 }

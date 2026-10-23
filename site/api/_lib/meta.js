@@ -5,10 +5,14 @@
 import { env } from './http.js';
 
 const BASE = () => `${env('META_MOCK_BASE') || 'https://graph.facebook.com'}/${env('META_GRAPH_VERSION') || 'v26.0'}`;
+// A target is whose accounts to publish to: Nawa's own (from the environment) or a client's
+// { page, ig } once the client has given Nawa access (see accessiblePages).
+export const nawaTarget = () => ({ page: env('META_PAGE_ID'), ig: env('META_IG_USER_ID') });
 const PAGE = () => env('META_PAGE_ID');
 const IG = () => env('META_IG_USER_ID');
 
 export const metaConfigured = () => Boolean(env('META_ACCESS_TOKEN') && PAGE() && IG());
+export const metaTokenConfigured = () => Boolean(env('META_ACCESS_TOKEN'));
 
 export class MetaError extends Error {
   constructor(e = {}, status = 0) {
@@ -33,32 +37,51 @@ async function graph(path, { method = 'GET', params = {}, token = env('META_ACCE
 }
 
 // Facebook posts need the Page's own key, which the system user can read.
-let pageCache = null;
-async function pageToken() {
-  if (pageCache && pageCache.exp > Date.now()) return pageCache.token;
-  const d = await graph(`/${PAGE()}`, { params: { fields: 'access_token' } });
+const pageCache = new Map();
+async function pageToken(page) {
+  const c = pageCache.get(page);
+  if (c && c.exp > Date.now()) return c.token;
+  const d = await graph(`/${page}`, { params: { fields: 'access_token' } });
   if (!d.access_token) throw new MetaError({ code: 10, message: 'no page access' });
-  pageCache = { token: d.access_token, exp: Date.now() + 30 * 60e3 };
+  pageCache.set(page, { token: d.access_token, exp: Date.now() + 30 * 60e3 });
   return d.access_token;
 }
 
 /** Names of the connected accounts, for the admin header. */
-let accountCache = null;
-export async function accounts() {
-  if (accountCache && accountCache.exp > Date.now()) return accountCache.value;
+const accountCache = new Map();
+export async function accounts(t = nawaTarget()) {
+  const key = `${t.page}|${t.ig}`;
+  const c = accountCache.get(key);
+  if (c && c.exp > Date.now()) return c.value;
   const [page, ig] = await Promise.all([
-    graph(`/${PAGE()}`, { params: { fields: 'name,link' } }),
-    graph(`/${IG()}`, { params: { fields: 'username' } }),
+    t.page ? graph(`/${t.page}`, { params: { fields: 'name,link' } }) : null,
+    t.ig ? graph(`/${t.ig}`, { params: { fields: 'username' } }) : null,
   ]);
-  const value = { page: page.name, pageUrl: page.link || `https://www.facebook.com/${PAGE()}`, ig: ig.username };
-  accountCache = { value, exp: Date.now() + 10 * 60e3 };
+  const value = { page: page?.name || '', pageUrl: page ? page.link || `https://www.facebook.com/${t.page}` : '', ig: ig?.username || '' };
+  accountCache.set(key, { value, exp: Date.now() + 10 * 60e3 });
+  return value;
+}
+
+/**
+ * Every Facebook Page Nawa's key can manage, with its linked Instagram business account.
+ * A client's Page shows up here once the client added Nawa as a partner and Nawa assigned the
+ * Page to its system user: that is the automatic check for Facebook and Instagram.
+ */
+let pagesCache = null;
+export async function accessiblePages({ fresh = false } = {}) {
+  if (!fresh && pagesCache && pagesCache.exp > Date.now()) return pagesCache.value;
+  const d = await graph('/me/accounts', { params: { fields: 'id,name,link,instagram_business_account{id,username}', limit: 100 } });
+  const value = (d.data || []).map((p) => ({ id: p.id, name: p.name, link: p.link || `https://www.facebook.com/${p.id}`, ig: p.instagram_business_account ? { id: p.instagram_business_account.id, username: p.instagram_business_account.username } : null }));
+  pagesCache = { value, exp: Date.now() + 2 * 60e3 };
   return value;
 }
 
 // ---------- Facebook ----------
 /** items: [{ url, video }] in order. Returns { id, url }. */
-export async function publishFacebook({ caption, items }) {
-  const token = await pageToken();
+export async function publishFacebook({ caption, items }, t = nawaTarget()) {
+  if (!t.page) throw Object.assign(new Error('no_page'), { code: 'no_page' });
+  const PAGE = () => t.page;
+  const token = await pageToken(t.page);
   const videos = items.filter((m) => m.video);
   if (videos.length && items.length > 1) throw Object.assign(new Error('fb_mixed'), { code: 'fb_mixed' });
   if (videos.length) {
@@ -94,15 +117,17 @@ async function waitReady(id, deadline) {
   }
 }
 
-async function publishContainer(id) {
-  const d = await graph(`/${IG()}/media_publish`, { method: 'POST', params: { creation_id: id } });
+async function publishContainer(id, t = nawaTarget()) {
+  const d = await graph(`/${t.ig}/media_publish`, { method: 'POST', params: { creation_id: id } });
   let url = 'https://www.instagram.com/';
   try { url = (await graph(`/${d.id}`, { params: { fields: 'permalink' } })).permalink || url; } catch {}
   return { id: d.id, url };
 }
 
 /** items: [{ url, video }]. Returns { id, url }, or { pending: containerId } while a video is still processing. */
-export async function publishInstagram({ caption, items }, deadline) {
+export async function publishInstagram({ caption, items }, deadline, t = nawaTarget()) {
+  if (!t.ig) throw Object.assign(new Error('no_ig'), { code: 'no_ig' });
+  const IG = () => t.ig;
   if (!items.length) throw Object.assign(new Error('ig_needs_media'), { code: 'ig_needs_media' });
   if (items.length > 10) throw Object.assign(new Error('ig_too_many'), { code: 'ig_too_many' });
   let container;
@@ -120,7 +145,7 @@ export async function publishInstagram({ caption, items }, deadline) {
     container = (await graph(`/${IG()}/media`, { method: 'POST', params: { media_type: 'CAROUSEL', children: children.join(','), caption } })).id;
   }
   if (!(await waitReady(container, deadline))) return { pending: container };
-  return publishContainer(container);
+  return publishContainer(container, t);
 }
 
 /** One image story. Returns { id, url }, or { pending: containerId } when the deadline passes first. */
@@ -139,9 +164,9 @@ export async function publishStory(imageUrl, deadline) {
 }
 
 /** Finishes a container that was still processing on an earlier run. */
-export async function finishInstagram(container, deadline) {
+export async function finishInstagram(container, deadline, t = nawaTarget()) {
   if (!(await waitReady(container, deadline))) return { pending: container };
-  return publishContainer(container);
+  return publishContainer(container, t);
 }
 
 /** A message the owner can act on, in Arabic. */
@@ -151,6 +176,8 @@ export function explain(e) {
   if (c === 'ig_too_many') return 'الكاروسيل في إنستغرام 10 ملفات كحد أقصى.';
   if (c === 'ig_slow') return 'إنستغرام ما زال يعالج ملفات الكاروسيل. ستُعاد المحاولة تلقائيًا.';
   if (c === 'fb_mixed') return 'فيسبوك لا يجمع الفيديو مع الصور في منشور واحد. اترك فيديو واحدًا أو صورًا فقط.';
+  if (c === 'no_page') return 'صفحة فيسبوك غير مربوطة بعد: أكمل خطوات تفعيل فيسبوك.';
+  if (c === 'no_ig') return 'حساب إنستغرام غير مربوط بعد: أكمل خطوات تفعيل إنستغرام.';
   if (c === 'no_google') return 'افتح قسم «المحتوى» في لوحة الإدارة مرة واحدة ليتمكّن النشر التلقائي من الوصول إلى Drive.';
   if (c === 190) return 'مفتاح Meta غير صالح أو أُلغي. أنشئ مفتاحًا جديدًا وضعه في Vercel باسم META_ACCESS_TOKEN.';
   if (c === 10 || c === 200 || (c >= 200 && c < 300)) return 'مفتاح Meta لا يملك صلاحية النشر. تأكد من pages_manage_posts وinstagram_content_publish.';

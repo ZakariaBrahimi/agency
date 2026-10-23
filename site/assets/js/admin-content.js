@@ -1,11 +1,21 @@
-// /admin → «المحتوى»: plan, draft, edit and schedule posts. Data lives in the Nawa Google Drive;
-// scheduling (your approval) adds events to the "Nawa · Content" Google Calendar.
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261018a';
-import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261018a';
+// «المحتوى»: plan, draft, edit, schedule and publish posts. Data lives in the Nawa Google Drive;
+// scheduling (the approval) adds events to a Google Calendar.
+// Runs in two places with the same tools:
+// - /admin  (window.NAWA_CT unset): Nawa's own content, or any client's (the switcher at the top)
+// - /portal (window.NAWA_CT = { api: '/api/portal', mode: 'client' }): a client's own content
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261023a';
+import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261023a';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const API = '/api/admin/content';
+const CFG = window.NAWA_CT || { api: '/api/admin/content', mode: 'admin' };
+const CLIENT_MODE = CFG.mode === 'client';
+let tenant = ''; // admin only: '' = Nawa, else the id of the client being managed
+/** The content API URL for an action (the admin adds the client being managed). */
+const api = (action, params = {}) => {
+  const q = new URLSearchParams({ ...(action ? { action } : {}), ...params, ...(tenant ? { client: tenant } : {}) }).toString();
+  return CFG.api + (q ? '?' + q : '');
+};
 const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const MONTHS = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const ERR = {
@@ -19,6 +29,9 @@ const ERR = {
   already_published: 'نُشر هذا المنشور على هذه المنصة من قبل.',
   publishing: 'النشر جارٍ الآن. انتظر دقيقة ثم حدّث.',
   bad_platform: 'هذه المنصة غير مختارة لهذا المنشور.',
+  platform_not_connected: 'هذه المنصة غير مفعّلة بعد: أكمل خطوات تفعيلها في «المنصات».',
+  content_unavailable: 'المحتوى غير متاح مؤقتًا. تواصل مع نواة.',
+  client_not_found: 'هذا العميل غير موجود.',
   storage_not_configured: 'قاعدة البيانات غير مربوطة (Supabase).',
 };
 const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
@@ -34,7 +47,7 @@ async function call(path, { method = 'GET', body } = {}) {
   if (!r.ok || d.ok === false) throw Object.assign(new Error(d.error || 'error'), { code: d.error || 'error' });
   return d;
 }
-const act = (action, body) => call(`${API}?action=${action}`, { method: 'POST', body });
+const act = (action, body) => call(api(action), { method: 'POST', body });
 function absorb(d) {
   if (d.posts) state.posts = d.posts;
   if (d.settings) state.settings = d.settings;
@@ -54,6 +67,7 @@ function toast(msg, bad = false) {
 // ---------- load ----------
 async function load() {
   const body = $('ctBody');
+  if (CLIENT_MODE) return loadContent();
   if (!body.firstChild) body.innerHTML = NawaUI.loading('جارٍ التحقق من حساب Google…', 'calendar');
   try {
     state.status = await call('/api/admin/google');
@@ -76,20 +90,29 @@ async function load() {
       <p class="muted">سيظهر تنبيه «Google hasn't verified this app» لأن التطبيق خاص بك: اضغط <b dir="ltr">Advanced</b> ثم <b dir="ltr">Go to Nawa Admin</b> ووافق على الصلاحيات.</p></div>`;
     return;
   }
-  body.innerHTML = NawaUI.loading('جارٍ تحميل المحتوى من Google Drive…', 'calendar');
+  if (!state.clients) call(api('clients')).then((d) => { state.clients = d.clients; if (state.loaded) render(); }).catch(() => {});
+  return loadContent();
+}
+
+async function loadContent() {
+  const body = $('ctBody');
+  body.innerHTML = NawaUI.loading('جارٍ تحميل المحتوى…', 'calendar');
+  state.meta = null; state.posts = []; state.busy = true;
   try {
-    absorb(await call(API));
+    absorb(await call(api()));
     state.loaded = true;
   } catch (e) {
+    state.busy = false;
     if (e.code === 'google_not_connected') return load();
     if (e.code !== 'signed_out') body.innerHTML = `<p class="empty">${esc(errText(e))}</p>`;
     return;
   }
+  state.busy = false;
   $('ctHeadActions').hidden = false;
   render();
   routeHash();
-  call(`${API}?action=meta`).then((m) => { state.meta = m; drawStories(); const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
-  call(`${API}?action=stories`).then((d) => { state.stories = d.sets; state.storyQueue = d.queue || []; drawStories(); }).catch(() => {});
+  call(api('meta')).then((m) => { state.meta = m; drawStories(); const p = current(); if (p && $('ceSched')) drawSchedule(p); }).catch(() => {});
+  if (!CLIENT_MODE && !tenant) call(api('stories')).then((d) => { state.stories = d.sets; state.storyQueue = d.queue || []; drawStories(); }).catch(() => {});
 }
 
 const fmtTime = (iso) => new Date(iso).toLocaleString('ar-DZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -122,7 +145,7 @@ const fmtAt = (at) => {
   const wd = new Date(Date.UTC(y, m - 1, day)).getUTCDay();
   return `${DAYS[wd]} ${day} ${MONTHS[m - 1]} · ${t}`;
 };
-const thumb = (m, size = 300) => `${API}?action=media&id=${encodeURIComponent(m.id)}&size=${size}`;
+const thumb = (m, size = 300) => api('media', { id: m.id, size: String(size) });
 const isVideo = (m) => m.video || /^video\//.test(m.mimeType);
 const todayAt = () => {
   const d = new Date(Date.now() + 3600e3); // Algeria is UTC+1 all year
@@ -139,8 +162,13 @@ function pfBadges(p) {
 function render() {
   const body = $('ctBody');
   const s = state.status;
-  $('ctAccount').innerHTML = `متصل بـ <b dir="ltr">${esc(state.email || 'Google')}</b> · <a href="${esc(state.rootUrl)}" target="_blank" rel="noopener">مجلد Drive ↗</a> · <button type="button" class="link-btn" id="ctDisconnect">فصل</button>`;
-  $('ctDisconnect').onclick = async () => { await call('/api/admin/google', { method: 'DELETE' }); state.loaded = false; load(); };
+  if (!CLIENT_MODE) {
+    const who = state.clients?.length ? `<label class="ct-tenant"><span>محتوى:</span><select id="ctTenant" aria-label="محتوى من">
+        <option value="">نواة</option>${state.clients.map((c) => `<option value="${esc(c.id)}"${c.id === tenant ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label> · ` : '';
+    $('ctAccount').innerHTML = `${who}متصل بـ <b dir="ltr">${esc(state.email || 'Google')}</b> · <a href="${esc(state.rootUrl)}" target="_blank" rel="noopener">مجلد Drive ↗</a> · <button type="button" class="link-btn" id="ctDisconnect">فصل</button>`;
+    $('ctDisconnect').onclick = async () => { await call('/api/admin/google', { method: 'DELETE' }); state.loaded = false; load(); };
+    if ($('ctTenant')) $('ctTenant').onchange = (e) => switchTenant(e.target.value);
+  }
   document.querySelectorAll('.ct-views button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
 
   const counts = { draft: 0, scheduled: 0, published: 0 };
@@ -148,7 +176,7 @@ function render() {
   const weekEnd = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), today = todayAt();
   const thisWeek = state.posts.filter((p) => p.date && p.date.slice(0, 10) >= today && p.date.slice(0, 10) <= weekEnd).length;
 
-  const seed = !state.settings.seeded ? `<div class="ct-card ct-seed"><div><b>ابدأ بخطة الشهر الأول</b><p class="muted">16 مسودة بعناوينها وتواريخها (4 منشورات في الأسبوع، الساعة 20:00)، مع نصوص جاهزة لمنشورات الإطلاق.</p></div>
+  const seed = !state.settings.seeded && !CLIENT_MODE && !tenant ? `<div class="ct-card ct-seed"><div><b>ابدأ بخطة الشهر الأول</b><p class="muted">16 مسودة بعناوينها وتواريخها (4 منشورات في الأسبوع، الساعة 20:00)، مع نصوص جاهزة لمنشورات الإطلاق.</p></div>
       <button type="button" class="btn btn-lime" id="ctSeed">إضافة الخطة</button></div>` : '';
 
   body.innerHTML = `${seed}
@@ -178,6 +206,7 @@ function render() {
 // Instagram in order; Instagram has no API for highlights, so the highlight itself is made in the app.
 function drawStories() {
   const box = $('ctStories'); if (!box) return;
+  if (CLIENT_MODE || tenant) { box.innerHTML = ''; return; } // Nawa's own highlights only
   const sets = state.stories || {};
   const done = STORY_SETS.filter((s) => sets[s.id]?.publishedAt).length;
   const live = state.meta?.configured && state.meta.accounts;
@@ -315,7 +344,7 @@ function openEditor(id, fresh = false) {
   if (!dlg.open) dlg.showModal();
   if (fresh) setTimeout(() => { const t = $('ceTitle'); t.focus(); t.select(); }, 30);
   // pick up files added straight into the post's Drive folder
-  if (p.folderId) call(`${API}?action=files&id=${encodeURIComponent(id)}`).then((d) => { absorb(d); if (state.open === id) drawMedia(); render(); }).catch(() => {});
+  if (p.folderId) call(api('files', { id })).then((d) => { absorb(d); if (state.open === id) drawMedia(); render(); }).catch(() => {});
 }
 
 function current() { return state.posts.find((x) => x.id === state.open); }
@@ -452,12 +481,12 @@ function drawMedia() {
   const media = p.media || [];
   $('ceMedia').innerHTML = media.length ? `<ol class="ct-media">${media.map((m, i) => `
     <li>
-      <a class="ct-mthumb" href="https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view" target="_blank" rel="noopener" title="${esc(m.name)}">
+      <a class="ct-mthumb" href="${CLIENT_MODE ? esc(thumb(m, 1600)) : `https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view`}" target="_blank" rel="noopener" title="${esc(m.name)}">
         <img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">${isVideo(m) ? '<i class="ct-play">▶</i>' : ''}<i class="ct-idx" dir="ltr">${i + 1}</i></a>
       <span class="ct-mtools">
         <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="تقديم">→</button>
         <button type="button" data-mv="${i}" data-d="1" ${i === media.length - 1 ? 'disabled' : ''} aria-label="تأخير">←</button>
-        <a href="https://drive.google.com/uc?id=${encodeURIComponent(m.id)}&export=download" aria-label="تنزيل">⤓</a>
+        ${CLIENT_MODE ? '' : `<a href="https://drive.google.com/uc?id=${encodeURIComponent(m.id)}&export=download" aria-label="تنزيل">⤓</a>`}
         <button type="button" data-rm="${m.id}" aria-label="حذف">✕</button>
       </span>
     </li>`).join('')}</ol>` : '<p class="muted">لا توجد ملفات بعد. للكاروسيل ارفع عدة صور بالترتيب.</p>';
@@ -569,5 +598,14 @@ document.querySelectorAll('.ct-views button').forEach((b) => b.addEventListener(
   render();
 }));
 $('ctNew').addEventListener('click', () => newPost(''));
-window.addEventListener('nawa:content', () => { if (!state.loaded) load(); else { render(); routeHash(); } });
+window.addEventListener('nawa:content', () => { if (state.busy) return; if (!state.loaded) load(); else { render(); routeHash(); } });
+window.addEventListener('nawa:clients', (e) => { state.clients = e.detail; if (state.loaded && !state.busy && !CLIENT_MODE) render(); });
+// the admin's «العملاء» section opens a client's content here
+window.addEventListener('nawa:tenant', (e) => { switchTenant(e.detail || ''); });
+function switchTenant(id) {
+  if (CLIENT_MODE || id === tenant) return;
+  if ($('ctDialog').open) { state.open = null; state.dirty = false; $('ctDialog').close(); }
+  tenant = id; state.month = null; state.filter = 'all';
+  if (state.loaded && state.status?.connected) loadContent(); // otherwise opening the section loads it
+}
 window.addEventListener('hashchange', () => { if (state.loaded && location.hash.startsWith('#content')) routeHash(); });

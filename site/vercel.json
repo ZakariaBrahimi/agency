@@ -39,6 +39,19 @@
       ]
     },
     {
+      "source": "/portal",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/api/(.*)",
       "headers": [
         {
@@ -85,6 +98,9 @@
   ],
   "functions": {
     "api/admin/content.js": {
+      "maxDuration": 60
+    },
+    "api/portal.js": {
       "maxDuration": 60
     }
   }

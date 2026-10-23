@@ -56,3 +56,14 @@ export const kv = {
   set: (k, value) => rest('app_state?on_conflict=key', { key: svc(), method: 'POST', body: { key: k, value: typeof value === 'string' ? value : JSON.stringify(value), updated_at: new Date().toISOString() }, prefer: 'resolution=merge-duplicates,return=minimal' }),
   del: (k) => rest(`app_state?key=eq.${encodeURIComponent(k)}`, { key: svc(), method: 'DELETE' }),
 };
+
+// Server-only table access with the service key (client portal tables: clients, client_users, client_otps).
+// `filter` is a PostgREST filter string, e.g. "id=eq.<uuid>".
+export const sb = {
+  ready: () => Boolean(env('SUPABASE_URL') && svc()),
+  select: (table, query = '') => rest(`${table}?${query}`, { key: svc() }),
+  insert: (table, row) => rest(table, { key: svc(), method: 'POST', body: row, prefer: 'return=representation' }),
+  upsert: (table, row, onConflict) => rest(`${table}?on_conflict=${onConflict}`, { key: svc(), method: 'POST', body: row, prefer: 'resolution=merge-duplicates,return=representation' }),
+  update: (table, filter, patch) => rest(`${table}?${filter}`, { key: svc(), method: 'PATCH', body: patch, prefer: 'return=representation' }),
+  remove: (table, filter) => rest(`${table}?${filter}`, { key: svc(), method: 'DELETE' }),
+};

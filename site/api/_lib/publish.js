@@ -73,21 +73,22 @@ export function isDue(s, now = Date.now()) {
 
 /**
  * Publishes one platform of a post. `persist` saves the index (called once with the lock, before
- * Meta is contacted, so a parallel run can't publish the same post twice).
+ * Meta is contacted, so a parallel run can't publish the same post twice). `target` is whose
+ * Facebook Page and Instagram account to use (Nawa's by default, or a client's).
  * Returns 'published' | 'pending' | 'failed'.
  */
-export async function publishPlatform(g, post, platform, { deadline, persist }) {
+export async function publishPlatform(g, post, platform, { deadline, persist, target = M.nawaTarget() }) {
   const s = post.schedule[platform];
   s.lockedAt = new Date().toISOString();
   await persist();
   try {
     let r;
-    if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline);
+    if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline, target);
     else {
       const items = [];
       for (const m of post.media || []) items.push({ url: await mediaUrl(g, m, platform), video: Boolean(m.video || /^video\//.test(m.mimeType || '')) });
       const caption = captionFor(post, platform);
-      r = platform === 'facebook' ? await M.publishFacebook({ caption, items }) : await M.publishInstagram({ caption, items }, deadline);
+      r = platform === 'facebook' ? await M.publishFacebook({ caption, items }, target) : await M.publishInstagram({ caption, items }, deadline, target);
     }
     delete s.lockedAt;
     if (r.pending) { s.status = 'publishing'; s.container = r.pending; return 'pending'; }

@@ -1,0 +1,74 @@
+// /api/portal: the client portal (/portal). Clients of Nawa sign in here and manage their own
+// social media content with the same tools Nawa uses (see _lib/content-api.js).
+//
+// Without a session:
+// POST ?action=otp-send    { email }          sends a 6-digit code (always answers ok, so emails can't be probed)
+// POST ?action=otp-verify  { email, code }    signs in
+// GET  ?action=google                          signs in with Google (back through /api/admin/google/callback)
+// With a session (cookie nawa_client):
+// GET  ?action=me          -> { user, client, status }   status: each platform's activation state
+// POST ?action=logout
+// anything else            -> the content API for this client's own posts (list, create, update, upload,
+//                             schedule, publish… exactly like /api/admin/content)
+import { json, readJson } from './_lib/http.js';
+import * as G from './_lib/google.js';
+import { contentApi, storedConnection, clientTarget, clientTenant } from './_lib/content-api.js';
+import { clientSession, clearClientSession, requestCode, verifyCode, signedIn, normEmail, validEmail, mailConfigured } from './_lib/clients.js';
+import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin.js';
+import { sb } from './_lib/supabase.js';
+
+export default async function handler(req, res) {
+  const url = new URL(req.url, 'http://x');
+  const action = url.searchParams.get('action') || '';
+  if (!sb.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
+
+  try {
+    if (action === 'otp-send' && req.method === 'POST') {
+      const email = normEmail((await readJson(req)).email);
+      if (!validEmail(email)) return json(res, 400, { ok: false, error: 'bad_email' });
+      if (!mailConfigured()) return json(res, 503, { ok: false, error: 'mail_not_configured' });
+      const r = await requestCode(email);
+      if (r === 'wait') return json(res, 429, { ok: false, error: 'wait' });
+      return json(res, 200, { ok: true });
+    }
+    if (action === 'otp-verify' && req.method === 'POST') {
+      const { email, code } = await readJson(req);
+      const user = await verifyCode(email, String(code || '').replace(/\D/g, ''));
+      if (!user) return json(res, 400, { ok: false, error: 'bad_code' });
+      await signedIn(res, user);
+      return json(res, 200, { ok: true });
+    }
+    if (action === 'google' && req.method === 'GET') {
+      if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'google_not_configured' });
+      res.statusCode = 302;
+      res.setHeader('Location', G.authUrl(res, 'client'));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
+
+    const session = await clientSession(req);
+    if (!session) { clearClientSession(res); return json(res, 401, { ok: false, error: 'signed_out' }); }
+    const { user, client } = session;
+
+    if (action === 'logout') { clearClientSession(res); return json(res, 200, { ok: true }); }
+    if (action === 'me') {
+      const pages = await pagesOrNull(url.searchParams.has('fresh'));
+      await syncInstagram(client, pages);
+      return json(res, 200, {
+        ok: true,
+        user: { name: user.name, email: user.email, role: user.role },
+        client: { name: client.name, industry: client.industry, city: client.city, website: client.website },
+        status: platformStatus(client, pages),
+      });
+    }
+
+    // content: Nawa's Drive holds every client's posts; the connection Nawa's admin keeps for the scheduler is used here
+    if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'content_unavailable' });
+    const conn = await storedConnection();
+    if (!conn) return json(res, 503, { ok: false, error: 'content_unavailable' });
+    return contentApi(req, res, { g: G.client(conn), conn, asClient: true, tenant: clientTenant(client), target: clientTarget(client), action, url });
+  } catch (e) {
+    console.error('portal', action, e.message);
+    return json(res, 502, { ok: false, error: 'error' });
+  }
+}

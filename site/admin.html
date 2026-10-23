@@ -10,13 +10,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
-<link rel="stylesheet" href="assets/css/styles.css?v=20261018a">
-<link rel="stylesheet" href="assets/css/admin.css?v=20261018a">
-<link rel="stylesheet" href="assets/css/madar.css?v=20261018a">
-<script src="assets/js/admin-ui.js?v=20261018a"></script>
-<script type="module" src="assets/js/admin.js?v=20261018a"></script>
-<script type="module" src="assets/js/admin-content.js?v=20261018a"></script>
-<script type="module" src="assets/js/admin-madar.js?v=20261018a"></script>
+<link rel="stylesheet" href="assets/css/styles.css?v=20261023a">
+<link rel="stylesheet" href="assets/css/admin.css?v=20261023a">
+<link rel="stylesheet" href="assets/css/madar.css?v=20261023a">
+<script src="assets/js/admin-ui.js?v=20261023a"></script>
+<script type="module" src="assets/js/admin.js?v=20261023a"></script>
+<script type="module" src="assets/js/admin-content.js?v=20261023a"></script>
+<script type="module" src="assets/js/admin-madar.js?v=20261023a"></script>
+<script type="module" src="assets/js/admin-clients.js?v=20261023a"></script>
 </head>
 <body class="admin-page">
 
@@ -53,6 +54,7 @@
   <nav class="sections" id="sections" hidden aria-label="أقسام اللوحة">
     <button type="button" data-section="requests" aria-pressed="true">الطلبات</button>
     <button type="button" data-section="content" aria-pressed="false">المحتوى</button>
+    <button type="button" data-section="clients" aria-pressed="false">العملاء</button>
     <button type="button" data-section="madar" aria-pressed="false">مدار</button>
   </nav>
 
@@ -103,6 +105,21 @@
     <div id="ctBody"></div>
   </section>
 
+  <!-- Clients: companies Nawa manages; they sign in at /portal -->
+  <section id="clients" class="cl" hidden>
+    <div class="dash-head">
+      <div>
+        <h1>العملاء</h1>
+        <p class="muted">يدخل العملاء من <a href="/portal" target="_blank" rel="noopener" dir="ltr">/portal ↗</a> ويديرون محتواهم بنفس أدوات نواة.</p>
+      </div>
+      <div class="ct-head-actions">
+        <button type="button" class="btn btn-ghost-dark" id="clRefresh">تحقق من المنصات</button>
+        <button type="button" class="btn btn-lime" id="clNew">+ عميل جديد</button>
+      </div>
+    </div>
+    <div id="clBody"></div>
+  </section>
+
   <!-- Madar: community articles, tips and podcast (Supabase) -->
   <section id="madar" class="mdx" hidden>
     <div class="dash-head">
@@ -128,6 +145,9 @@
 
 <dialog class="ct-dialog" id="ctDialog" aria-labelledby="ctDlgTitle">
   <form method="dialog" class="ct-dlg" id="ctForm"></form>
+</dialog>
+<dialog class="ct-dialog" id="clDialog" aria-labelledby="clDlgTitle">
+  <form method="dialog" class="ct-dlg" id="clForm"></form>
 </dialog>
 <div class="ct-toast" id="ctToast" role="status" aria-live="polite"></div>
 <div class="ct-toast" id="mdToast" role="status" aria-live="polite"></div>
