@@ -59,6 +59,9 @@
   .bank { position: absolute; width: 470px; height: 290px; border-radius: 30px; padding: 34px; color: #fff; box-shadow: 0 30px 60px rgba(0,0,0,.35); font: 600 30px Poppins; }
   .bank .chipc { width: 70px; height: 52px; border-radius: 10px; background: linear-gradient(135deg, #F8E91C, #D9C400); margin: 26px 0 30px; }
   .bank .num { font: 600 34px Poppins; letter-spacing: 4px; }
+  .numrow { display: flex; align-items: center; gap: 30px; }
+  .bignum { font: 800 150px/1 Poppins; color: var(--yellow); letter-spacing: -4px; }
+  .light .bignum { color: var(--navy); }
   .bank .nm { position: absolute; right: 34px; top: 34px; font: 700 30px Poppins; letter-spacing: 2px; }
 </style>
 <div id="post"></div>
@@ -183,6 +186,73 @@
         <h1 class="ar">سجّل كارطتك<br><span class="hl">مرة وحدة</span></h1>
         <div class="en">Save your CIB or Edahabia card and pay in one tap. No retyping, every time.</div>
         <div class="chips"><span class="chip">Top up</span><span class="chip">Bills</span><span class="chip">Recharge</span></div></div>`, end: 'Link in bio' },
+
+    // Mon 16 Nov: 5 things you can do without leaving home
+    'home-1': { theme: 'navy', n: '1/7', body: `<div class="body">
+        <div class="badge">${I('shop', 76)}</div>
+        <div class="kicker">Without leaving home</div>
+        <h1 class="ar big">5 حوايج دير<span class="hl"><br>بلا ما تخرج</span></h1>
+        <div class="en">5 things you can do from the couch with Mizaniya Pay.</div></div>`, swipe: true },
+    'home-2': { theme: 'deep', n: '2/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">01</span><div class="badge">${I('send', 76)}</div></div>
+        <h1 class="ar">ابعث الدراهم<br><span class="hl">للعايلة</span></h1>
+        <div class="en">Send money to family and friends, instantly.</div></div>`, swipe: true },
+    'home-3': { theme: 'navy', n: '3/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">02</span><div class="badge">${I('phone', 76)}</div></div>
+        <h1 class="ar">شارجي<br><span class="hl">التيليفون</span></h1>
+        <div class="en">Recharge any mobile line, for you or someone else.</div>
+        <div class="chips"><span class="chip">All operators</span></div></div>`, swipe: true },
+    'home-4': { theme: 'deep', n: '4/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">03</span><div class="badge">${I('wifi', 76)}</div></div>
+        <h1 class="ar">عبّي<br><span class="hl">الانترنت</span></h1>
+        <div class="en">Top up your home internet before it runs out.</div></div>`, swipe: true },
+    'home-5': { theme: 'navy', n: '5/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">04</span><div class="badge">${I('bill', 76)}</div></div>
+        <h1 class="ar">خلّص<br><span class="hl">الفواتير</span></h1>
+        <div class="en">Pay your essential bills without the queue.</div></div>`, swipe: true },
+    'home-6': { theme: 'deep', n: '6/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">05</span><div class="badge">${I('card', 76)}</div></div>
+        <h1 class="ar">شري<br><span class="hl">أونلاين</span></h1>
+        <div class="en">Pay online stores with CIB, Edahabia or the app, where Mizaniya Pay is accepted.</div>
+        <div class="chips"><span class="chip">CIB</span><span class="chip">Edahabia</span><span class="chip">App</span></div></div>`, swipe: true },
+    'home-7': { theme: 'light', n: '7/7', body: `<div class="body">
+        <div class="kicker">Stay in, get it done</div>
+        <h1 class="ar" style="color:var(--navy)">كلش من دارك<br>مع Mizaniya Pay</h1>
+        <div class="en">Download the app and open your account in minutes.</div>
+        ${STORES}</div>`, end: 'Link in bio' },
+
+    // Thu 19 Nov: 5 tips to keep your account safe
+    'tips-1': { theme: 'navy', n: '1/7', body: `<div class="body">
+        <div class="badge">${I('shield', 76)}</div>
+        <div class="kicker">Save this post</div>
+        <h1 class="ar big">5 نصايح<br><span class="hl">باش تحمي حسابك</span></h1>
+        <div class="en">5 simple habits that keep your account and your money safe.</div></div>`, swipe: true },
+    'tips-2': { theme: 'deep', n: '2/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">01</span><div class="badge">${I('shield', 76)}</div></div>
+        <h1 class="ar">الكود تاعك<br><span class="hl">ليك وحدك</span></h1>
+        <div class="en">Never share your PIN or verification codes with anyone, even someone who says they work for Mizaniya Pay.</div></div>`, swipe: true },
+    'tips-3': { theme: 'navy', n: '3/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">02</span><div class="badge">${I('check', 76)}</div></div>
+        <h1 class="ar">شوف لمن تخلّص<br><span class="hl">قبل ما تأكّد</span></h1>
+        <div class="en">Check the name and the amount before you confirm a payment.</div></div>`, swipe: true },
+    'tips-4': { theme: 'deep', n: '4/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">03</span><div class="badge">${I('phone', 76)}</div></div>
+        <h1 class="ar">سكّر<br><span class="hl">التيليفون</span></h1>
+        <div class="en">Lock your phone with a code, fingerprint or face so no one else can open your apps.</div></div>`, swipe: true },
+    'tips-5': { theme: 'navy', n: '5/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">04</span><div class="badge">${I('bolt', 76)}</div></div>
+        <h1 class="ar">حمّل التطبيق<br><span class="hl">من البلاصة الصحيحة</span></h1>
+        <div class="en">Download Mizaniya Pay only from Google Play or the App Store.</div>
+        <div class="chips"><span class="chip">Google Play</span><span class="chip">App Store</span></div></div>`, swipe: true },
+    'tips-6': { theme: 'deep', n: '6/7', body: `<div class="body">
+        <div class="numrow"><span class="bignum">05</span><div class="badge">${I('bill', 76)}</div></div>
+        <h1 class="ar">ما تحلّش<br><span class="hl">الروابط الغريبة</span></h1>
+        <div class="en">Ignore messages that ask you to "verify your account" through a link.</div></div>`, swipe: true },
+    'tips-7': { theme: 'light', n: '7/7', body: `<div class="body">
+        <div class="kicker">Questions?</div>
+        <h1 class="ar" style="color:var(--navy)">عندك سؤال؟<br>كتبلنا</h1>
+        <div class="en">Send us a message here and our team will answer. Save this post and share it with someone who needs it.</div>
+        <div class="chips"><span class="chip">Save</span><span class="chip">Share</span><span class="chip">Message us</span></div></div>`, end: '@mizaniya_pay' },
   };
 
   const id = new URLSearchParams(location.search).get('id') || 'app-1';

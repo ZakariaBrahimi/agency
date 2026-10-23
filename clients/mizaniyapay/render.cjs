@@ -27,6 +27,11 @@ const JOBS = [
   post('week-2/07-sat-save-card', 'cards'),
   { name: 'week-2/01-sun-signup-reel', url: D('reel.html?id=signup'), reel: true },
   { name: 'week-2/05-thu-partner-reel', url: D('reel.html?id=partner'), reel: true },
+  ...[1, 2, 3, 4, 5, 6, 7].map((i) => post(`week-3/02-mon-home-carousel/slide-${i}`, `home-${i}`)),
+  ...[1, 2, 3, 4, 5, 6, 7].map((i) => post(`week-3/05-thu-tips-carousel/slide-${i}`, `tips-${i}`)),
+  { name: 'week-3/01-sun-internet-reel', url: D('reel.html?id=internet'), reel: true },
+  { name: 'week-3/03-tue-shop-owner-outro', url: D('reel.html?id=outro-partner'), reel: true },
+  { name: 'week-3/07-sat-request-reel', url: D('reel.html?id=request'), reel: true },
 ];
 
 async function renderReel(browser, j) {
