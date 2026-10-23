@@ -414,7 +414,12 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .pt-card-head .cl-st { margin-inline-start: auto; }
 .pt-logo { inline-size: 42px; block-size: 42px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: var(--c); flex: none; }
 .pt-note { margin: 0; font-size: 14.5px; background: #ECEAFF; border-radius: 12px; padding: 10px 12px; }
-.pt-card details summary { cursor: pointer; font-weight: 700; font-size: 15px; }
+.pt-card details summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); user-select: none; }
+.pt-card details summary::-webkit-details-marker { display: none; }
+.pt-card details summary::after { content: ""; margin-inline-start: auto; inline-size: 9px; block-size: 9px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .2s; opacity: .6; }
+.pt-card details[open] summary::after { transform: translateY(2px) rotate(-135deg); }
+.pt-card details summary:hover { border-color: var(--muted); }
+.pt-card details summary:focus-visible { outline: 2px solid var(--violet, #5B4BFF); outline-offset: 2px; }
 .pt-steps { margin: 10px 0 8px; padding-inline-start: 22px; display: grid; gap: 8px; font-size: 15px; line-height: 1.7; }
 .pt-steps code { background: var(--paper); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; font-size: 14px; user-select: all; }
 .pt-card details .muted { margin: 0; font-size: 13.5px; }
