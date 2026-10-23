@@ -18,6 +18,7 @@
 <script type="module" src="assets/js/admin-content.js?v=20261023a"></script>
 <script type="module" src="assets/js/admin-madar.js?v=20261023a"></script>
 <script type="module" src="assets/js/admin-clients.js?v=20261023a"></script>
+<script type="module" src="assets/js/admin-settings.js?v=20261023a"></script>
 </head>
 <body class="admin-page">
 
@@ -55,6 +56,7 @@
     <button type="button" data-section="requests" aria-pressed="true">الطلبات</button>
     <button type="button" data-section="content" aria-pressed="false">المحتوى</button>
     <button type="button" data-section="clients" aria-pressed="false">العملاء</button>
+    <button type="button" data-section="settings" aria-pressed="false">الإعدادات</button>
     <button type="button" data-section="madar" aria-pressed="false">مدار</button>
   </nav>
 
@@ -118,6 +120,12 @@
       </div>
     </div>
     <div id="clBody"></div>
+  </section>
+
+  <!-- Settings: storage prices and payment details shown to clients -->
+  <section id="settings" class="st" hidden>
+    <div class="dash-head"><div><h1>الإعدادات</h1><p class="muted">أسعار «تخزين نواة» ومعلومات الدفع التي يراها العملاء.</p></div></div>
+    <div id="stBody"></div>
   </section>
 
   <!-- Madar: community articles, tips and podcast (Supabase) -->

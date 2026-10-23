@@ -1,10 +1,14 @@
 // GET /api/admin/google/callback: Google sends people back here after sign-in.
 // - the owner connecting Nawa's Drive and Calendar (purpose 'admin', back to /admin)
 // - a client signing in to /portal with Google (purpose 'client', matched on the verified email)
+// - a client connecting their own Google Drive for storage (purpose 'client-drive', state carries who)
 // The admin cookie is SameSite=Strict, so it isn't sent on this cross-site redirect; the signed
 // state (matched to a cookie set when sign-in started) proves the request came from this browser.
 import { checkState, clearState, exchangeCode, exchangeLogin, saveConnection } from '../../_lib/google.js';
 import { findUserByEmail, getClient, signedIn } from '../../_lib/clients.js';
+import { client as googleClient } from '../../_lib/google.js';
+import { sealDrive, createDriveFolder } from '../../_lib/storage.js';
+import { sb } from '../../_lib/supabase.js';
 
 function back(res, location) {
   res.statusCode = 302;
@@ -18,6 +22,21 @@ export default async function handler(req, res) {
   const code = url.searchParams.get('code');
   const state = checkState(req, url.searchParams.get('state'));
   clearState(res);
+  if (state?.p === 'client-drive') {
+    if (url.searchParams.get('error') || !code) return back(res, '/portal#storage/drive-denied');
+    try {
+      const c = await getClient(state.c);
+      if (!c) return back(res, '/portal#storage/drive-failed');
+      const t = await exchangeCode(code);
+      const conn = { refresh: t.refresh, email: t.email };
+      const folder = c.drive_folder && c.drive_email === t.email ? c.drive_folder : await createDriveFolder(googleClient(conn), c);
+      await sb.update('clients', `id=eq.${encodeURIComponent(c.id)}`, { drive_conn: sealDrive(conn), drive_email: t.email, drive_folder: folder, updated_at: new Date().toISOString() });
+      return back(res, '/portal#storage/drive-connected');
+    } catch (e) {
+      console.error('client drive', e.message);
+      return back(res, '/portal#storage/drive-failed');
+    }
+  }
   if (state?.p === 'client') {
     if (url.searchParams.get('error') || !code) return back(res, '/portal#google-denied');
     try {

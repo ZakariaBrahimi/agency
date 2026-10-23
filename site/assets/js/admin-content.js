@@ -32,6 +32,9 @@ const ERR = {
   platform_not_connected: 'هذه المنصة غير مفعّلة بعد: أكمل خطوات تفعيلها في «المنصات».',
   content_unavailable: 'المحتوى غير متاح مؤقتًا. تواصل مع نواة.',
   client_not_found: 'هذا العميل غير موجود.',
+  no_storage: 'اختر مكان التخزين أولًا من «التخزين»: Google Drive مجانًا أو «تخزين نواة».',
+  drive_full: 'مساحة Google Drive المجانية ممتلئة. فعّل «تخزين نواة» من «التخزين» لمتابعة الرفع.',
+  drive_disconnected: 'Google Drive غير مربوط. أعد ربطه من «التخزين».',
   storage_not_configured: 'قاعدة البيانات غير مربوطة (Supabase).',
 };
 const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
@@ -515,8 +518,10 @@ async function upload(files) {
       const uploaded = await new Promise((resolve, reject) => {
         const x = new XMLHttpRequest();
         x.open('PUT', d.uploadUrl);
+        if (d.contentType) x.setRequestHeader('Content-Type', d.contentType); // «تخزين نواة» keeps the file's type
         x.upload.onprogress = (e) => { if (e.lengthComputable) row.querySelector('progress').value = (e.loaded / e.total) * 100; };
-        x.onload = () => (x.status < 300 ? resolve(JSON.parse(x.responseText || '{}')) : reject(new Error('upload ' + x.status)));
+        // Google answers with the new file; «تخزين نواة» answers empty and the id comes from the server
+        x.onload = () => (x.status < 300 ? resolve(d.fileId ? { id: d.fileId } : JSON.parse(x.responseText || '{}')) : reject(new Error('upload ' + x.status)));
         x.onerror = () => reject(new Error('network'));
         x.send(file);
       });

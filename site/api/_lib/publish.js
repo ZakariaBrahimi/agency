@@ -7,6 +7,7 @@ import { Readable } from 'node:stream';
 import { siteUrl } from './http.js';
 import { seal, unseal } from './seal.js';
 import * as M from './meta.js';
+import * as R2 from './r2.js';
 import { captionFor } from '../../assets/js/content-schema.js';
 
 export const META_PLATFORMS = ['facebook', 'instagram'];
@@ -40,11 +41,12 @@ async function toJpeg(buf, forInstagram) {
   return img.flatten({ background: INK }).resize({ width: 1440, height: 1800, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
 }
 
-/** GET /media/<sealed>.<ext>: serves one file to Meta. */
+/** GET /media/<sealed>.<ext>: serves one file to Meta (from Drive, or from «تخزين نواة» when it has k). */
 export async function serveMedia(req, res, sealed, driveBase) {
   const t = unseal('nawa-media', String(sealed || '').replace(/\.\w+$/, ''));
-  if (!t || !t.f || t.e < Date.now()) { res.statusCode = 404; return res.end(); }
-  const r = await fetch(`${driveBase}/drive/v3/files/${encodeURIComponent(t.f)}?alt=media`, { headers: { Authorization: `Bearer ${t.a}` } });
+  if (!t || !(t.f || t.k) || t.e < Date.now()) { res.statusCode = 404; return res.end(); }
+  const r = t.k ? await R2.fetchObject(t.k)
+    : await fetch(`${driveBase}/drive/v3/files/${encodeURIComponent(t.f)}?alt=media`, { headers: { Authorization: `Bearer ${t.a}` } });
   if (!r.ok) { res.statusCode = 404; return res.end(); }
   res.setHeader('Cache-Control', 'no-store');
   const type = r.headers.get('content-type') || 'application/octet-stream';
@@ -74,10 +76,11 @@ export function isDue(s, now = Date.now()) {
 /**
  * Publishes one platform of a post. `persist` saves the index (called once with the lock, before
  * Meta is contacted, so a parallel run can't publish the same post twice). `target` is whose
- * Facebook Page and Instagram account to use (Nawa's by default, or a client's).
+ * Facebook Page and Instagram account to use (Nawa's by default, or a client's); `urlFor(media, platform)`
+ * gives the link Meta downloads each file from (see the stores in storage.js).
  * Returns 'published' | 'pending' | 'failed'.
  */
-export async function publishPlatform(g, post, platform, { deadline, persist, target = M.nawaTarget() }) {
+export async function publishPlatform(post, platform, { deadline, persist, target = M.nawaTarget(), urlFor }) {
   const s = post.schedule[platform];
   s.lockedAt = new Date().toISOString();
   await persist();
@@ -86,7 +89,7 @@ export async function publishPlatform(g, post, platform, { deadline, persist, ta
     if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline, target);
     else {
       const items = [];
-      for (const m of post.media || []) items.push({ url: await mediaUrl(g, m, platform), video: Boolean(m.video || /^video\//.test(m.mimeType || '')) });
+      for (const m of post.media || []) items.push({ url: await urlFor(m, platform), video: Boolean(m.video || /^video\//.test(m.mimeType || '')) });
       const caption = captionFor(post, platform);
       r = platform === 'facebook' ? await M.publishFacebook({ caption, items }, target) : await M.publishInstagram({ caption, items }, deadline, target);
     }

@@ -8,9 +8,11 @@
 import { json, readJson } from './http.js';
 import { sb } from './supabase.js';
 import * as M from './meta.js';
+import * as B from './billing.js';
 import { listClients, getClient, cleanClient, cleanUser, validEmail, findUserByEmail, mailConfigured, PLATFORM_KEYS, MANUAL_STATUS } from './clients.js';
 
-export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove'];
+export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove', 'client-cloud', 'invoice-mark'];
+export const PAY_METHODS = ['baridimob', 'ccp', 'redotpay', 'cash', 'other'];
 const enc = encodeURIComponent;
 
 /** Facebook Pages Nawa can manage, or null when Meta isn't set up or can't be reached. */
@@ -81,10 +83,15 @@ export async function adminClients(req, res, action) {
     // a Page is taken once a client uses it; Nawa's own Page is never offered
     const used = new Set([...clients.map((c) => c.fb_page_id), M.nawaTarget().page].filter(Boolean));
     delete extra.fresh;
+    // storage overview per client: where its files are, how much, this month, unpaid invoices
+    const settings = await B.getSettings();
+    const contents = await sb.select('client_content', 'select=client_id,data').catch(() => []);
+    const storage = await Promise.all(clients.map((c) => B.storageSummary(c, contents.find((x) => x.client_id === c.id)?.data || { posts: [] }, settings).catch(() => null)));
     return json(res, 200, {
-      ok: true, mail: mailConfigured(), meta: M.metaTokenConfigured(),
+      ok: true, mail: mailConfigured(), meta: M.metaTokenConfigured(), price_dzd: B.priceDzd(settings),
       pages: pages ? pages.map((p) => ({ ...p, used: used.has(p.id) })) : null,
-      clients: clients.map((c) => ({ ...c, status: platformStatus(c, pages) })), ...extra,
+      // the sealed Drive connection never leaves the server
+      clients: clients.map(({ drive_conn, ...c }, i) => ({ ...c, status: platformStatus(c, pages), storage: storage[i] })), ...extra,
     });
   };
   if (req.method === 'GET') return reply({ fresh: new URL(req.url, 'http://x').searchParams.has('fresh') });
@@ -135,6 +142,20 @@ export async function adminClients(req, res, action) {
       if (!validEmail(user.email)) return json(res, 400, { ok: false, error: 'bad_email' });
       if (await findUserByEmail(user.email)) return json(res, 409, { ok: false, error: 'email_taken' });
       await sb.insert('client_users', { ...user, client_id: c.id, role: 'member' });
+      return reply();
+    }
+    case 'client-cloud': {
+      const c = await getClient(body.id);
+      if (!c) return json(res, 404, { ok: false, error: 'client_not_found' });
+      await sb.update('clients', `id=eq.${enc(c.id)}`, { cloud_enabled: Boolean(body.enabled), ...stamp });
+      return reply();
+    }
+    case 'invoice-mark': {
+      if (!/^[0-9a-f-]{36}$/.test(String(body.id || '')) || !['paid', 'unpaid', 'void'].includes(body.status)) return json(res, 400, { ok: false, error: 'bad_id' });
+      const method = PAY_METHODS.includes(body.method) ? body.method : null;
+      await sb.update('client_invoices', `id=eq.${enc(body.id)}`, body.status === 'paid'
+        ? { status: 'paid', method: method || 'other', paid_at: new Date().toISOString() }
+        : { status: body.status, method: null, paid_at: null });
       return reply();
     }
     case 'client-user-remove': {

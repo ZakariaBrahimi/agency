@@ -8,11 +8,17 @@
 // With a session (cookie nawa_client):
 // GET  ?action=me          -> { user, client, status }   status: each platform's activation state
 // POST ?action=logout
+// GET  ?action=storage     -> { drive, cloud, estimate, invoices, payment }   (see billing.storageSummary)
+// GET  ?action=drive-connect                 connects the client's own Google Drive (free storage)
+// POST ?action=drive-disconnect
+// POST ?action=cloud       { enabled }      «تخزين نواة» (paid per GB-month) on/off
 // anything else            -> the content API for this client's own posts (list, create, update, upload,
 //                             schedule, publish… exactly like /api/admin/content)
 import { json, readJson } from './_lib/http.js';
 import * as G from './_lib/google.js';
-import { contentApi, storedConnection, clientTarget, clientTenant } from './_lib/content-api.js';
+import { contentApi, clientTarget } from './_lib/content-api.js';
+import { clientStore, driveConnection } from './_lib/storage.js';
+import * as B from './_lib/billing.js';
 import { clientSession, clearClientSession, requestCode, verifyCode, signedIn, normEmail, validEmail, mailConfigured } from './_lib/clients.js';
 import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin.js';
 import { sb } from './_lib/supabase.js';
@@ -62,11 +68,41 @@ export default async function handler(req, res) {
       });
     }
 
-    // content: Nawa's Drive holds every client's posts; the connection Nawa's admin keeps for the scheduler is used here
-    if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'content_unavailable' });
-    const conn = await storedConnection();
-    if (!conn) return json(res, 503, { ok: false, error: 'content_unavailable' });
-    return contentApi(req, res, { g: G.client(conn), conn, asClient: true, tenant: clientTenant(client), target: clientTarget(client), action, url });
+    // ---- storage
+    if (action === 'storage') {
+      const [row] = await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`);
+      const settings = await B.getSettings();
+      const summary = await B.storageSummary(client, row?.data || { posts: [] }, settings, { withQuota: true });
+      return json(res, 200, { ok: true, ...summary, payment: settings.payment });
+    }
+    if (action === 'drive-connect' && req.method === 'GET') {
+      if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'google_not_configured' });
+      res.statusCode = 302;
+      res.setHeader('Location', G.authUrl(res, 'client-drive', { c: client.id }));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
+    if (action === 'drive-disconnect' && req.method === 'POST') {
+      const conn = driveConnection(client);
+      if (conn) await G.revoke(conn.refresh);
+      // the files stay in the client's Drive; the portal just can't reach them any more
+      await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { drive_conn: null, updated_at: new Date().toISOString() });
+      return json(res, 200, { ok: true });
+    }
+    if (action === 'cloud' && req.method === 'POST') {
+      const { enabled } = await readJson(req);
+      if (!enabled) {
+        // turning it off is only possible once nothing is stored there (stored files are billed)
+        const [row] = await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`);
+        const { usageOf } = await import('./_lib/storage.js');
+        if (usageOf(row?.data || { posts: [] }).cloud > 0) return json(res, 409, { ok: false, error: 'cloud_not_empty' });
+      }
+      await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { cloud_enabled: Boolean(enabled), updated_at: new Date().toISOString() });
+      return json(res, 200, { ok: true });
+    }
+
+    // ---- content: in the client's own storage (never Nawa's Drive)
+    return contentApi(req, res, { store: await clientStore(client), asClient: true, target: clientTarget(client), action, url });
   } catch (e) {
     console.error('portal', action, e.message);
     return json(res, 502, { ok: false, error: 'error' });

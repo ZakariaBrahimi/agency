@@ -35,6 +35,21 @@ function toast(msg, bad = false) {
   t.textContent = msg; t.classList.toggle('bad', bad); t.classList.add('on');
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 3200);
 }
+const gb = (b) => { const v = Number(b || 0) / 1e9; return `${v < 10 ? v.toFixed(v < 1 ? 2 : 1) : Math.round(v)} غ.ب`; };
+const dzd = (n) => `${Math.round(Number(n || 0)).toLocaleString('ar-DZ')} دج`;
+const METHODS = { baridimob: 'بريدي موب', ccp: 'CCP', redotpay: 'RedotPay', cash: 'نقدًا', other: 'أخرى' };
+const INV = { paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة' };
+/** One line per client: where the files are, how much, this month, unpaid invoices. */
+function storageLine(c) {
+  const s = c.storage; if (!s) return '';
+  const unpaid = s.invoices.filter((i) => i.status === 'unpaid');
+  return `<div class="cl-storage">
+    <span title="Google Drive الخاص بالعميل">${s.drive.connected ? `Drive ${gb(s.drive.bytes)}` : 'Drive غير مربوط'}</span>
+    <span title="«تخزين نواة»">${s.cloud.enabled ? `سحابة ${gb(s.cloud.bytes)}` : 'سحابة متوقفة'}</span>
+    <span>هذا الشهر ≈ ${dzd(s.estimate.projected_dzd)}</span>
+    ${unpaid.length ? `<span class="cl-st tone-wait">${unpaid.length} غير مدفوعة · ${dzd(unpaid.reduce((a, i) => a + i.amount_dzd, 0))}</span>` : ''}
+  </div>`;
+}
 const pill = (st) => `<span class="cl-st tone-${STATUS[st]?.tone || 'idle'}">${esc(L(STATUS[st]?.label) || st)}</span>`;
 const activeCount = (c) => PLATFORM_ORDER.filter((k) => c.status?.[k]?.status === 'active').length;
 
@@ -61,6 +76,7 @@ function render() {
         <div class="cl-pfs">${PLATFORM_ORDER.map((k) => `<span class="cl-pf" title="${esc(L(PLATFORMS[k].name))} · ${esc(L(STATUS[c.status[k].status]?.label))}"><i class="cl-ic tone-${STATUS[c.status[k].status]?.tone}">${icon(k, 16)}</i></span>`).join('')}
           <span class="muted">${activeCount(c)} من 4 مفعّلة</span></div>
         <div class="muted cl-users">${c.users.map((u) => `<bdi>${esc(u.name || u.email)}</bdi>`).join('، ') || 'لا أحد'}</div>
+        ${storageLine(c)}
         <div class="cl-btns">
           <button type="button" class="btn btn-dark" data-manage="${c.id}">إدارة</button>
           <button type="button" class="btn btn-ghost-dark" data-content="${c.id}">المحتوى</button>
@@ -137,6 +153,23 @@ function openClient(id) {
       <div class="ct-save"><button type="button" class="btn btn-dark" id="clSavePf">حفظ المنصات</button></div>
     </section>
 
+    ${c.storage ? `<section class="ct-sec"><div class="ct-sec-head"><h3>التخزين والفواتير</h3></div>
+      <div class="cl-stgrid">
+        <div class="cl-stbox"><b>Google Drive (مجاني)</b><span class="muted">${c.storage.drive.connected ? `مربوط: <bdi dir="ltr">${esc(c.storage.drive.email)}</bdi>` : 'لم يربطه العميل بعد'}</span><span>${gb(c.storage.drive.bytes)} من ${gb(c.storage.drive.cap)}</span></div>
+        <div class="cl-stbox"><b>«تخزين نواة»</b><span class="muted">${c.storage.cloud.enabled ? 'مفعّل' : 'متوقف'}${c.storage.cloud.available ? '' : ' · غير مضبوط بعد (R2)'}</span><span>${gb(c.storage.cloud.bytes)} · ${dzd(c.storage.estimate.price_dzd)}/غ.ب</span>
+          <button type="button" class="link-btn" id="clCloud">${c.storage.cloud.enabled ? 'إيقاف' : 'تفعيل'}</button></div>
+        <div class="cl-stbox"><b>هذا الشهر</b><span>حتى الآن: ${dzd(c.storage.estimate.so_far_dzd)}</span><span>المتوقع: ${dzd(c.storage.estimate.projected_dzd)}</span></div>
+      </div>
+      ${c.storage.invoices.length ? `<ul class="cl-invs">${c.storage.invoices.map((i) => `<li>
+        <span dir="ltr">${esc(i.month)}</span><span>${gb(Number(i.avg_gb) * 1e9)}</span><b>${dzd(i.amount_dzd)}</b>
+        <span class="cl-st tone-${i.status === 'paid' ? 'ok' : i.status === 'void' ? 'idle' : 'wait'}">${INV[i.status]}${i.status === 'paid' && i.method ? ' · ' + esc(METHODS[i.method] || i.method) : ''}</span>
+        ${i.status === 'paid' ? `<button type="button" class="link-btn" data-inv="${i.id}" data-st="unpaid">إلغاء الدفع</button>`
+          : `<select data-method="${i.id}" aria-label="طريقة الدفع">${Object.entries(METHODS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+             <button type="button" class="btn btn-ghost-dark" data-inv="${i.id}" data-st="paid">تم الدفع</button>
+             ${i.status === 'unpaid' ? `<button type="button" class="link-btn ct-danger" data-inv="${i.id}" data-st="void">إلغاء الفاتورة</button>` : ''}`}
+      </li>`).join('')}</ul>` : '<p class="muted">لا فواتير بعد. تصدر تلقائيًا أول كل شهر عن الشهر السابق.</p>'}
+    </section>` : ''}
+
     <section class="ct-sec"><div class="ct-sec-head"><h3>الأشخاص</h3></div>
       <ul class="cl-people">${c.users.map((u) => `<li><span><b>${esc(u.name || '—')}</b> <span dir="ltr" class="muted">${esc(u.email)}</span>${u.role === 'owner' ? ' <span class="pill">المسؤول</span>' : ''}<br><span class="muted">${u.last_login_at ? 'آخر دخول: ' + new Date(u.last_login_at).toLocaleString('ar-DZ', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'لم يدخل بعد'}</span></span>
         <button type="button" class="link-btn ct-danger" data-rmuser="${u.id}" data-email="${esc(u.email)}">إزالة</button></li>`).join('')}</ul>
@@ -165,6 +198,12 @@ function openClient(id) {
     catch (e) { toast(errText(e), true); form.querySelectorAll('button').forEach((b) => (b.disabled = false)); }
   };
   $('clCheck').onclick = async () => { $('clCheck').disabled = true; await load(true); openClient(id); toast('تم التحقق من فيسبوك وإنستغرام.'); };
+  if ($('clCloud')) $('clCloud').onclick = () => run('client-cloud', { id, enabled: !c.storage.cloud.enabled }, c.storage.cloud.enabled ? 'أُوقف «تخزين نواة» لهذا العميل.' : 'فُعّل «تخزين نواة» لهذا العميل.');
+  form.querySelectorAll('[data-inv]').forEach((b) => b.addEventListener('click', () => {
+    const st = b.dataset.st;
+    run('invoice-mark', { id: b.dataset.inv, status: st, method: st === 'paid' ? form.querySelector(`[data-method="${b.dataset.inv}"]`)?.value : undefined },
+      st === 'paid' ? 'سُجّلت الفاتورة مدفوعة.' : st === 'void' ? 'أُلغيت الفاتورة.' : 'أُعيدت إلى غير مدفوعة.');
+  }));
   $('clSavePf').onclick = () => {
     const platforms = {};
     for (const k of PLATFORM_ORDER) {

@@ -27,6 +27,7 @@ export const SCOPES = [
   'https://www.googleapis.com/auth/drive',
   'https://www.googleapis.com/auth/calendar',
 ];
+export const DRIVE_FILE = 'https://www.googleapis.com/auth/drive.file';
 export const TZ = 'Africa/Algiers';
 export const ROOT_NAME = 'Nawa Content';
 export const INDEX_NAME = 'nawa-content.json';
@@ -74,15 +75,18 @@ export function clearConnection(res) {
 
 // ---------- sign-in ----------
 /** Starts the Google sign-in; the state ties the callback to this browser. */
-export function authUrl(res, purpose = 'admin') {
+export function authUrl(res, purpose = 'admin', extra = {}) {
   const nonce = crypto.randomBytes(16).toString('base64url');
-  const state = seal({ nonce, exp: Date.now() + 10 * 60e3, p: purpose });
+  const state = seal({ nonce, exp: Date.now() + 10 * 60e3, p: purpose, ...extra });
   // Lax so the cookie survives the redirect back from accounts.google.com.
   addCookie(res, `${STATE_COOKIE}=${nonce}; Path=/api/admin/google; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
-  // clients only prove who they are; the owner also grants Drive and Calendar
-  const q = new URLSearchParams(purpose === 'client'
-    ? { client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code', scope: 'openid email profile', prompt: 'select_account', state }
-    : { client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code', scope: SCOPES.join(' '), access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state });
+  // 'client': a client signing in (who they are, nothing else)
+  // 'client-drive': a client connecting their own Drive (drive.file: only files the app creates)
+  // 'admin': the owner, with Nawa's Drive and Calendar
+  const base = { client_id: env('GOOGLE_CLIENT_ID'), redirect_uri: redirectUri(), response_type: 'code', state };
+  const q = new URLSearchParams(purpose === 'client' ? { ...base, scope: 'openid email profile', prompt: 'select_account' }
+    : purpose === 'client-drive' ? { ...base, scope: `openid email ${DRIVE_FILE}`, access_type: 'offline', prompt: 'consent' }
+    : { ...base, scope: SCOPES.join(' '), access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' });
   return `${ACCOUNTS}/o/oauth2/v2/auth?${q}`;
 }
 

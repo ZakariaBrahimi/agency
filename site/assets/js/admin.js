@@ -15,7 +15,7 @@ const LANG_NAME = { ar: 'العربية', en: 'English', fr: 'Français' };
 
 let briefs = [];
 let filter = 'all';
-const SECTION_HASH = /^#(content|madar|clients)/;
+const SECTION_HASH = /^#(content|madar|clients|settings)/;
 let selected = (!SECTION_HASH.test(location.hash) && location.hash.slice(1)) || null;
 
 async function api(path, opts = {}) {
@@ -31,7 +31,7 @@ async function api(path, opts = {}) {
 function showLogin(msg = '') {
   $('booting').hidden = true;
   $('login').hidden = false; $('dash').hidden = true; $('logout').hidden = true; $('setup').hidden = true;
-  $('sections').hidden = true; $('content').hidden = true; $('madar').hidden = true; $('clients').hidden = true;
+  $('sections').hidden = true; $('content').hidden = true; $('madar').hidden = true; $('clients').hidden = true; $('settings').hidden = true;
   $('loginMsg').textContent = msg;
   setTimeout(() => $('pw').focus(), 50);
 }
@@ -90,8 +90,10 @@ function showSection(name) {
   $('content').hidden = name !== 'content';
   $('madar').hidden = name !== 'madar';
   $('clients').hidden = name !== 'clients';
-  document.title = ({ content: 'المحتوى', madar: 'مدار', clients: 'العملاء' }[name] || 'الطلبات') + ' | نواة';
+  $('settings').hidden = name !== 'settings';
+  document.title = ({ content: 'المحتوى', madar: 'مدار', clients: 'العملاء', settings: 'الإعدادات' }[name] || 'الطلبات') + ' | نواة';
   if (name === 'clients') window.dispatchEvent(new CustomEvent('nawa:clients-section'));
+  if (name === 'settings') window.dispatchEvent(new CustomEvent('nawa:settings'));
   if (name === 'content' || name === 'madar') window.dispatchEvent(new CustomEvent('nawa:' + name));
   else if (name === 'requests' && SECTION_HASH.test(location.hash)) history.replaceState(null, '', location.pathname + (selected ? '#' + selected : ''));
 }
