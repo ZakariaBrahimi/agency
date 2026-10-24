@@ -12,7 +12,7 @@
 // GET  ?action=drive-connect                 connects the client's own Google Drive (free storage)
 // POST ?action=drive-disconnect
 // POST ?action=cloud       { enabled }      «تخزين نواة» (paid per GB-month) on/off
-// POST ?action=topup     { amount, method, reference, receipt }   a top-up request (Nawa approves it in «المدفوعات»)
+// POST ?action=topup     { amount, method, receipt }   a top-up request (Nawa approves it in «المدفوعات»)
 // POST ?action=storage-pref { pref }       where new uploads go: 'auto' (Drive first) | 'cloud' («تخزين نواة» always)
 // POST ?action=move-to-cloud              moves Drive files into «تخزين نواة», a batch per call -> { moved, failed, remaining }
 // POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram

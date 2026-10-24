@@ -1,5 +1,5 @@
-// «تخزين نواة» prepaid balance. Clients top up (BaridiMob / CCP / RedotPay, with the transfer
-// reference and a receipt screenshot); Nawa approves in admin «المدفوعات»; every day the cron takes
+// «تخزين نواة» prepaid balance. Clients top up (BaridiMob / CCP / RedotPay, with a receipt
+// screenshot); Nawa approves in admin «المدفوعات»; every day the cron takes
 // that day's storage from the balance (GB stored × monthly price ÷ days in the month).
 //
 // Balance = the sum of client_ledger (topups +, usage −). When it reaches 0, uploads to «تخزين نواة»
@@ -131,15 +131,15 @@ const usersOf = (clientId) => sb.select('client_users', `select=name,email&clien
 const RECEIPT = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 export class WalletError extends Error { constructor(code) { super(code); this.code = code; } }
 
-/** A client's top-up request: { amount, method, reference, receipt (data URL) }. */
+/** A client's top-up request: { amount, method, receipt (data URL) }. */
 export async function requestTopup(client, input, settings) {
   const amount = Math.round(Number(input.amount));
   if (!Number.isFinite(amount) || amount < 100 || amount > 1000000) throw new WalletError('bad_amount');
   if (!clientMethods(settings.payment).includes(input.method)) throw new WalletError('bad_method');
   const reference = String(input.reference || '').trim().slice(0, 80);
   const receipt = String(input.receipt || '');
-  if (!reference && !receipt) throw new WalletError('proof_required');
-  if (receipt && (!RECEIPT.test(receipt) || receipt.length > 1.4e6)) throw new WalletError('bad_receipt');
+  if (!receipt) throw new WalletError('proof_required');
+  if (!RECEIPT.test(receipt) || receipt.length > 1.4e6) throw new WalletError('bad_receipt');
   const pending = await sb.select('client_payments', `select=id&client_id=eq.${enc(client.id)}&status=eq.pending`).catch(() => []);
   if (pending.length >= 5) throw new WalletError('too_many_pending');
   const [row] = await sb.insert('client_payments', { client_id: client.id, amount_dzd: amount, method: input.method, reference, receipt: receipt || null });
