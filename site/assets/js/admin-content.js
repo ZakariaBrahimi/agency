@@ -555,7 +555,9 @@ async function upload(files) {
       row.remove();
     } catch (e) {
       row.classList.add('bad'); row.querySelector('progress').remove();
-      row.insertAdjacentHTML('beforeend', `<span>${esc(e.code ? errText(e) : 'تعذّر الرفع.')}</span>`);
+      // a refused connection is usually the storage's CORS rule; a status is the storage refusing the upload
+      const why = e.code ? errText(e) : e.message === 'network' ? 'تعذّر الرفع: رفض التخزين الاتصال.' : `تعذّر الرفع (${e.message.replace('upload ', 'رمز ')}).`;
+      row.insertAdjacentHTML('beforeend', `<span>${esc(why)}</span>`);
     }
     drawMedia(); render();
   }

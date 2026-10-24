@@ -59,6 +59,13 @@ function render() {
       <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ الأسعار</button></div>
     </form>
 
+    <section class="ct-card st-card" id="stCheck">
+      <h2>فحص «تخزين نواة»</h2>
+      <p class="muted">يتأكد من الاتصال بالتخزين، ومن إمكانية حفظ ملف، ومن السماح بالرفع من الموقع. لا يعرض أي مفاتيح.</p>
+      <div id="stCheckOut" aria-live="polite"></div>
+      <div class="ct-save"><button type="button" class="btn btn-ghost-dark" id="stCheckBtn">افحص الآن</button></div>
+    </section>
+
     <form class="ct-card st-card" id="stPay">
       <h2>معلومات الدفع</h2>
       <p class="muted">تظهر للعملاء في «التخزين» تحت فواتيرهم. اترك أي حقل فارغًا لإخفائه.</p>
@@ -80,6 +87,14 @@ function render() {
     try { state.settings = (await call(Object.fromEntries(['cost_usd', 'fee_usd', 'rate_dzd'].map((k) => [k, Number(form[k].value)])))).settings; render(); toast('حُفظت الأسعار.'); }
     catch (err) { toast(err.code === 'bad_number' ? 'تحقّق من الأرقام.' : 'تعذّر الحفظ.', true); }
   };
+  $('stCheckBtn').onclick = async (e) => {
+    const b = e.currentTarget; b.disabled = true; $('stCheckOut').innerHTML = '<p class="muted">جارٍ الفحص…</p>';
+    try {
+      const c = (await (await fetch('/api/admin/content?action=storage-check', { credentials: 'same-origin' })).json()).check;
+      $('stCheckOut').innerHTML = checkLines(c);
+    } catch { $('stCheckOut').innerHTML = '<p class="st-bad">تعذّر الفحص.</p>'; }
+    b.disabled = false;
+  };
   $('stContact').onsubmit = async (e) => {
     e.preventDefault();
     try { state.settings = (await call({ contact: { email: $('stContact').email.value } })).settings; render(); toast('حُفظ بريد التواصل.'); }
@@ -91,6 +106,35 @@ function render() {
     try { state.settings = (await call({ payment })).settings; render(); toast('حُفظت معلومات الدفع.'); }
     catch { toast('تعذّر الحفظ.', true); }
   };
+}
+
+// Plain-words result of the storage check, with what to fix for each failure.
+const CHECK = {
+  connect: {
+    ok: 'الاتصال بالتخزين يعمل.',
+    unreachable: 'تعذّر الوصول إلى التخزين: تأكد أن R2_ACCOUNT_ID هو معرّف الحساب فقط (32 حرفًا ورقمًا)، وليس رابطًا كاملًا.',
+    InvalidAccessKeyId: 'مفتاح الوصول غير صحيح: تحقّق من R2_ACCESS_KEY_ID في Vercel.',
+    SignatureDoesNotMatch: 'المفتاح السري لا يطابق مفتاح الوصول: تحقّق من R2_SECRET_ACCESS_KEY في Vercel.',
+    NoSuchBucket: 'اسم الحاوية غير موجود: يجب أن يكون R2_BUCKET مطابقًا تمامًا لاسم الحاوية في Cloudflare.',
+    AccessDenied: 'المفتاح لا يملك صلاحية هذه الحاوية: أنشئ مفتاحًا بصلاحية Object Read & Write على هذه الحاوية.',
+    Unauthorized: 'المفتاح لا يملك صلاحية هذه الحاوية: أنشئ مفتاحًا بصلاحية Object Read & Write على هذه الحاوية.',
+  },
+  write: { ok: 'حفظ الملفات وقراءتها يعمل.', AccessDenied: 'المفتاح يقرأ فقط: يلزمه صلاحية Object Read & Write.' },
+  cors: {
+    ok: 'الرفع من الموقع مسموح (CORS).',
+    missing: 'الرفع من الموقع غير مسموح: أضف قاعدة CORS للحاوية في Cloudflare (Settings ← CORS Policy) بعنوان الموقع.',
+    other_origin: 'قاعدة CORS موجودة لكن بعنوان موقع آخر: أضف عنوان هذا الموقع في AllowedOrigins.',
+  },
+};
+function checkLines(c) {
+  if (!c?.configured) return '<p class="st-bad">✗ «تخزين نواة» غير مضبوط: أضف متغيرات R2 الأربعة في Vercel ثم أعد النشر.</p>';
+  const line = (k) => {
+    const v = c[k]; if (!v) return '';
+    const ok = v === 'ok';
+    return `<p class="${ok ? 'st-ok' : 'st-bad'}">${ok ? '✓' : '✗'} ${esc(CHECK[k][v] || `${k}: ${v}`)}</p>`;
+  };
+  const acct = c.account === 'bad_format' ? '<p class="st-bad">✗ R2_ACCOUNT_ID ليس بالشكل المتوقع (32 حرفًا ورقمًا من صفحة R2 في Cloudflare).</p>' : '';
+  return acct + line('connect') + line('write') + line('cors');
 }
 
 window.addEventListener('nawa:settings', () => { if (!state.loaded) load(); });

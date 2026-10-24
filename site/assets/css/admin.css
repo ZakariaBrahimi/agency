@@ -567,3 +567,17 @@ button.pt-num:focus-visible { outline: 2px solid var(--violet, #5B4BFF); outline
 .pt-allset b { font-size: 20px; }
 .pt-allset p { margin: 0; }
 
+/* settings: storage check result */
+#stCheckOut p { margin: 4px 0; font-weight: 600; }
+#stCheckOut .st-ok { color: #17703A; }
+#stCheckOut .st-bad { color: #B42318; }
+
+/* Phones: nothing may widen the page (Android zooms the whole page out when something is too wide).
+   Date/time boxes on Android and iOS keep a native minimum width unless their appearance is reset. */
+html, body { overflow-x: clip; }
+.ct-dialog { overflow-x: hidden; }
+.ct-dialog form, .ct-dialog form > *, .ct-dialog section, .ct-dialog .ct-row > * { min-width: 0; }
+input[type="datetime-local"], input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; min-inline-size: 0; max-inline-size: 100%; display: block; }
+input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
+.ct-up { min-width: 0; overflow-wrap: anywhere; }
+

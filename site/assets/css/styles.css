@@ -463,3 +463,6 @@
 .copy-ico.done .i-done { display: block; }
 .copy-ico.done { color: var(--lime); }
 
+/* Phones: nothing may widen the page (Android zooms the whole page out when something is too wide). */
+html, body { overflow-x: clip; }
+

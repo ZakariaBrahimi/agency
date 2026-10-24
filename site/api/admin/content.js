@@ -36,6 +36,7 @@
 // POST ?action=invoice-mark       { id, status, method? }  an invoice paid / unpaid / void
 // GET  ?action=billing            -> { settings, price_dzd }
 // POST ?action=billing            { cost_usd?, fee_usd?, rate_dzd?, payment?: {...} }
+// GET  ?action=storage-check      -> «تخزين نواة» (R2) health: connect, write, CORS (codes only, never keys)
 //
 // GET  /media/<sealed>     -> a post's file for Meta to download (rewritten here as ?action=pub-media)
 // POST ?action=cron        publishes what is due; called every 5 minutes by Supabase (header x-cron-secret)
@@ -186,6 +187,10 @@ export default async function handler(req, res) {
   if (CLIENT_ACTIONS.includes(act0)) {
     try { return await adminClients(req, res, act0); }
     catch (e) { console.error('clients', e.message); return json(res, 502, { ok: false, error: 'error' }); }
+  }
+  if (act0 === 'storage-check') {
+    const R2 = await import('../_lib/r2.js');
+    return json(res, 200, { ok: true, check: await R2.check(env('SITE_URL') || siteUrl(req)) });
   }
   if (act0 === 'billing') {
     try {

@@ -91,3 +91,32 @@ const decodeXml = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/
 
 /** The bytes of an object (a fetch Response). */
 export const fetchObject = (key) => fetch(presign('GET', key, 300));
+
+/**
+ * Health check for admin «الإعدادات», from the server: reaches the bucket, writes/reads/deletes a tiny
+ * object, and asks R2 whether the site may upload from the browser (CORS). Returns codes only,
+ * never keys: { configured, account, connect, write, cors, error? }.
+ */
+export async function check(origin) {
+  const out = { configured: r2Configured() };
+  if (!out.configured) return out;
+  out.account = env('R2_ENDPOINT') ? 'custom' : /^[0-9a-f]{32}$/i.test(env('R2_ACCOUNT_ID')) ? 'ok' : 'bad_format';
+  const why = async (r) => (await r.text().catch(() => '')).match(/<Code>([^<]+)<\/Code>/)?.[1] || `http_${r.status}`;
+  try {
+    const r = await request('GET', '', { query: { 'list-type': '2', 'max-keys': '1' } });
+    out.connect = r.ok ? 'ok' : await why(r);
+  } catch (e) { out.connect = 'unreachable'; out.error = e.cause?.code || e.message; }
+  if (out.connect !== 'ok') return out;
+  const key = `_check/${Date.now()}.txt`;
+  try {
+    const put = await fetch(presign('PUT', key, 120), { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: 'ok' });
+    if (!put.ok) out.write = await why(put);
+    else { const h = await head(key); out.write = h?.size === 2 ? 'ok' : 'read_back_failed'; await remove(key).catch(() => {}); }
+  } catch (e) { out.write = 'failed'; out.error = e.message; }
+  try {
+    const r = await fetch(presign('PUT', key, 120), { method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'PUT', 'Access-Control-Request-Headers': 'content-type' } });
+    const allow = r.headers.get('access-control-allow-origin');
+    out.cors = allow === origin || allow === '*' ? 'ok' : r.status === 403 || !allow ? 'missing' : 'other_origin';
+  } catch (e) { out.cors = 'failed'; }
+  return out;
+}
