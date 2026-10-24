@@ -11,13 +11,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Noto+Naskh+Arabic:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap">
 <link rel="stylesheet" href="assets/css/styles.css?v=20261023b">
-<link rel="stylesheet" href="assets/css/admin.css?v=20261024j">
+<link rel="stylesheet" href="assets/css/admin.css?v=20261024k">
 <link rel="stylesheet" href="assets/css/madar.css?v=20261023b">
 <script src="assets/js/admin-ui.js?v=20261023b"></script>
-<script type="module" src="assets/js/admin.js?v=20261023b"></script>
-<script type="module" src="assets/js/admin-content.js?v=20261024h"></script>
+<script type="module" src="assets/js/admin.js?v=20261024k"></script>
+<script type="module" src="assets/js/admin-content.js?v=20261024k"></script>
 <script type="module" src="assets/js/admin-madar.js?v=20261023b"></script>
-<script type="module" src="assets/js/admin-clients.js?v=20261024h"></script>
+<script type="module" src="assets/js/admin-clients.js?v=20261024k"></script>
+<script type="module" src="assets/js/admin-payments.js?v=20261024a"></script>
 <script type="module" src="assets/js/admin-settings.js?v=20261024c"></script>
 </head>
 <body class="admin-page">
@@ -56,6 +57,7 @@
     <button type="button" data-section="requests" aria-pressed="true">الطلبات</button>
     <button type="button" data-section="content" aria-pressed="false">المحتوى</button>
     <button type="button" data-section="clients" aria-pressed="false">العملاء</button>
+    <button type="button" data-section="payments" aria-pressed="false">المدفوعات</button>
     <button type="button" data-section="settings" aria-pressed="false">الإعدادات</button>
     <button type="button" data-section="madar" aria-pressed="false">مدار</button>
   </nav>
@@ -123,6 +125,13 @@
   </section>
 
   <!-- Settings: storage prices and payment details shown to clients -->
+  <!-- Payments: top-ups to check, balances, history -->
+  <section id="payments" class="pay" hidden>
+    <div class="dash-head"><div><h1>المدفوعات</h1><p class="muted">شحن رصيد «تخزين نواة»: الوصولات التي تنتظر التحقق، وأرصدة العملاء، وسجل الدفعات.</p></div>
+      <div class="dash-actions"><input type="month" id="payMonth" aria-label="الشهر" dir="ltr"><button type="button" class="btn btn-ghost-dark" id="payRefresh">تحديث</button></div></div>
+    <div id="payBody"></div>
+  </section>
+
   <section id="settings" class="st" hidden>
     <div class="dash-head"><div><h1>الإعدادات</h1><p class="muted">أسعار «تخزين نواة» ومعلومات الدفع التي يراها العملاء.</p></div></div>
     <div id="stBody"></div>

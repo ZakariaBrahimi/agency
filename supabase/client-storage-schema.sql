@@ -47,3 +47,38 @@ alter table client_invoices enable row level security;
 -- cloud = always «تخزين نواة» (only when cloud_enabled).
 alter table clients add column if not exists storage_pref text not null default 'auto'
   check (storage_pref in ('auto', 'cloud'));
+
+-- «تخزين نواة» prepaid balance: a ledger (balance = sum) and the top-up requests with their receipts.
+create table if not exists client_ledger (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  kind text not null check (kind in ('topup', 'usage', 'adjust')),
+  amount_dzd numeric(12, 2) not null,           -- + credit, - usage
+  ref text,                                     -- 'usage:2026-10-24' | 'payment:<id>': one entry each
+  note text not null default '',
+  created_at timestamptz not null default now(),
+  unique (client_id, ref)
+);
+create index if not exists client_ledger_client_created on client_ledger (client_id, created_at);
+
+create table if not exists client_payments (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  amount_dzd integer not null check (amount_dzd > 0 and amount_dzd <= 1000000),
+  method text not null,                         -- baridimob | ccp | redotpay | cash | other
+  reference text not null default '',
+  receipt text,                                 -- the receipt image as a data URL (compressed in the browser)
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reason text not null default '',
+  source text not null default 'client' check (source in ('client', 'admin')),
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+create index if not exists client_payments_status on client_payments (status, created_at);
+create index if not exists client_payments_client on client_payments (client_id, created_at);
+
+alter table clients add column if not exists wallet_zero_since date;               -- balance reached 0 (grace starts)
+alter table clients add column if not exists wallet_alert text not null default ''; -- last alert sent: d7 | d3 | zero | paused | day30
+
+alter table client_ledger enable row level security;
+alter table client_payments enable row level security;

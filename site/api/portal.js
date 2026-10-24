@@ -12,6 +12,7 @@
 // GET  ?action=drive-connect                 connects the client's own Google Drive (free storage)
 // POST ?action=drive-disconnect
 // POST ?action=cloud       { enabled }      «تخزين نواة» (paid per GB-month) on/off
+// POST ?action=topup     { amount, method, reference, receipt }   a top-up request (Nawa approves it in «المدفوعات»)
 // POST ?action=storage-pref { pref }       where new uploads go: 'auto' (Drive first) | 'cloud' («تخزين نواة» always)
 // POST ?action=move-to-cloud              moves Drive files into «تخزين نواة», a batch per call -> { moved, failed, remaining }
 // POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram
@@ -22,6 +23,7 @@ import * as G from './_lib/google.js';
 import { contentApi, clientTarget } from './_lib/content-api.js';
 import { clientStore, driveConnection } from './_lib/storage.js';
 import * as B from './_lib/billing.js';
+import * as W from './_lib/wallet.js';
 import { clientSession, clearClientSession, requestCode, verifyCode, signedIn, normEmail, validEmail, mailConfigured } from './_lib/clients.js';
 import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin.js';
 import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
@@ -94,7 +96,12 @@ export default async function handler(req, res) {
       const [row] = await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`);
       const settings = await B.getSettings();
       const summary = await B.storageSummary(client, row?.data || { posts: [] }, settings, { withQuota: true });
-      return json(res, 200, { ok: true, ...summary, payment: settings.payment });
+      const wallet = await W.walletSummary(client, summary.cloud.bytes, settings);
+      return json(res, 200, { ok: true, ...summary, wallet, payment: settings.payment });
+    }
+    if (action === 'topup' && req.method === 'POST') {
+      try { return json(res, 200, { ok: true, payment: await W.requestTopup(client, await readJson(req, 2e6), await B.getSettings()) }); }
+      catch (e) { if (e.code) return json(res, 400, { ok: false, error: e.code }); throw e; }
     }
     if (action === 'drive-connect' && req.method === 'GET') {
       if (!G.googleConfigured()) return json(res, 503, { ok: false, error: 'google_not_configured' });

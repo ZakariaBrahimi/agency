@@ -6,7 +6,7 @@
 // The session is a sealed cookie scoped to /api/portal; every request re-reads the person, so
 // removing them in the admin signs them out at once.
 import crypto from 'node:crypto';
-import { env } from './http.js';
+import { env, siteUrl } from './http.js';
 import { seal, unseal } from './seal.js';
 import { sb } from './supabase.js';
 
@@ -143,3 +143,25 @@ async function sendCodeEmail(user, client, code) {
   await t.sendMail({ from: `"نواة · Nawa" <${env('SMTP_FROM') || env('SMTP_USER')}>`, to: user.email, subject, text, html });
 }
 const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/**
+ * A short Arabic notice to a client user (balance alerts, top-up results), in Nawa's simple card.
+ * lines: plain-text paragraphs. Logged instead of sent in local tests (MAIL_LOG=1 without SMTP).
+ */
+export async function sendNotice(to, subject, lines) {
+  if (!mailConfigured() || !to) return;
+  const text = `${lines.join('\n\n')}\n\nنواة · Nawa Studio`;
+  if (env('MAIL_LOG') === '1' && !env('SMTP_USER')) { console.log(`[mail] to ${to}: ${subject}`); return; }
+  const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#F6F5F2;padding:32px 16px;color:#0B1220">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:20px;padding:28px">
+    <div style="font-size:22px;font-weight:700;margin-bottom:12px">نواة</div>
+    ${lines.map((l) => `<p style="margin:0 0 12px;line-height:1.7">${escapeHtml(l)}</p>`).join('')}
+    <a href="${siteUrl()}/portal#storage" style="display:inline-block;margin-top:6px;background:#C6F432;color:#0B1220;font-weight:700;text-decoration:none;border-radius:999px;padding:10px 20px">افتح «التخزين»</a>
+  </div></div>`;
+  const nodemailer = (await import('nodemailer')).default;
+  const t = nodemailer.createTransport({
+    host: env('SMTP_HOST') || 'smtp.gmail.com', port: Number(env('SMTP_PORT') || 465), secure: Number(env('SMTP_PORT') || 465) === 465,
+    auth: { user: env('SMTP_USER'), pass: env('SMTP_PASS') },
+  });
+  await t.sendMail({ from: `"نواة · Nawa" <${env('SMTP_FROM') || env('SMTP_USER')}>`, to, subject, text, html });
+}

@@ -35,6 +35,7 @@ const ERR = {
   client_not_found: 'هذا العميل غير موجود.',
   no_storage: 'اختر مكان التخزين أولًا من «التخزين»: Google Drive مجانًا أو «تخزين نواة».',
   drive_full: 'مساحة Google Drive المجانية ممتلئة. فعّل «تخزين نواة» من «التخزين» لمتابعة الرفع.',
+  balance_empty: 'رصيد «تخزين نواة» نفد. اشحن رصيدك من «التخزين» لمتابعة الرفع.',
   drive_disconnected: 'Google Drive غير مربوط. أعد ربطه من «التخزين».',
   storage_not_configured: 'قاعدة البيانات غير مربوطة (Supabase).',
 };

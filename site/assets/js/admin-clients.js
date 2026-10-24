@@ -46,7 +46,7 @@ function storageLine(c) {
   return `<div class="cl-storage">
     <span title="Google Drive الخاص بالعميل">${s.drive.connected ? `Drive ${gb(s.drive.bytes)}` : 'Drive غير مربوط'}</span>
     <span title="«تخزين نواة»">${s.cloud.enabled ? `سحابة ${gb(s.cloud.bytes)}${s.cloud.pref === 'cloud' ? ' · الملفات الجديدة هنا دائمًا' : ''}` : 'سحابة متوقفة'}</span>
-    <span>هذا الشهر ≈ ${dzd(s.estimate.projected_dzd)}</span>
+    ${s.wallet ? `<span title="رصيد «تخزين نواة» المسبق">الرصيد ${dzd(s.wallet.balance)}${s.wallet.state === 'low' ? ` · يكفي ${s.wallet.daysLeft} أيام` : s.wallet.state === 'grace' ? ' · مهلة' : s.wallet.state === 'paused' ? ' · متوقف' : ''}</span>` : ''}
     ${unpaid.length ? `<span class="cl-st tone-wait">${unpaid.length} غير مدفوعة · ${dzd(unpaid.reduce((a, i) => a + i.amount_dzd, 0))}</span>` : ''}
   </div>`;
 }

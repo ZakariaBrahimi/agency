@@ -62,14 +62,12 @@ const TS = {
     stepsDrive: ['اضغط «ربط Google Drive».', 'اختر حسابك على Google ووافق.', 'ننشئ مجلد «نواة» في Drive الخاص بك. لا نرى إلا الملفات التي ترفعها من هنا، ولا نصل إلى بقية ملفاتك.'],
     driveCatch: 'مهم: الملفات التي تضيفها إلى مجلد «نواة» مباشرة من Google Drive لا تظهر هنا. ارفع ملفاتك دائمًا من هذه المساحة.',
     connectDrive: 'ربط Google Drive', disconnect: 'فصل Google Drive', confirmDisconnect: 'تأكيد الفصل (تبقى ملفاتك في Drive)',
-    cloudTitle: 'تخزين نواة', payg: 'حسب الاستهلاك', perGb: (n) => `${n} دج لكل غيغابايت في الشهر`,
-    cloudExplain: 'تدفع فقط مقابل ما تخزّنه: سعر الغيغابايت لشهر كامل، محسوبًا على متوسط ما خزّنته خلال الشهر. مثال: 2 غيغابايت نصف الشهر ثم 4 غيغابايت النصف الآخر = 3 غيغابايت.',
-    storedNow: (a) => `مخزّن الآن: ${a}`, monthSoFar: (n) => `هذا الشهر حتى الآن: ${n} دج`, monthProjected: (n) => `المتوقع لنهاية الشهر: ${n} دج`,
+    cloudTitle: 'تخزين نواة', perGb: (n) => `${n} دج لكل غيغابايت في الشهر`,
+    cloudExplain: 'تدفع مسبقًا: تشحن رصيدًا، ويُخصم منه كل يوم مقابل ما تخزّنه فقط. لا فواتير ولا مفاجآت.', prepaid: 'رصيد مسبق الدفع', w_ok: 'مفعّل', w_low: 'رصيد منخفض', w_grace: 'نفد الرصيد', w_paused: 'متوقف', w_empty: 'اشحن للبدء', balance: 'الرصيد', lastsAbout: (n) => `يكفي لنحو ${n} يومًا بالاستهلاك الحالي`, dailyOnly: 'الرصيد نفد', noUsage: 'لا استهلاك حاليًا', ws_low: 'الرصيد قارب على النفاد. اشحنه حتى لا يتوقف حفظ الملفات الجديدة.', ws_grace: (n, g) => `نفد الرصيد. يستمر الحفظ في «تخزين نواة» ${n} أيام أخرى، ثم يتوقف حتى تشحن. ملفاتك لا تُحذف.`, ws_paused: 'توقّف حفظ الملفات الجديدة في «تخزين نواة». ملفاتك المحفوظة باقية ومنشوراتك تُنشر كالمعتاد. اشحن رصيدك ليعود الحفظ.', ws_empty: 'اشحن رصيدك لتبدأ حفظ الملفات في «تخزين نواة».', perDay: (x) => `الاستهلاك اليومي ≈ ${x}`, usedMonth: (x) => `استُهلك هذا الشهر: ${x}`, topup: 'شحن الرصيد', topupLead: 'اختر المبلغ وطريقة الدفع، ثم أرسل مرجع العملية أو صورة الوصل. نضيف المبلغ إلى رصيدك بعد التحقق.', amount: 'المبلغ', otherAmount: 'مبلغ آخر', payWith: 'طريقة الدفع', m_baridimob: 'بريدي موب', m_ccp: 'CCP', m_redotpay: 'RedotPay', m_cash: 'نقدًا', m_other: 'أخرى', reference: 'مرجع العملية', referenceHint: 'رقم العملية في الوصل', receipt: 'صورة الوصل', proofNote: 'أرسل المرجع أو صورة الوصل (أو كليهما) حتى نتحقق بسرعة.', sendForCheck: 'أرسل للتحقق', noMethods: 'طرق الدفع غير متاحة الآن. تواصل مع نواة.', topups: 'عمليات الشحن', p_pending: 'قيد التحقق', p_approved: 'أُضيف للرصيد', p_rejected: 'مرفوض', reasonLabel: 'السبب', noTopups: 'لا عمليات شحن بعد.', statementTitle: 'كشف الحساب', opening: 'أول الشهر', topupsCol: 'شحن', usageCol: 'استهلاك', closing: 'آخر الشهر', noStatement: 'يظهر هنا كشف كل شهر بعد أول عملية.', pastInvoices: 'فواتير سابقة', calcDays: (a, gb, d) => `بما تخزّنه الآن (${gb})، يكفي ${a} لنحو ${d} يومًا.`, calcGb: (a, gb) => `يكفي ${a} لتخزين نحو ${gb} غيغابايت لشهر كامل.`, topupSent: (a) => `أرسلنا طلب شحن ${a}. نضيفه إلى رصيدك بعد التحقق، وتصلك رسالة.`, e_bad_amount: 'أدخل مبلغًا من 100 دج فأكثر.', e_bad_method: 'اختر طريقة الدفع.', e_proof_required: 'أرسل مرجع العملية أو صورة الوصل.', e_bad_receipt: 'تعذّرت قراءة الصورة. جرّب صورة أخرى.', e_too_many_pending: 'لديك طلبات قيد التحقق. انتظر حتى نراجعها.', e_balance_empty: 'رصيد «تخزين نواة» نفد. اشحن رصيدك لمتابعة الرفع.',
+    storedNow: (a) => `مخزّن الآن: ${a}`,
     cloudOn: 'مفعّل', cloudOff: 'غير مفعّل', enableCloud: 'تفعيل «تخزين نواة»', disableCloud: 'إيقاف «تخزين نواة»', confirmEnable: (n) => `تأكيد: ${n} دج لكل غيغابايت شهريًا`,
     cloudSoon: 'قريبًا: تواصل مع نواة لتفعيله.', cloudNotEmpty: 'لا يمكن الإيقاف وفيه ملفات. احذفها أولًا.',
-    invoices: 'الفواتير', noInvoices: 'لا توجد فواتير بعد. تصدر فاتورة في بداية كل شهر عن الشهر السابق.',
     invMonth: 'الشهر', invGb: 'متوسط التخزين', invAmount: 'المبلغ', invStatus: 'الحالة', paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة',
-    payTitle: 'طرق الدفع', payLead: 'ادفع بإحدى الطرق التالية، ثم أرسل لنا وصل الدفع مع رقم الشهر.',
     baridimob: 'بريدي موب (RIP)', ccp: 'الحساب البريدي الجاري (CCP)', ccpName: 'الاسم', ccpAccount: 'رقم الحساب', ccpKey: 'المفتاح', redotpay: 'RedotPay', uid: 'UID', email2: 'البريد',
     copy: 'نسخ', copied: 'نُسخ', prefTitle: 'أين تُحفظ الملفات الجديدة؟', prefAuto: 'تلقائي', prefAutoNote: 'Google Drive أولًا مجانًا، ثم «تخزين نواة» عند امتلائه.', prefCloud: '«تخزين نواة» دائمًا', prefCloudNote: 'كل الملفات الجديدة تُحفظ في تخزين نواة.', recommended: 'موصى به', whyTitle: 'لماذا نوصي به؟', why: ['نشر لا يتعطّل: منشوراتك المجدولة لا تتأثر بفصل Google Drive أو حذف ملف منه أو انتهاء صلاحية حساب Google.', 'مساحة Google تبقى لك: الـ15 غيغابايت المجانية مشتركة مع Gmail وصور Google.', 'كل ملفاتك في مكان واحد، وتدفع فقط مقابل ما تخزّنه.'], prefSavedAuto: 'تُحفظ الملفات الجديدة في Google Drive أولًا.', prefSavedCloud: 'تُحفظ الملفات الجديدة في «تخزين نواة».', driveAlmostCloud: (p) => `مساحة Google Drive شارفت على الامتلاء. ستُحفظ الملفات الجديدة في «تخزين نواة» بسعر ${p} دج لكل غيغابايت شهريًا.`, driveAlmostOff: 'مساحة Google Drive شارفت على الامتلاء. فعّل «تخزين نواة» لتواصل الرفع بعد امتلائها.', moveTitle: 'نقل ملفاتك إلى «تخزين نواة»', moveLead: (n) => `${n} ملف في Google Drive. ننسخها إلى تخزين نواة ثم ننقلها إلى سلة Drive (تبقى قابلة للاسترجاع 30 يومًا).`, moveBtn: 'انقل ملفاتي', moveConfirm: 'تأكيد النقل', moving: (a, b) => `نُقل ${a}، وبقي ${b}…`, moveDone: (n) => `نُقل ${n} ملف إلى «تخزين نواة».`, moveSome: (a, b) => `نُقل ${a} ملف، وتعذّر نقل ${b}. حاول مرة أخرى لاحقًا.`, e_cloud_off: 'فعّل «تخزين نواة» أولًا.', mark: (n) => `علّم الخطوة ${n} كمنجزة`, unmark: (n) => `ألغِ إنجاز الخطوة ${n}`, stepsCount: (a, b) => `${a} من ${b} خطوات منجزة`, afterFb: 'يُفعَّل إنستغرام عبر صفحتك على فيسبوك، فابدأ بفيسبوك أولًا.', afterFbShort: 'بعد فيسبوك', goFb: 'اذهب إلى فيسبوك', tellLead: 'أنهيت الخطوات؟ أخبرنا لنتحقق ونفعّل المنصة.', tellNawa: 'أنهيت، أخبر نواة', reviewing: 'وصلنا إشعارك ✓ نتحقق الآن ونفعّل المنصة قريبًا.', activeLine: (n) => `${n} مفعّل`, stepsAgain: 'عرض الخطوات من جديد', allSetTitle: 'كل منصاتك جاهزة 🎉', goContent: 'اذهب إلى «المحتوى»', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
   },
@@ -83,14 +81,12 @@ const TS = {
     stepsDrive: ['Press “Connect Google Drive”.', 'Choose your Google account and approve.', 'We create a “Nawa” folder in your Drive. We only see the files you upload here, never the rest of your Drive.'],
     driveCatch: 'Important: files you add to the “Nawa” folder directly in Google Drive won’t show up here. Always upload from this space.',
     connectDrive: 'Connect Google Drive', disconnect: 'Disconnect Google Drive', confirmDisconnect: 'Confirm (your files stay in Drive)',
-    cloudTitle: 'Nawa storage', payg: 'Pay as you go', perGb: (n) => `${n} DZD per GB per month`,
-    cloudExplain: 'You pay only for what you store: the price of one GB for a full month, based on your average over the month. Example: 2 GB for half the month, then 4 GB = 3 GB.',
-    storedNow: (a) => `Stored now: ${a}`, monthSoFar: (n) => `This month so far: ${n} DZD`, monthProjected: (n) => `Expected by month end: ${n} DZD`,
+    cloudTitle: 'Nawa storage', perGb: (n) => `${n} DZD per GB per month`,
+    cloudExplain: 'Prepaid: you top up a balance, and each day only what you store is taken from it. No bills, no surprises.', prepaid: 'Prepaid balance', w_ok: 'On', w_low: 'Low balance', w_grace: 'Balance used up', w_paused: 'Paused', w_empty: 'Top up to start', balance: 'Balance', lastsAbout: (n) => `About ${n} days at current use`, dailyOnly: 'Balance used up', noUsage: 'Nothing stored yet', ws_low: 'Your balance is running low. Top up so new files keep saving.', ws_grace: (n, g) => `Your balance is used up. Saving to Nawa Storage continues for ${n} more days, then pauses until you top up. Your files are never deleted.`, ws_paused: 'New files are no longer saved to Nawa Storage. Your stored files stay and your posts publish as usual. Top up to resume.', ws_empty: 'Top up your balance to start saving files in Nawa Storage.', perDay: (x) => `Daily use ≈ ${x}`, usedMonth: (x) => `Used this month: ${x}`, topup: 'Top up', topupLead: 'Choose the amount and how you pay, then send the transfer reference or a photo of the receipt. We add it to your balance once checked.', amount: 'Amount', otherAmount: 'Other amount', payWith: 'Pay with', m_baridimob: 'BaridiMob', m_ccp: 'CCP', m_redotpay: 'RedotPay', m_cash: 'Cash', m_other: 'Other', reference: 'Transfer reference', referenceHint: 'The number on the receipt', receipt: 'Receipt photo', proofNote: 'Send the reference or a receipt photo (or both) so we can check quickly.', sendForCheck: 'Send for checking', noMethods: 'Payment methods aren’t available right now. Contact Nawa.', topups: 'Top-ups', p_pending: 'Being checked', p_approved: 'Added to balance', p_rejected: 'Rejected', reasonLabel: 'Reason', noTopups: 'No top-ups yet.', statementTitle: 'Statement', opening: 'Opening', topupsCol: 'Top-ups', usageCol: 'Used', closing: 'Closing', noStatement: 'Your monthly statement appears here after the first top-up.', pastInvoices: 'Past invoices', calcDays: (a, gb, d) => `With what you store now (${gb}), ${a} lasts about ${d} days.`, calcGb: (a, gb) => `${a} stores about ${gb} GB for a full month.`, topupSent: (a) => `Your ${a} top-up was sent. We add it to your balance once checked, and email you.`, e_bad_amount: 'Enter an amount of 100 DZD or more.', e_bad_method: 'Choose how you paid.', e_proof_required: 'Send the transfer reference or a receipt photo.', e_bad_receipt: 'That image couldn’t be read. Try another one.', e_too_many_pending: 'You have top-ups being checked. Please wait until we review them.', e_balance_empty: 'Your Nawa Storage balance is used up. Top up to keep uploading.',
+    storedNow: (a) => `Stored now: ${a}`,
     cloudOn: 'On', cloudOff: 'Off', enableCloud: 'Turn on Nawa storage', disableCloud: 'Turn off Nawa storage', confirmEnable: (n) => `Confirm: ${n} DZD per GB per month`,
     cloudSoon: 'Coming soon: contact Nawa to turn it on.', cloudNotEmpty: 'It can’t be turned off while files are stored. Delete them first.',
-    invoices: 'Invoices', noInvoices: 'No invoices yet. An invoice is issued at the start of each month for the month before.',
     invMonth: 'Month', invGb: 'Average stored', invAmount: 'Amount', invStatus: 'Status', paid: 'Paid', unpaid: 'Unpaid', void: 'Void',
-    payTitle: 'How to pay', payLead: 'Pay with one of these, then send us the payment receipt with the month.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Postal account (CCP)', ccpName: 'Name', ccpAccount: 'Account number', ccpKey: 'Key', redotpay: 'RedotPay', uid: 'UID', email2: 'Email',
     copy: 'Copy', copied: 'Copied', prefTitle: 'Where should new files go?', prefAuto: 'Automatic', prefAutoNote: 'Google Drive first, for free, then Nawa Storage once it’s full.', prefCloud: 'Always Nawa Storage', prefCloudNote: 'Every new file is saved in Nawa Storage.', recommended: 'Recommended', whyTitle: 'Why we recommend it', why: ['Publishing never breaks: scheduled posts aren’t affected if Google Drive is disconnected, a file is deleted there, or the Google sign-in expires.', 'Your Google space stays yours: the free 15 GB is shared with Gmail and Google Photos.', 'All your files in one place, and you only pay for what you store.'], prefSavedAuto: 'New files go to Google Drive first.', prefSavedCloud: 'New files go to Nawa Storage.', driveAlmostCloud: (p) => `Your Google Drive is almost full. New files will go to Nawa Storage at ${p} DZD per GB per month.`, driveAlmostOff: 'Your Google Drive is almost full. Turn on Nawa Storage to keep uploading once it’s full.', moveTitle: 'Move your files to Nawa Storage', moveLead: (n) => `${n} files are in Google Drive. We copy them to Nawa Storage, then move them to your Drive trash (recoverable for 30 days).`, moveBtn: 'Move my files', moveConfirm: 'Confirm move', moving: (a, b) => `${a} moved, ${b} left…`, moveDone: (n) => `${n} files moved to Nawa Storage.`, moveSome: (a, b) => `${a} files moved, ${b} couldn’t be moved. Please try again later.`, e_cloud_off: 'Turn on Nawa Storage first.', mark: (n) => `Mark step ${n} as done`, unmark: (n) => `Mark step ${n} as not done`, stepsCount: (a, b) => `${a} of ${b} steps done`, afterFb: 'Instagram is activated through your Facebook Page, so start with Facebook first.', afterFbShort: 'After Facebook', goFb: 'Go to Facebook', tellLead: 'Finished the steps? Let us know and we’ll check and turn it on.', tellNawa: 'I’m done, tell Nawa', reviewing: 'We got your note ✓ We’re checking and will turn it on soon.', activeLine: (n) => `${n} is active`, stepsAgain: 'Show the steps again', allSetTitle: 'All your platforms are ready 🎉', goContent: 'Go to “Content”', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
   },
@@ -104,14 +100,12 @@ const TS = {
     stepsDrive: ['Appuyez sur « Connecter Google Drive ».', 'Choisissez votre compte Google et acceptez.', 'Nous créons un dossier « Nawa » dans votre Drive. Nous ne voyons que les fichiers envoyés ici, jamais le reste de votre Drive.'],
     driveCatch: 'Important : les fichiers ajoutés directement au dossier « Nawa » dans Google Drive n’apparaissent pas ici. Envoyez toujours vos fichiers depuis cet espace.',
     connectDrive: 'Connecter Google Drive', disconnect: 'Déconnecter Google Drive', confirmDisconnect: 'Confirmer (vos fichiers restent dans Drive)',
-    cloudTitle: 'Stockage Nawa', payg: 'Paiement à l’usage', perGb: (n) => `${n} DA par Go et par mois`,
-    cloudExplain: 'Vous payez seulement ce que vous stockez : le prix d’un Go pour un mois entier, selon votre moyenne du mois. Exemple : 2 Go la moitié du mois puis 4 Go = 3 Go.',
-    storedNow: (a) => `Stocké maintenant : ${a}`, monthSoFar: (n) => `Ce mois jusqu’ici : ${n} DA`, monthProjected: (n) => `Prévu en fin de mois : ${n} DA`,
+    cloudTitle: 'Stockage Nawa', perGb: (n) => `${n} DA par Go et par mois`,
+    cloudExplain: 'Prépayé : vous rechargez un solde, et chaque jour seul ce que vous stockez en est déduit. Pas de factures, pas de surprises.', prepaid: 'Solde prépayé', w_ok: 'Activé', w_low: 'Solde faible', w_grace: 'Solde épuisé', w_paused: 'En pause', w_empty: 'Rechargez pour commencer', balance: 'Solde', lastsAbout: (n) => `Environ ${n} jours au rythme actuel`, dailyOnly: 'Solde épuisé', noUsage: 'Rien de stocké pour l’instant', ws_low: 'Votre solde baisse. Rechargez pour que les nouveaux fichiers continuent d’être enregistrés.', ws_grace: (n, g) => `Votre solde est épuisé. L’enregistrement dans le Stockage Nawa continue encore ${n} jours, puis se met en pause jusqu’à la recharge. Vos fichiers ne sont jamais supprimés.`, ws_paused: 'Les nouveaux fichiers ne sont plus enregistrés dans le Stockage Nawa. Vos fichiers restent et vos publications partent normalement. Rechargez pour reprendre.', ws_empty: 'Rechargez votre solde pour enregistrer des fichiers dans le Stockage Nawa.', perDay: (x) => `Consommation par jour ≈ ${x}`, usedMonth: (x) => `Consommé ce mois : ${x}`, topup: 'Recharger', topupLead: 'Choisissez le montant et le moyen de paiement, puis envoyez la référence du virement ou une photo du reçu. Nous l’ajoutons à votre solde après vérification.', amount: 'Montant', otherAmount: 'Autre montant', payWith: 'Payer avec', m_baridimob: 'BaridiMob', m_ccp: 'CCP', m_redotpay: 'RedotPay', m_cash: 'Espèces', m_other: 'Autre', reference: 'Référence du virement', referenceHint: 'Le numéro sur le reçu', receipt: 'Photo du reçu', proofNote: 'Envoyez la référence ou une photo du reçu (ou les deux) pour une vérification rapide.', sendForCheck: 'Envoyer pour vérification', noMethods: 'Les moyens de paiement ne sont pas disponibles. Contactez Nawa.', topups: 'Recharges', p_pending: 'En vérification', p_approved: 'Ajouté au solde', p_rejected: 'Refusé', reasonLabel: 'Motif', noTopups: 'Aucune recharge pour l’instant.', statementTitle: 'Relevé', opening: 'Début', topupsCol: 'Recharges', usageCol: 'Consommé', closing: 'Fin', noStatement: 'Votre relevé mensuel apparaît ici après la première recharge.', pastInvoices: 'Factures précédentes', calcDays: (a, gb, d) => `Avec ce que vous stockez (${gb}), ${a} dure environ ${d} jours.`, calcGb: (a, gb) => `${a} permet de stocker environ ${gb} Go pendant un mois.`, topupSent: (a) => `Votre recharge de ${a} a été envoyée. Nous l’ajoutons à votre solde après vérification et vous prévenons par e-mail.`, e_bad_amount: 'Saisissez un montant de 100 DA ou plus.', e_bad_method: 'Choisissez le moyen de paiement.', e_proof_required: 'Envoyez la référence du virement ou une photo du reçu.', e_bad_receipt: 'Image illisible. Essayez-en une autre.', e_too_many_pending: 'Des recharges sont en vérification. Attendez notre retour.', e_balance_empty: 'Votre solde Stockage Nawa est épuisé. Rechargez pour continuer.',
+    storedNow: (a) => `Stocké maintenant : ${a}`,
     cloudOn: 'Activé', cloudOff: 'Désactivé', enableCloud: 'Activer le stockage Nawa', disableCloud: 'Désactiver le stockage Nawa', confirmEnable: (n) => `Confirmer : ${n} DA par Go et par mois`,
     cloudSoon: 'Bientôt : contactez Nawa pour l’activer.', cloudNotEmpty: 'Impossible de le désactiver tant que des fichiers y sont stockés.',
-    invoices: 'Factures', noInvoices: 'Aucune facture pour l’instant. Une facture est émise au début de chaque mois pour le mois précédent.',
     invMonth: 'Mois', invGb: 'Stockage moyen', invAmount: 'Montant', invStatus: 'Statut', paid: 'Payée', unpaid: 'Non payée', void: 'Annulée',
-    payTitle: 'Comment payer', payLead: 'Payez avec l’un de ces moyens, puis envoyez-nous le reçu avec le mois concerné.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Compte postal (CCP)', ccpName: 'Nom', ccpAccount: 'Numéro de compte', ccpKey: 'Clé', redotpay: 'RedotPay', uid: 'UID', email2: 'E-mail',
     copy: 'Copier', copied: 'Copié', prefTitle: 'Où enregistrer les nouveaux fichiers ?', prefAuto: 'Automatique', prefAutoNote: 'Google Drive d’abord, gratuitement, puis le Stockage Nawa quand il est plein.', prefCloud: 'Toujours le Stockage Nawa', prefCloudNote: 'Tous les nouveaux fichiers sont enregistrés dans le Stockage Nawa.', recommended: 'Recommandé', whyTitle: 'Pourquoi nous le recommandons', why: ['Une publication qui ne casse pas : vos publications planifiées ne sont pas touchées si Google Drive est déconnecté, si un fichier y est supprimé ou si la connexion Google expire.', 'Votre espace Google reste à vous : les 15 Go gratuits sont partagés avec Gmail et Google Photos.', 'Tous vos fichiers au même endroit, et vous ne payez que ce que vous stockez.'], prefSavedAuto: 'Les nouveaux fichiers vont d’abord dans Google Drive.', prefSavedCloud: 'Les nouveaux fichiers vont dans le Stockage Nawa.', driveAlmostCloud: (p) => `Votre Google Drive est presque plein. Les nouveaux fichiers iront dans le Stockage Nawa à ${p} DA par Go et par mois.`, driveAlmostOff: 'Votre Google Drive est presque plein. Activez le Stockage Nawa pour continuer à importer une fois plein.', moveTitle: 'Déplacer vos fichiers vers le Stockage Nawa', moveLead: (n) => `${n} fichiers sont dans Google Drive. Nous les copions dans le Stockage Nawa, puis les mettons dans la corbeille de Drive (récupérables 30 jours).`, moveBtn: 'Déplacer mes fichiers', moveConfirm: 'Confirmer le déplacement', moving: (a, b) => `${a} déplacés, ${b} restants…`, moveDone: (n) => `${n} fichiers déplacés vers le Stockage Nawa.`, moveSome: (a, b) => `${a} fichiers déplacés, ${b} n’ont pas pu l’être. Réessayez plus tard.`, e_cloud_off: 'Activez d’abord le Stockage Nawa.', mark: (n) => `Marquer l’étape ${n} comme faite`, unmark: (n) => `Marquer l’étape ${n} comme non faite`, stepsCount: (a, b) => `${a} étapes faites sur ${b}`, afterFb: 'Instagram s’active via votre Page Facebook : commencez par Facebook.', afterFbShort: 'Après Facebook', goFb: 'Aller à Facebook', tellLead: 'Étapes terminées ? Prévenez-nous, nous vérifions et activons la plateforme.', tellNawa: 'C’est fait, prévenir Nawa', reviewing: 'Bien reçu ✓ Nous vérifions et activons la plateforme bientôt.', activeLine: (n) => `${n} est activé`, stepsAgain: 'Revoir les étapes', allSetTitle: 'Toutes vos plateformes sont prêtes 🎉', goContent: 'Aller à « Contenu »', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
   },
@@ -123,7 +117,7 @@ try { const q = new URLSearchParams(location.search).get('lang'); lang = LANGS.i
 if (!LANGS.includes(lang)) lang = 'ar';
 const t = (k, ...a) => { const v = T[lang][k] ?? T.ar[k]; return typeof v === 'function' ? v(...a) : v; };
 
-const state = { me: null, tab: 'platforms', email: '' };
+const state = { me: null, tab: 'platforms', email: '', topup: { amount: 1000, custom: false, method: '' }, topupOpen: false };
 
 function applyLang() {
   document.documentElement.lang = lang;
@@ -350,8 +344,7 @@ function drawStorage(msg = '') {
   const pctDrive = Math.min(100, (d.bytes / d.cap) * 100);
   // "almost full" at 90% of what Drive can hold for us (the 15 GB cap, or less if the account has less room)
   const usable = Math.min(d.cap, q?.limit || d.cap), almost = d.connected && usable > 0 && (usable - room) / usable >= 0.9;
-  const row = (label, value) => `<div class="pt-payrow"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b>${copyButton(esc(value))}</div>`;
-  const pay = s.payment || {};
+  const w = s.wallet;
   $('ptStorage').innerHTML = `
     ${msg ? `<p class="ct-card pt-msg">${esc(msg)}</p>` : ''}
     <div class="pt-st-head"><h2>${esc(t('stTitle'))}</h2><p class="muted">${esc(t('stLead'))}</p></div>
@@ -377,16 +370,23 @@ function drawStorage(msg = '') {
 
       <article class="pt-card pt-st">
         <div class="pt-card-head"><i class="pt-logo" style="--c:#5B4BFF"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 8.5a4.5 4.5 0 0 1-.5 9.5z"/></svg></i>
-          <div><b>${esc(t('cloudTitle'))} <i class="pt-rec">${esc(t('recommended'))}</i></b><span class="muted">${esc(t('payg'))}</span></div>
-          <span class="cl-st tone-${c.enabled ? 'ok' : 'idle'}">${esc(t(c.enabled ? 'cloudOn' : 'cloudOff'))}</span></div>
+          <div><b>${esc(t('cloudTitle'))} <i class="pt-rec">${esc(t('recommended'))}</i></b><span class="muted">${esc(t('prepaid'))}</span></div>
+          <span class="cl-st tone-${!c.enabled ? 'idle' : { ok: 'ok', low: 'wait', grace: 'wait', paused: 'bad', empty: 'wait' }[w.state]}">${esc(c.enabled ? t('w_' + w.state) : t('cloudOff'))}</span></div>
         <p class="pt-price"><b>${esc(t('perGb', num(e.price_dzd)))}</b></p>
         <p class="muted pt-small">${esc(t('cloudExplain'))}</p>
-        ${c.enabled ? '' : whyList()}
-        <div class="pt-figs">
-          <div><span>${esc(t('storedNow', fmtGb(c.bytes)))}</span></div>
-          <div><span>${esc(t('monthSoFar', num(e.so_far_dzd)))}</span></div>
-          <div><span>${esc(t('monthProjected', num(e.projected_dzd)))}</span></div>
-        </div>
+        ${c.enabled ? `
+          <div class="pt-balance">
+            <span>${esc(t('balance'))}</span>
+            <b dir="auto">${esc(dzd(w.balance))}</b>
+            <small>${esc(w.daily > 0 ? (w.balance > 0 ? t('lastsAbout', num(w.daysLeft)) : t('dailyOnly')) : t('noUsage'))}</small>
+          </div>
+          ${w.state !== 'ok' ? `<p class="pt-warn">${esc(t('ws_' + w.state, num(w.graceLeft || 0), w.graceDays))}</p>` : ''}
+          <div class="pt-figs">
+            <div><span>${esc(t('storedNow', fmtGb(c.bytes)))}</span></div>
+            <div><span>${esc(t('perDay', dzd(w.daily)))}</span></div>
+            <div><span>${esc(t('usedMonth', dzd(w.usedThisMonth)))}</span></div>
+          </div>
+          <div class="pt-st-btns"><button type="button" class="btn btn-lime" id="ptTopupOpen">${esc(t('topup'))}</button></div>` : whyList()}
         ${c.enabled ? `
           <fieldset class="pt-pref"><legend>${esc(t('prefTitle'))}</legend>
             ${['cloud', 'auto'].map((v) => `<label class="pt-prefopt${c.pref === v ? ' on' : ''}"><input type="radio" name="ptPref" value="${v}"${c.pref === v ? ' checked' : ''}><span><b>${esc(t(v === 'auto' ? 'prefAuto' : 'prefCloud'))}${v === 'cloud' ? ` <i class="pt-rec">${esc(t('recommended'))}</i>` : ''}</b><small>${esc(t(v === 'auto' ? 'prefAutoNote' : 'prefCloudNote'))}</small>${v === 'cloud' ? whyList() : ''}</span></label>`).join('')}
@@ -398,20 +398,55 @@ function drawStorage(msg = '') {
       </article>
     </div>
 
-    <section class="ct-card pt-inv">
-      <h3>${esc(t('invoices'))}</h3>
-      ${s.invoices.length ? `<div class="pt-table"><table><thead><tr><th>${esc(t('invMonth'))}</th><th>${esc(t('invGb'))}</th><th>${esc(t('invAmount'))}</th><th>${esc(t('invStatus'))}</th></tr></thead><tbody>
-        ${s.invoices.map((i) => `<tr><td dir="ltr">${esc(i.month)}</td><td>${esc(fmtGb(Number(i.avg_gb) * 1e9))}</td><td><b>${esc(num(i.amount_dzd))} ${lang === 'ar' ? 'دج' : lang === 'fr' ? 'DA' : 'DZD'}</b></td><td><span class="cl-st tone-${i.status === 'paid' ? 'ok' : i.status === 'void' ? 'idle' : 'wait'}">${esc(t(i.status))}</span></td></tr>`).join('')}
-      </tbody></table></div>` : `<p class="muted">${esc(t('noInvoices'))}</p>`}
+    ${c.enabled ? `
+    <section class="ct-card pt-topup" id="ptTopup"${state.topupOpen || w.state === 'empty' ? '' : ' hidden'}>
+      <h3>${esc(t('topup'))}</h3>
+      <p class="muted pt-small">${esc(t('topupLead'))}</p>
+      <form id="ptTopupForm" novalidate>
+        <fieldset class="pt-amounts"><legend>${esc(t('amount'))}</legend>
+          ${[500, 1000, 2000].map((a) => `<label class="pt-chip"><input type="radio" name="amt" value="${a}"${state.topup.amount === a ? ' checked' : ''}><span>${esc(dzd(a))}</span></label>`).join('')}
+          <label class="pt-chip pt-custom"><input type="radio" name="amt" value="custom"${state.topup.custom ? ' checked' : ''}><span>${esc(t('otherAmount'))}</span></label>
+          <input type="number" id="ptAmt" min="100" step="50" inputmode="numeric" dir="ltr" placeholder="1500" value="${state.topup.custom ? esc(state.topup.amount || '') : ''}"${state.topup.custom ? '' : ' hidden'} aria-label="${esc(t('amount'))}">
+        </fieldset>
+        <p class="pt-calc" id="ptCalc" aria-live="polite"></p>
+        ${w.methods.length ? `
+        <fieldset class="pt-methods"><legend>${esc(t('payWith'))}</legend>
+          ${w.methods.map((m) => `<label class="pt-chip"><input type="radio" name="method" value="${m}"${state.topup.method === m ? ' checked' : ''}><span>${esc(t('m_' + m))}</span></label>`).join('')}
+        </fieldset>
+        <div id="ptPayDetails"></div>
+        <label class="ct-field"><span>${esc(t('reference'))}</span><input id="ptRef" maxlength="80" dir="ltr" autocomplete="off" value="${esc(state.topup.reference || '')}" placeholder="${esc(t('referenceHint'))}"></label>
+        <label class="ct-field"><span>${esc(t('receipt'))}</span><input id="ptReceipt" type="file" accept="image/*"></label>
+        <img class="pt-receipt-prev" id="ptReceiptPrev" alt="" hidden>
+        <p class="muted pt-small">${esc(t('proofNote'))}</p>
+        <div class="pt-st-btns"><button type="submit" class="btn btn-dark" id="ptTopupSend"><span class="btn-label">${esc(t('sendForCheck'))}</span></button></div>
+        <p class="login-msg" id="ptTopupMsg" role="alert"></p>` : `<p class="muted">${esc(t('noMethods'))}</p>`}
+      </form>
     </section>
 
-    <section class="ct-card pt-pay">
-      <h3>${esc(t('payTitle'))}</h3>
-      <p class="muted pt-small">${esc(t('payLead'))}</p>
-      ${pay.baridimob_rip ? `<div class="pt-paybox"><b>${esc(t('baridimob'))}</b>${row('RIP', pay.baridimob_rip)}</div>` : ''}
-      ${pay.ccp_account ? `<div class="pt-paybox"><b>${esc(t('ccp'))}</b>${row(t('ccpName'), pay.ccp_name)}${row(t('ccpAccount'), pay.ccp_account)}${row(t('ccpKey'), pay.ccp_key)}</div>` : ''}
-      ${pay.redotpay_uid || pay.redotpay_email ? `<div class="pt-paybox"><b>${esc(t('redotpay'))}</b>${pay.redotpay_uid ? row(t('uid'), pay.redotpay_uid) : ''}${pay.redotpay_email ? row(t('email2'), pay.redotpay_email) : ''}</div>` : ''}
-    </section>`;
+    <section class="ct-card pt-inv">
+      <h3>${esc(t('topups'))}</h3>
+      ${w.payments.length ? `<ul class="pt-paylist">${w.payments.map((p) => `<li>
+          <b>${esc(dzd(p.amount_dzd))}</b>
+          <span class="muted">${esc(t('m_' + p.method))} · <span dir="ltr">${esc(String(p.created_at).slice(0, 10))}</span>${p.reference ? ` · <span dir="ltr">${esc(p.reference)}</span>` : ''}</span>
+          <span class="cl-st tone-${p.status === 'approved' ? 'ok' : p.status === 'rejected' ? 'bad' : 'wait'}">${esc(t('p_' + p.status))}</span>
+          ${p.status === 'rejected' && p.reason ? `<small class="pt-reason">${esc(t('reasonLabel'))}: ${esc(p.reason)}</small>` : ''}
+        </li>`).join('')}</ul>` : `<p class="muted">${esc(t('noTopups'))}</p>`}
+    </section>
+
+    <section class="ct-card pt-inv">
+      <h3>${esc(t('statementTitle'))}</h3>
+      ${w.statement.length ? `<div class="pt-table"><table><thead><tr><th>${esc(t('invMonth'))}</th><th>${esc(t('opening'))}</th><th>${esc(t('topupsCol'))}</th><th>${esc(t('usageCol'))}</th><th>${esc(t('closing'))}</th></tr></thead><tbody>
+        ${w.statement.map((m) => `<tr><td dir="ltr">${esc(m.month)}</td><td>${esc(dzd(m.opening))}</td><td>+${esc(dzd(m.topups))}</td><td>−${esc(dzd(m.usage))}</td><td><b>${esc(dzd(m.closing))}</b></td></tr>`).join('')}
+      </tbody></table></div>` : `<p class="muted">${esc(t('noStatement'))}</p>`}
+    </section>` : ''}
+
+    ${s.invoices.length ? `
+    <section class="ct-card pt-inv">
+      <h3>${esc(t('pastInvoices'))}</h3>
+      <div class="pt-table"><table><thead><tr><th>${esc(t('invMonth'))}</th><th>${esc(t('invGb'))}</th><th>${esc(t('invAmount'))}</th><th>${esc(t('invStatus'))}</th></tr></thead><tbody>
+        ${s.invoices.map((i) => `<tr><td dir="ltr">${esc(i.month)}</td><td>${esc(fmtGb(Number(i.avg_gb) * 1e9))}</td><td><b>${esc(dzd(i.amount_dzd))}</b></td><td><span class="cl-st tone-${i.status === 'paid' ? 'ok' : i.status === 'void' ? 'idle' : 'wait'}">${esc(t(i.status))}</span></td></tr>`).join('')}
+      </tbody></table></div>
+    </section>` : ''}`;
 
   labelCopies($('ptStorage'));
   const arm = (b, label, fn) => b && b.addEventListener('click', async () => {
@@ -439,6 +474,67 @@ function drawStorage(msg = '') {
       }
       await loadStorage(failed ? t('moveSome', num(moved), num(failed)) : t('moveDone', num(moved)));
     } catch (err) { drawStorage(errMsg(err)); }
+  });
+  if ($('ptTopupForm')) bindTopup(s);
+}
+
+// ---------- top-up (prepaid «تخزين نواة») ----------
+const dzd = (n) => `${Math.round(Number(n || 0)).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US')} ${lang === 'ar' ? 'دج' : lang === 'fr' ? 'DA' : 'DZD'}`;
+const payRow = (label, value) => `<div class="pt-payrow"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b>${copyButton(esc(value))}</div>`;
+function payDetails(method, pay) {
+  if (method === 'baridimob') return payRow('RIP', pay.baridimob_rip);
+  if (method === 'ccp') return payRow(t('ccpName'), pay.ccp_name) + payRow(t('ccpAccount'), pay.ccp_account) + payRow(t('ccpKey'), pay.ccp_key);
+  if (method === 'redotpay') return (pay.redotpay_uid ? payRow(t('uid'), pay.redotpay_uid) : '') + (pay.redotpay_email ? payRow(t('email2'), pay.redotpay_email) : '');
+  return '';
+}
+// receipts are shrunk in the browser (≤ 1600 px JPEG) so they stay small
+async function shrinkImage(file) {
+  const bmp = await createImageBitmap(file);
+  for (const [max, q] of [[1600, 0.8], [1200, 0.7], [900, 0.6]]) {
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
+    cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+    const url = cv.toDataURL('image/jpeg', q);
+    if (url.length < 1.3e6) return url;
+  }
+  throw Object.assign(new Error('bad_receipt'), { code: 'bad_receipt' });
+}
+function bindTopup(s) {
+  const w = s.wallet, f = $('ptTopupForm'), tp = state.topup;
+  $('ptTopupOpen')?.addEventListener('click', () => { state.topupOpen = true; $('ptTopup').hidden = false; $('ptTopup').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  const amount = () => (tp.custom ? Math.round(Number($('ptAmt').value)) : tp.amount) || 0;
+  const calc = () => {
+    const a = amount(), price = s.estimate.price_dzd;
+    $('ptCalc').textContent = !a ? '' : w.daily > 0 ? t('calcDays', dzd(a), fmtGb(s.cloud.bytes), num(a / w.daily)) : t('calcGb', dzd(a), (a / price).toFixed(a / price < 10 ? 1 : 0));
+  };
+  f.querySelectorAll('input[name="amt"]').forEach((r) => r.addEventListener('change', () => {
+    tp.custom = r.value === 'custom'; if (!tp.custom) tp.amount = Number(r.value);
+    $('ptAmt').hidden = !tp.custom; if (tp.custom) $('ptAmt').focus(); calc();
+  }));
+  $('ptAmt').addEventListener('input', () => { tp.amount = Number($('ptAmt').value); calc(); });
+  const showDetails = () => { $('ptPayDetails') && ($('ptPayDetails').innerHTML = tp.method ? `<div class="pt-paybox">${payDetails(tp.method, s.payment || {})}</div>` : ''); labelCopies($('ptTopup')); };
+  f.querySelectorAll('input[name="method"]').forEach((r) => r.addEventListener('change', () => { tp.method = r.value; showDetails(); }));
+  if (!tp.method && w.methods.length === 1) { tp.method = w.methods[0]; f.querySelector('input[name="method"]').checked = true; }
+  showDetails(); calc();
+  $('ptRef')?.addEventListener('input', (e) => { tp.reference = e.target.value; });
+  $('ptReceipt')?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0]; tp.receipt = '';
+    if (!file) { $('ptReceiptPrev').hidden = true; return; }
+    try { tp.receipt = await shrinkImage(file); $('ptReceiptPrev').src = tp.receipt; $('ptReceiptPrev').hidden = false; $('ptTopupMsg').textContent = ''; }
+    catch { $('ptTopupMsg').textContent = t('e_bad_receipt'); }
+  });
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const a = amount(), msg = $('ptTopupMsg');
+    if (!a || a < 100) { msg.textContent = t('e_bad_amount'); return; }
+    if (!tp.method) { msg.textContent = t('e_bad_method'); return; }
+    if (!tp.reference?.trim() && !tp.receipt) { msg.textContent = t('e_proof_required'); return; }
+    const btn = $('ptTopupSend'); btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+    try {
+      await call('topup', { amount: a, method: tp.method, reference: tp.reference || '', receipt: tp.receipt || '' });
+      state.topup = { amount: 1000, custom: false, method: tp.method }; state.topupOpen = false;
+      await loadStorage(t('topupSent', dzd(a)));
+    } catch (err) { msg.textContent = errMsg(err); btn.disabled = false; btn.removeAttribute('aria-busy'); }
   });
 }
 

@@ -15,6 +15,7 @@ import crypto from 'node:crypto';
 import { siteUrl } from './http.js';
 import * as G from './google.js';
 import * as R2 from './r2.js';
+import { cloudAllowed } from './wallet.js';
 import { mediaUrl } from './publish.js';
 import { seal, unseal } from './seal.js';
 import { sb } from './supabase.js';
@@ -121,7 +122,9 @@ export async function clientStore(client) {
     async startUpload(post, { name, mimeType, size, origin }) {
       const u = usageOf(data);
       let driveFull = false;
-      const cloudFirst = client.storage_pref === 'cloud' && client.cloud_enabled && R2.r2Configured();
+      // «تخزين نواة» needs a balance (or the grace period after it ran out)
+      const cloudOk = client.cloud_enabled && R2.r2Configured() && await cloudAllowed(client);
+      const cloudFirst = client.storage_pref === 'cloud' && cloudOk;
       if (g && client.drive_folder && !cloudFirst) {
         const q = await driveQuota(g);
         const room = q?.limit ? q.limit - q.usage : Infinity;
@@ -131,11 +134,12 @@ export async function clientStore(client) {
         }
         driveFull = true;
       }
-      if (client.cloud_enabled && R2.r2Configured()) {
+      if (cloudOk) {
         const id = 'c_' + crypto.randomBytes(8).toString('hex');
         const key = `${cloudPrefix(client, post)}${id}/${safeName(name)}`;
         return { uploadUrl: R2.presign('PUT', key, 3600), store: 'cloud', fileId: id, contentType: mimeType };
       }
+      if (client.cloud_enabled && R2.r2Configured()) throw new StorageError('balance_empty');
       throw new StorageError(driveFull ? 'drive_full' : 'no_storage');
     },
     async attach(post, file) {
@@ -177,6 +181,7 @@ export async function clientStore(client) {
      */
     async moveToCloud(deadline) {
       if (!g || !client.cloud_enabled || !R2.r2Configured()) throw new StorageError('no_storage');
+      if (!(await cloudAllowed(client))) throw new StorageError('balance_empty');
       let moved = 0, failed = 0;
       for (const post of data.posts) {
         for (const [i, m] of (post.media || []).entries()) {
