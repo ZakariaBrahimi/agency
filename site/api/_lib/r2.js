@@ -8,7 +8,9 @@ import crypto from 'node:crypto';
 import { env } from './http.js';
 
 export const r2Configured = () => Boolean(env('R2_ACCESS_KEY_ID') && env('R2_SECRET_ACCESS_KEY') && env('R2_BUCKET') && (env('R2_ACCOUNT_ID') || env('R2_ENDPOINT')));
-const endpoint = () => (env('R2_ENDPOINT') || `https://${env('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`).replace(/\/$/, '');
+// the account id is 32 hex characters; a pasted storage address (https://<id>.r2.cloudflarestorage.com) still works
+const accountId = () => (String(env('R2_ACCOUNT_ID') || '').match(/[0-9a-f]{32}/i) || [''])[0];
+const endpoint = () => (env('R2_ENDPOINT') || `https://${accountId()}.r2.cloudflarestorage.com`).replace(/\/$/, '');
 
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const hmac = (k, s) => crypto.createHmac('sha256', k).update(s).digest();
@@ -100,7 +102,8 @@ export const fetchObject = (key) => fetch(presign('GET', key, 300));
 export async function check(origin) {
   const out = { configured: r2Configured() };
   if (!out.configured) return out;
-  out.account = env('R2_ENDPOINT') ? 'custom' : /^[0-9a-f]{32}$/i.test(env('R2_ACCOUNT_ID')) ? 'ok' : 'bad_format';
+  out.account = env('R2_ENDPOINT') ? 'custom' : /^[0-9a-f]{32}$/i.test(env('R2_ACCOUNT_ID').trim()) ? 'ok' : accountId() ? 'extracted' : 'bad_format';
+  if (out.account === 'bad_format') { out.connect = 'unreachable'; return out; }
   const why = async (r) => (await r.text().catch(() => '')).match(/<Code>([^<]+)<\/Code>/)?.[1] || `http_${r.status}`;
   try {
     const r = await request('GET', '', { query: { 'list-type': '2', 'max-keys': '1' } });

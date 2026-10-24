@@ -133,7 +133,8 @@ function checkLines(c) {
     const ok = v === 'ok';
     return `<p class="${ok ? 'st-ok' : 'st-bad'}">${ok ? '✓' : '✗'} ${esc(CHECK[k][v] || `${k}: ${v}`)}</p>`;
   };
-  const acct = c.account === 'bad_format' ? '<p class="st-bad">✗ R2_ACCOUNT_ID ليس بالشكل المتوقع (32 حرفًا ورقمًا من صفحة R2 في Cloudflare).</p>' : '';
+  const acct = c.account === 'bad_format' ? '<p class="st-bad">✗ R2_ACCOUNT_ID ليس بالشكل المتوقع: لا يحتوي على معرّف حساب (32 حرفًا ورقمًا من صفحة R2 في Cloudflare). صحّحه في Vercel ثم أعد النشر.</p>'
+    : c.account === 'extracted' ? '<p class="st-ok">✓ استُخرج معرّف الحساب من قيمة R2_ACCOUNT_ID (يُفضّل أن تكون المعرّف وحده).</p>' : '';
   return acct + line('connect') + line('write') + line('cors');
 }
 
