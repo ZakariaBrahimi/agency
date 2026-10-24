@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import { siteUrl } from './http.js';
 import * as G from './google.js';
 import * as R2 from './r2.js';
-import { cloudAllowed } from './wallet.js';
+import { planAllows } from './plans.js';
 import { mediaUrl } from './publish.js';
 import { seal, unseal } from './seal.js';
 import { sb } from './supabase.js';
@@ -122,8 +122,8 @@ export async function clientStore(client) {
     async startUpload(post, { name, mimeType, size, origin }) {
       const u = usageOf(data);
       let driveFull = false;
-      // «تخزين نواة» needs a balance (or the grace period after it ran out)
-      const cloudOk = client.cloud_enabled && R2.r2Configured() && await cloudAllowed(client);
+      // «تخزين نواة» needs a live plan with room for this file
+      const cloudOk = client.cloud_enabled && R2.r2Configured() && planAllows(client, u.cloud + size);
       const cloudFirst = client.storage_pref === 'cloud' && cloudOk;
       if (g && client.drive_folder && !cloudFirst) {
         const q = await driveQuota(g);
@@ -139,7 +139,7 @@ export async function clientStore(client) {
         const key = `${cloudPrefix(client, post)}${id}/${safeName(name)}`;
         return { uploadUrl: R2.presign('PUT', key, 3600), store: 'cloud', fileId: id, contentType: mimeType };
       }
-      if (client.cloud_enabled && R2.r2Configured()) throw new StorageError('balance_empty');
+      if (client.cloud_enabled && R2.r2Configured()) throw new StorageError(planAllows(client, 0) ? 'plan_full' : 'plan_ended');
       throw new StorageError(driveFull ? 'drive_full' : 'no_storage');
     },
     async attach(post, file) {
@@ -181,12 +181,13 @@ export async function clientStore(client) {
      */
     async moveToCloud(deadline) {
       if (!g || !client.cloud_enabled || !R2.r2Configured()) throw new StorageError('no_storage');
-      if (!(await cloudAllowed(client))) throw new StorageError('balance_empty');
+      if (!planAllows(client, 0)) throw new StorageError('plan_ended');
       let moved = 0, failed = 0;
       for (const post of data.posts) {
         for (const [i, m] of (post.media || []).entries()) {
           if (m.store === 'cloud') continue;
           if (Date.now() > deadline) return { moved, failed, remaining: countDrive(data) };
+          if (!planAllows(client, usageOf(data).cloud + Number(m.size || 0))) return { moved, failed, remaining: countDrive(data), full: true };
           try {
             const src = await g.call(`/drive/v3/files/${enc(m.id)}?alt=media`, { raw: true });
             if (!src.ok) throw new Error('drive ' + src.status);

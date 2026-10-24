@@ -1,4 +1,5 @@
-// /admin → «الإعدادات»: the site's contact email, what clients pay for «تخزين نواة» and how they pay.
+// /admin → «الإعدادات»: the site's contact email, what clients pay for «تخزين نواة» (price per GB,
+// the plans' sizes, durations and discounts) and how they pay.
 // Clients only ever see the DZD price and the payment details; the dollar figures stay here.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -59,6 +60,30 @@ function render() {
       <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ الأسعار</button></div>
     </form>
 
+    <form class="ct-card st-card" id="stPlans">
+      <h2>خطط «تخزين نواة»</h2>
+      <p class="muted">ما يختاره العميل في نافذة الخطة: المساحة بالمؤشر، والمدة، وتخفيض كل مدة. السعر الشهري للغيغابايت يأتي من «التخزين والأسعار» أعلاه.</p>
+      <div class="st-grid">
+        <label class="ct-field"><span>أقل مساحة (غ.ب)</span><input name="min_gb" type="number" min="1" step="1" dir="ltr" value="${esc(s.plans.min_gb)}"></label>
+        <label class="ct-field"><span>أكبر مساحة (غ.ب)</span><input name="max_gb" type="number" min="1" step="1" dir="ltr" value="${esc(s.plans.max_gb)}"></label>
+        <label class="ct-field"><span>خطوة المؤشر (غ.ب)</span><input name="step_gb" type="number" min="1" step="1" dir="ltr" value="${esc(s.plans.step_gb)}"></label>
+      </div>
+      <div class="st-durs">
+        <div class="st-durs-head"><span>المدة</span><span>متاحة</span><span>التخفيض %</span></div>
+        ${s.plans.durations.map((d) => `<div class="st-dur">
+          <b>${{ 1: 'شهر', 3: '3 أشهر', 6: '6 أشهر', 12: 'سنة' }[d.months]}</b>
+          <label class="st-switch"><input type="checkbox" name="on_${d.months}"${d.on ? ' checked' : ''}${d.months === 1 ? ' disabled title="الشهر متاح دائمًا"' : ''}><span></span></label>
+          <input name="disc_${d.months}" type="number" min="0" max="90" step="0.5" dir="ltr" value="${esc(d.discount)}" aria-label="تخفيض ${d.months} أشهر">
+        </div>`).join('')}
+      </div>
+      <div class="st-grid">
+        <label class="ct-field"><span>حجم الصورة للتقدير (م.ب)</span><input name="photo_mb" type="number" min="0.05" step="0.05" dir="ltr" value="${esc(s.plans.photo_mb)}"></label>
+        <label class="ct-field"><span>حجم الفيديو القصير للتقدير (م.ب)</span><input name="video_mb" type="number" min="1" step="1" dir="ltr" value="${esc(s.plans.video_mb)}"></label>
+      </div>
+      <div class="st-preview" id="stPlanPreview" aria-live="polite"></div>
+      <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ الخطط</button></div>
+    </form>
+
     <section class="ct-card st-card" id="stCheck">
       <h2>فحص «تخزين نواة»</h2>
       <p class="muted">يتأكد من الاتصال بالتخزين، ومن إمكانية حفظ ملف، ومن السماح بالرفع من الموقع. لا يعرض أي مفاتيح.</p>
@@ -86,6 +111,26 @@ function render() {
     e.preventDefault();
     try { state.settings = (await call(Object.fromEntries(['cost_usd', 'fee_usd', 'rate_dzd'].map((k) => [k, Number(form[k].value)])))).settings; render(); toast('حُفظت الأسعار.'); }
     catch (err) { toast(err.code === 'bad_number' ? 'تحقّق من الأرقام.' : 'تعذّر الحفظ.', true); }
+  };
+  const pf = $('stPlans');
+  const planInput = () => ({
+    min_gb: Number(pf.min_gb.value), max_gb: Number(pf.max_gb.value), step_gb: Number(pf.step_gb.value),
+    photo_mb: Number(pf.photo_mb.value), video_mb: Number(pf.video_mb.value),
+    durations: [1, 3, 6, 12].map((m) => ({ months: m, on: m === 1 || pf['on_' + m].checked, discount: Number(pf['disc_' + m].value) || 0 })),
+  });
+  const planPreview = () => {
+    const p = planInput(), unit = price(Object.fromEntries(['cost_usd', 'fee_usd', 'rate_dzd'].map((k) => [k, Number(form[k].value)])));
+    const year = p.durations.find((d) => d.months === 12), six = p.durations.find((d) => d.months === 6);
+    const line = (gb, d) => `${gb} غ.ب × ${{ 1: 'شهر', 3: '3 أشهر', 6: '6 أشهر', 12: 'سنة' }[d.months]} = <b>${dzd(gb * unit * d.months * (1 - d.discount / 100))} دج</b>${d.discount ? ` <span class="muted">(بدل ${dzd(gb * unit * d.months)} دج)</span>` : ''}`;
+    $('stPlanPreview').innerHTML = `<b>أمثلة بالسعر الحالي (${dzd(unit)} دج لكل غيغابايت شهريًا)</b>
+      <span>${line(20, p.durations[0])}</span>${six.on ? `<span>${line(20, six)}</span>` : ''}${year.on ? `<span>${line(20, year)}</span>` : ''}
+      <span>20 غ.ب ≈ ${dzd(Math.floor(20000 / (p.photo_mb || 1)))} صورة أو ${dzd(Math.floor(20000 / (p.video_mb || 1)))} فيديو قصير</span>`;
+  };
+  pf.addEventListener('input', planPreview); form.addEventListener('input', planPreview); planPreview();
+  pf.onsubmit = async (e) => {
+    e.preventDefault();
+    try { state.settings = (await call({ plans: planInput() })).settings; render(); toast('حُفظت الخطط.'); }
+    catch { toast('تعذّر الحفظ.', true); }
   };
   $('stCheckBtn').onclick = async (e) => {
     const b = e.currentTarget; b.disabled = true; $('stCheckOut').innerHTML = '<p class="muted">جارٍ الفحص…</p>';

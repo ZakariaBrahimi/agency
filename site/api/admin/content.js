@@ -36,10 +36,10 @@
 // POST ?action=invoice-mark       { id, status, method? }  an invoice paid / unpaid / void
 // GET  ?action=billing            -> { settings, price_dzd }
 // POST ?action=billing            { cost_usd?, fee_usd?, rate_dzd?, payment?: {...} }
-// GET  ?action=payments&month=YYYY-MM  -> «المدفوعات»: pending receipts, the month's payments, balances, totals
+// GET  ?action=payments&month=YYYY-MM  -> «المدفوعات»: pending requests, the month's payments, plans, figures
 // GET  ?action=payment-receipt&id=    -> the receipt image
 // POST ?action=payment-review    { id, approve, reason? }
-// POST ?action=payment-manual    { client_id, amount, method, note? }   cash or a transfer Nawa already checked
+// POST ?action=payment-manual    { client_id, gb, months, amount?, method, note? }   a plan paid in cash or already checked
 // GET  ?action=storage-check      -> «تخزين نواة» (R2) health: connect, write, CORS (codes only, never keys)
 //
 // GET  /media/<sealed>     -> a post's file for Meta to download (rewritten here as ?action=pub-media)
@@ -56,7 +56,7 @@ import { nawaStore, clientStore, usageOf } from '../_lib/storage.js';
 import { getClient } from '../_lib/clients.js';
 import { adminClients, CLIENT_ACTIONS } from '../_lib/clients-admin.js';
 import * as B from '../_lib/billing.js';
-import * as W from '../_lib/wallet.js';
+import * as P from '../_lib/plans.js';
 import { STORY_SETS, storyFiles } from '../../assets/js/stories-schema.js';
 
 const now = () => new Date().toISOString();
@@ -128,28 +128,26 @@ async function runAll(g) {
   return results;
 }
 
-// Cron, once a day: each client's stored bytes, and that day's «تخزين نواة» taken from its prepaid
-// balance (with the grace period and alerts, see _lib/wallet.js). Guarded in app_state so the
-// 5-minute runs do it only once. (Monthly invoices are no longer issued; past ones stay visible.)
+// Cron, once a day: each client's stored bytes, and «تخزين نواة» plans (a smaller size chosen at
+// renewal starting, alerts before and after a plan ends; see _lib/plans.js). Guarded in app_state so
+// the 5-minute runs do it only once. (Monthly invoices are no longer issued; past ones stay visible.)
 async function runBilling() {
   if (!sb.ready() || !kv.ready()) return null;
   const day = B.today();
   if ((await kv.get('billing_day').catch(() => null)) === day) return null;
   await kv.set('billing_day', day);
   const [clients, contents, settings] = await Promise.all([
-    sb.select('clients', 'select=id,name,cloud_enabled,wallet_zero_since,wallet_alert').catch(() => []),
+    sb.select('clients', 'select=id,name,plan_gb,plan_until,plan_next_gb,plan_next_from,wallet_alert').catch(() => []),
     sb.select('client_content', 'select=client_id,data').catch(() => []),
     B.getSettings(),
   ]);
-  let charged = 0;
+  let plans = 0;
   for (const c of clients) {
     const usage = usageOf(contents.find((x) => x.client_id === c.id)?.data || { posts: [] });
     await B.recordUsage(c.id, usage).catch((e) => console.error('usage', c.id, e.message));
-    if (usage.cloud > 0 || c.wallet_zero_since) {
-      await W.chargeDay(c, usage.cloud, settings, day).then(() => charged++).catch((e) => console.error('wallet', c.id, e.message));
-    }
+    if (c.plan_gb) await P.dailyPlan(c, usage.cloud, settings, day).then(() => plans++).catch((e) => console.error('plan', c.id, e.message));
   }
-  return { day, clients: clients.length, charged };
+  return { day, clients: clients.length, plans };
 }
 
 // Cron: the next queued set, if any. Returns null when there is nothing to do.
@@ -197,15 +195,15 @@ export default async function handler(req, res) {
   if (act0 === 'payments' || act0.startsWith('payment-')) {
     try {
       if (act0 === 'payment-receipt') {
-        const r = await W.receiptOf(url0.searchParams.get('id') || '');
+        const r = await P.receiptOf(url0.searchParams.get('id') || '');
         if (!r) return json(res, 404, { ok: false, error: 'not_found' });
         res.statusCode = 200; res.setHeader('Content-Type', r.type); res.setHeader('Cache-Control', 'private, max-age=3600');
         return res.end(r.body);
       }
-      if (act0 === 'payment-review' && req.method === 'POST') { const b = await readJson(req); return json(res, 200, { ok: true, payment: await W.review(b.id, Boolean(b.approve), b.reason) }); }
-      if (act0 === 'payment-manual' && req.method === 'POST') { const b = await readJson(req); return json(res, 200, { ok: true, payment: await W.manualTopup(b.client_id, b) }); }
+      if (act0 === 'payment-review' && req.method === 'POST') { const b = await readJson(req); return json(res, 200, { ok: true, payment: await P.review(b.id, Boolean(b.approve), b.reason) }); }
+      if (act0 === 'payment-manual' && req.method === 'POST') { const b = await readJson(req); return json(res, 200, { ok: true, payment: await P.grantPlan(b.client_id, b, await B.getSettings()) }); }
       const month = /^\d{4}-\d{2}$/.test(url0.searchParams.get('month') || '') ? url0.searchParams.get('month') : B.thisMonth();
-      return json(res, 200, { ok: true, ...(await W.adminOverview(month, await B.getSettings())) });
+      return json(res, 200, { ok: true, ...(await P.adminOverview(month, await B.getSettings())) });
     } catch (e) {
       if (e.code) return json(res, 400, { ok: false, error: e.code });
       console.error('payments', e.message); return json(res, 502, { ok: false, error: 'error' });

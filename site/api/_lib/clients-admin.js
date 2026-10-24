@@ -87,14 +87,9 @@ export async function adminClients(req, res, action) {
     const settings = await B.getSettings();
     const contents = await sb.select('client_content', 'select=client_id,data').catch(() => []);
     const storage = await Promise.all(clients.map((c) => B.storageSummary(c, contents.find((x) => x.client_id === c.id)?.data || { posts: [] }, settings).catch(() => null)));
-    // prepaid balance per client (one ledger read for all)
-    const W = await import('./wallet.js');
-    const ledger = await sb.select('client_ledger', 'select=client_id,amount_dzd').catch(() => []);
-    for (const [i, c] of clients.entries()) {
-      if (!storage[i]) continue;
-      const balance = W.balanceOf(ledger.filter((r) => r.client_id === c.id)), daily = W.dailyCost(storage[i].cloud.bytes, settings);
-      storage[i].wallet = { balance, ...W.walletState(c, balance, daily) };
-    }
+    // «تخزين نواة» plan per client
+    const P = await import('./plans.js');
+    for (const [i, c] of clients.entries()) if (storage[i]) storage[i].plan = P.planState(c, storage[i].cloud.bytes);
     return json(res, 200, {
       ok: true, mail: mailConfigured(), meta: M.metaTokenConfigured(), price_dzd: B.priceDzd(settings),
       pages: pages ? pages.map((p) => ({ ...p, used: used.has(p.id) })) : null,

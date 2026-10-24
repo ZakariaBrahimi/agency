@@ -6,12 +6,35 @@
 // 4 GB for the other half = 3 GB), rounded to the nearest dinar. Invoices keep the price they were issued with.
 //
 // Settings live in app_state «billing», never in the code: { cost_usd, fee_usd, rate_dzd, payment: {...},
-// contact: { email } }. Only `contact` is public (the site reads it through GET /api/brief).
+// contact: { email }, plans: { min_gb, max_gb, step_gb, photo_mb, video_mb, durations: [{ months, on, discount }] } }.
+// Only `contact` is public (the site reads it through GET /api/brief).
 import { kv, sb } from './supabase.js';
 
 export const DEFAULTS = { cost_usd: 0.015, fee_usd: 0.5, rate_dzd: 250 };
 export const PAYMENT_FIELDS = ['baridimob_rip', 'ccp_name', 'ccp_account', 'ccp_key', 'redotpay_uid', 'redotpay_email'];
 export const CONTACT_DEFAULTS = { email: 'nawa.studio.ai@gmail.com' };
+// «تخزين نواة» plans: what the client can pick in the portal; Nawa sets the discounts
+export const PLAN_MONTHS = [1, 3, 6, 12];
+export const PLAN_DEFAULTS = {
+  min_gb: 1, max_gb: 200, step_gb: 1, photo_mb: 1, video_mb: 50,
+  durations: [{ months: 1, on: true, discount: 0 }, { months: 3, on: true, discount: 0 }, { months: 6, on: true, discount: 5 }, { months: 12, on: true, discount: 10 }],
+};
+function cleanPlans(p = {}) {
+  const num = (v, d, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+  const out = {
+    min_gb: Math.round(num(p.min_gb, PLAN_DEFAULTS.min_gb, 1, 10000)),
+    max_gb: Math.round(num(p.max_gb, PLAN_DEFAULTS.max_gb, 1, 10000)),
+    step_gb: Math.round(num(p.step_gb, PLAN_DEFAULTS.step_gb, 1, 1000)),
+    photo_mb: num(p.photo_mb, PLAN_DEFAULTS.photo_mb, 0.05, 1000),
+    video_mb: num(p.video_mb, PLAN_DEFAULTS.video_mb, 1, 10000),
+    durations: PLAN_MONTHS.map((m) => {
+      const d = (p.durations || []).find((x) => Number(x.months) === m) || PLAN_DEFAULTS.durations.find((x) => x.months === m);
+      return { months: m, on: m === 1 ? true : d.on !== false, discount: num(d.discount, 0, 0, 90) }; // monthly is always offered
+    }),
+  };
+  if (out.max_gb < out.min_gb) out.max_gb = out.min_gb;
+  return out;
+}
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GB = 1e9;
 const enc = encodeURIComponent;
@@ -20,7 +43,7 @@ export async function getSettings() {
   const s = (await kv.get('billing').catch(() => null)) || {};
   const payment = Object.fromEntries(PAYMENT_FIELDS.map((k) => [k, String(s.payment?.[k] ?? '')]));
   const contact = { ...CONTACT_DEFAULTS, ...Object.fromEntries(Object.entries(s.contact || {}).filter(([k, v]) => k in CONTACT_DEFAULTS && v)) };
-  return { ...DEFAULTS, ...pick(s, Object.keys(DEFAULTS)), payment, contact };
+  return { ...DEFAULTS, ...pick(s, Object.keys(DEFAULTS)), payment, contact, plans: cleanPlans(s.plans) };
 }
 const pick = (o, keys) => Object.fromEntries(keys.filter((k) => typeof o?.[k] === 'number').map((k) => [k, o[k]]));
 
@@ -35,6 +58,7 @@ export async function saveSettings(input) {
     next[k] = v;
   }
   if (input.payment) for (const k of PAYMENT_FIELDS) if (input.payment[k] !== undefined) next.payment[k] = String(input.payment[k]).trim().slice(0, 120);
+  if (input.plans) next.plans = cleanPlans({ ...cur.plans, ...input.plans });
   if (input.contact?.email !== undefined) {
     const email = String(input.contact.email).trim().toLowerCase().slice(0, 120);
     if (!EMAIL.test(email)) throw Object.assign(new Error('bad_email'), { code: 'bad_email', field: 'email' });

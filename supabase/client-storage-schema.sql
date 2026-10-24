@@ -82,3 +82,18 @@ alter table clients add column if not exists wallet_alert text not null default 
 
 alter table client_ledger enable row level security;
 alter table client_payments enable row level security;
+
+-- «تخزين نواة» plans: the client buys N GB for 1/3/6/12 months (replaces the prepaid balance;
+-- client_ledger stays only as history).
+alter table clients add column if not exists plan_gb integer not null default 0;     -- current plan size
+alter table clients add column if not exists plan_until date;                        -- last day of the paid period
+alter table clients add column if not exists plan_next_gb integer;                   -- a smaller size chosen at renewal…
+alter table clients add column if not exists plan_next_from date;                    -- …applies from this day
+
+alter table client_payments add column if not exists kind text not null default 'topup'
+  check (kind in ('topup', 'new', 'renew', 'upgrade'));
+alter table client_payments add column if not exists gb integer;                     -- plan size bought
+alter table client_payments add column if not exists months integer;                 -- 0 = upgrade only
+alter table client_payments add column if not exists discount_pct numeric(5, 2) not null default 0;
+alter table client_payments add column if not exists unit_price numeric(10, 2);      -- DZD per GB per month at the time
+alter table client_payments add column if not exists upgrade_dzd integer not null default 0; -- part paying the extra GB for the days left
