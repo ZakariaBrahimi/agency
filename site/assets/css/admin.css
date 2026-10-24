@@ -498,9 +498,9 @@ code { font-family: ui-monospace, Menlo, monospace; background: var(--paper); pa
 .pt-table th, .pt-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .pt-table th { color: var(--muted); font-weight: 600; font-size: 13.5px; }
 .pt-paybox { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 6px; }
-.pt-payrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14.5px; }
-.pt-payrow span { color: var(--muted); min-inline-size: 7em; }
-.pt-payrow b { font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; overflow-wrap: anywhere; }
+.pt-payrow { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
+.pt-payrow span { color: var(--muted); min-inline-size: 7em; flex: none; }
+.pt-payrow b { font-family: "JetBrains Mono", ui-monospace, monospace; letter-spacing: .02em; overflow-wrap: anywhere; flex: 1; min-width: 0; }
 .pt-msg { margin: 0 0 12px; background: #EEFBE8; border-color: #CBEBB8; font-weight: 600; }
 
 /* Copy-to-clipboard icon button (swaps to a tick once copied) */
@@ -595,4 +595,11 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .pt-move .btn.armed { background: #9A5B00; border-color: #9A5B00; color: #fff; }
 .ct-store { position: absolute; inset-block-start: 6px; inset-inline-start: 6px; font: 700 10.5px var(--font); font-style: normal; padding: 2px 7px; border-radius: 999px; background: rgb(255 255 255 / .92); color: #1A73E8; }
 .ct-store.cloud { color: #5B4BFF; }
+
+/* «موصى به» on «تخزين نواة», with the reasons */
+.pt-rec { display: inline-block; vertical-align: 2px; font: 700 11.5px var(--font); font-style: normal; padding: 2px 9px; border-radius: 999px; background: var(--lime, #C6F432); color: var(--ink, #0B1220); margin-inline-start: 4px; }
+.pt-why { display: grid; gap: 4px; margin-top: 6px; background: #F4F3FF; border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
+.pt-why b { font-size: 13.5px; color: #3E31C9; }
+.pt-why ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 4px; color: var(--text); line-height: 1.6; }
+.pt-prefopt .pt-why { margin-top: 8px; }
 
