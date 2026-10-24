@@ -12,6 +12,8 @@
 // GET  ?action=drive-connect                 connects the client's own Google Drive (free storage)
 // POST ?action=drive-disconnect
 // POST ?action=cloud       { enabled }      «تخزين نواة» (paid per GB-month) on/off
+// POST ?action=storage-pref { pref }       where new uploads go: 'auto' (Drive first) | 'cloud' («تخزين نواة» always)
+// POST ?action=move-to-cloud              moves Drive files into «تخزين نواة», a batch per call -> { moved, failed, remaining }
 // POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram
 // anything else            -> the content API for this client's own posts (list, create, update, upload,
 //                             schedule, publish… exactly like /api/admin/content)
@@ -116,8 +118,27 @@ export default async function handler(req, res) {
         const { usageOf } = await import('./_lib/storage.js');
         if (usageOf(row?.data || { posts: [] }).cloud > 0) return json(res, 409, { ok: false, error: 'cloud_not_empty' });
       }
-      await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { cloud_enabled: Boolean(enabled), updated_at: new Date().toISOString() });
+      await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { cloud_enabled: Boolean(enabled), ...(enabled ? {} : { storage_pref: 'auto' }), updated_at: new Date().toISOString() });
       return json(res, 200, { ok: true });
+    }
+    if (action === 'storage-pref' && req.method === 'POST') {
+      const pref = (await readJson(req)).pref === 'cloud' ? 'cloud' : 'auto';
+      if (pref === 'cloud' && !client.cloud_enabled) return json(res, 409, { ok: false, error: 'cloud_off' });
+      await sb.update('clients', `id=eq.${encodeURIComponent(client.id)}`, { storage_pref: pref, updated_at: new Date().toISOString() });
+      return json(res, 200, { ok: true, pref });
+    }
+    if (action === 'move-to-cloud' && req.method === 'POST') {
+      if (!client.cloud_enabled) return json(res, 409, { ok: false, error: 'cloud_off' });
+      const store = await clientStore(client);
+      const { save } = await store.load();
+      try {
+        const r = await store.moveToCloud(Date.now() + 40e3); // the client calls again while files remain
+        if (r.moved) await save();
+        return json(res, 200, { ok: true, ...r });
+      } catch (e) {
+        if (e.code) return json(res, 409, { ok: false, error: e.code });
+        throw e;
+      }
     }
 
     // ---- content: in the client's own storage (never Nawa's Drive)

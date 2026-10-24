@@ -6,6 +6,8 @@
 //   - media in the client's own Google Drive (free, capped at DRIVE_CAP even on a paid Google plan,
 //     and only while their account has room), or else in «تخزين نواة» (Cloudflare R2, billed per
 //     GB-month) once the client turns it on. Each media entry remembers where it is (store).
+//     storage_pref 'cloud' sends new uploads straight to «تخزين نواة»; moveToCloud() moves existing
+//     Drive files there (and trashes them in Drive).
 //
 // A store: { kind, calendar, load() -> { data, save, rootUrl? }, startUpload, attach, preview,
 //            trash, removePost, rename, refreshFiles, urlFor, usage }
@@ -78,6 +80,8 @@ const DRIVE_PURPOSE = 'nawa-client-drive';
 export const sealDrive = (conn) => seal(DRIVE_PURPOSE, conn);
 export const driveConnection = (client) => (client.drive_conn ? unseal(DRIVE_PURPOSE, client.drive_conn) : null);
 
+const countDrive = (data) => (data.posts || []).reduce((n, p) => n + (p.media || []).filter((m) => m.store !== 'cloud').length, 0);
+
 /** Bytes a client's posts keep in each store. */
 export function usageOf(data) {
   const u = { drive: 0, cloud: 0 };
@@ -117,7 +121,8 @@ export async function clientStore(client) {
     async startUpload(post, { name, mimeType, size, origin }) {
       const u = usageOf(data);
       let driveFull = false;
-      if (g && client.drive_folder) {
+      const cloudFirst = client.storage_pref === 'cloud' && client.cloud_enabled && R2.r2Configured();
+      if (g && client.drive_folder && !cloudFirst) {
         const q = await driveQuota(g);
         const room = q?.limit ? q.limit - q.usage : Infinity;
         if (u.drive + size <= DRIVE_CAP && size <= room) {
@@ -165,6 +170,38 @@ export async function clientStore(client) {
     },
     rename: (post) => (post.folderId && g ? G.renameFile(g, post.folderId, folderName(post)) : null),
     async refreshFiles() { return null; }, // drive.file can't see files added in Drive directly: uploads go through the portal
+    /**
+     * Moves Drive files into «تخزين نواة», oldest posts first, until the deadline: each file is copied,
+     * checked, swapped in the post, then trashed in Drive (recoverable there for 30 days).
+     * Call load() first and save() after. Returns { moved, failed, remaining }.
+     */
+    async moveToCloud(deadline) {
+      if (!g || !client.cloud_enabled || !R2.r2Configured()) throw new StorageError('no_storage');
+      let moved = 0, failed = 0;
+      for (const post of data.posts) {
+        for (const [i, m] of (post.media || []).entries()) {
+          if (m.store === 'cloud') continue;
+          if (Date.now() > deadline) return { moved, failed, remaining: countDrive(data) };
+          try {
+            const src = await g.call(`/drive/v3/files/${enc(m.id)}?alt=media`, { raw: true });
+            if (!src.ok) throw new Error('drive ' + src.status);
+            const id = 'c_' + crypto.randomBytes(8).toString('hex');
+            const key = `${cloudPrefix(client, post)}${id}/${safeName(m.name)}`;
+            const size = Number(src.headers.get('content-length') || m.size || 0);
+            // R2 needs the length up front: files up to 150 MB are buffered, bigger ones streamed with it
+            const body = size && size <= 150e6 ? Buffer.from(await src.arrayBuffer()) : src.body;
+            const put = await fetch(R2.presign('PUT', key, 3600), { method: 'PUT', body, ...(body === src.body ? { duplex: 'half' } : {}), headers: { 'Content-Type': m.mimeType, ...(size ? { 'Content-Length': String(size) } : {}) } });
+            if (!put.ok) throw new Error('r2 ' + put.status);
+            const h = await R2.head(key);
+            if (!h?.size) throw new Error('r2 empty');
+            post.media[i] = { id, name: m.name, mimeType: m.mimeType, size: h.size, store: 'cloud', key, ...(m.video ? { video: true } : {}) };
+            await G.trashFile(g, m.id).catch(() => {});
+            moved++;
+          } catch (e) { console.error('move', m.id, e.message); failed++; }
+        }
+      }
+      return { moved, failed, remaining: countDrive(data) };
+    },
     urlFor(m, platform) {
       if (m.store === 'cloud') {
         const k = seal('nawa-media', { k: m.key, e: Date.now() + 30 * 60e3, m: m.video ? 'raw' : platform === 'instagram' ? 'ig' : 'fb' });

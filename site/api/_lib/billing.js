@@ -122,7 +122,8 @@ export async function storageSummary(client, data, settings, { withQuota = false
   ]);
   return {
     drive: { connected: Boolean(client.drive_conn), email: client.drive_email || '', bytes: u.drive, cap: DRIVE_CAP, ...(quota ? { quota } : {}) },
-    cloud: { available: r2Configured(), enabled: Boolean(client.cloud_enabled), bytes: u.cloud },
+    cloud: { available: r2Configured(), enabled: Boolean(client.cloud_enabled), bytes: u.cloud, pref: client.storage_pref === 'cloud' ? 'cloud' : 'auto' },
+    driveFiles: (data.posts || []).reduce((n, p) => n + (p.media || []).filter((m) => m.store !== 'cloud').length, 0),
     estimate: est,
     invoices,
   };

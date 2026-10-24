@@ -511,7 +511,7 @@ function drawMedia() {
   $('ceMedia').innerHTML = media.length ? `<ol class="ct-media">${media.map((m, i) => `
     <li>
       <a class="ct-mthumb" href="${CLIENT_MODE ? esc(thumb(m, 1600)) : `https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view`}" target="_blank" rel="noopener" title="${esc(m.name)}">
-        <img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">${isVideo(m) ? '<i class="ct-play">▶</i>' : ''}<i class="ct-idx" dir="ltr">${i + 1}</i></a>
+        <img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">${isVideo(m) ? '<i class="ct-play">▶</i>' : ''}<i class="ct-idx" dir="ltr">${i + 1}</i>${CLIENT_MODE ? `<i class="ct-store${m.store === 'cloud' ? ' cloud' : ''}">${m.store === 'cloud' ? 'تخزين نواة' : 'Drive'}</i>` : ''}</a>
       <span class="ct-mtools">
         <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="تقديم">→</button>
         <button type="button" data-mv="${i}" data-d="1" ${i === media.length - 1 ? 'disabled' : ''} aria-label="تأخير">←</button>

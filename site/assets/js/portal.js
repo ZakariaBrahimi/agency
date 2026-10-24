@@ -71,7 +71,7 @@ const TS = {
     invMonth: 'الشهر', invGb: 'متوسط التخزين', invAmount: 'المبلغ', invStatus: 'الحالة', paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة',
     payTitle: 'طرق الدفع', payLead: 'ادفع بإحدى الطرق التالية، ثم أرسل لنا وصل الدفع مع رقم الشهر.',
     baridimob: 'بريدي موب (RIP)', ccp: 'الحساب البريدي الجاري (CCP)', ccpName: 'الاسم', ccpAccount: 'رقم الحساب', ccpKey: 'المفتاح', redotpay: 'RedotPay', uid: 'UID', email2: 'البريد',
-    copy: 'نسخ', copied: 'نُسخ', mark: (n) => `علّم الخطوة ${n} كمنجزة`, unmark: (n) => `ألغِ إنجاز الخطوة ${n}`, stepsCount: (a, b) => `${a} من ${b} خطوات منجزة`, afterFb: 'يُفعَّل إنستغرام عبر صفحتك على فيسبوك، فابدأ بفيسبوك أولًا.', afterFbShort: 'بعد فيسبوك', goFb: 'اذهب إلى فيسبوك', tellLead: 'أنهيت الخطوات؟ أخبرنا لنتحقق ونفعّل المنصة.', tellNawa: 'أنهيت، أخبر نواة', reviewing: 'وصلنا إشعارك ✓ نتحقق الآن ونفعّل المنصة قريبًا.', activeLine: (n) => `${n} مفعّل`, stepsAgain: 'عرض الخطوات من جديد', allSetTitle: 'كل منصاتك جاهزة 🎉', goContent: 'اذهب إلى «المحتوى»', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
+    copy: 'نسخ', copied: 'نُسخ', prefTitle: 'أين تُحفظ الملفات الجديدة؟', prefAuto: 'تلقائي (موصى به)', prefAutoNote: 'Google Drive أولًا مجانًا، ثم «تخزين نواة» عند امتلائه.', prefCloud: '«تخزين نواة» دائمًا', prefCloudNote: 'كل الملفات الجديدة في تخزين نواة: نشر أكثر ثباتًا، وتبقى مساحة Google لك.', prefSavedAuto: 'تُحفظ الملفات الجديدة في Google Drive أولًا.', prefSavedCloud: 'تُحفظ الملفات الجديدة في «تخزين نواة».', driveAlmostCloud: (p) => `مساحة Google Drive شارفت على الامتلاء. ستُحفظ الملفات الجديدة في «تخزين نواة» بسعر ${p} دج لكل غيغابايت شهريًا.`, driveAlmostOff: 'مساحة Google Drive شارفت على الامتلاء. فعّل «تخزين نواة» لتواصل الرفع بعد امتلائها.', moveTitle: 'نقل ملفاتك إلى «تخزين نواة»', moveLead: (n) => `${n} ملف في Google Drive. ننسخها إلى تخزين نواة ثم ننقلها إلى سلة Drive (تبقى قابلة للاسترجاع 30 يومًا).`, moveBtn: 'انقل ملفاتي', moveConfirm: 'تأكيد النقل', moving: (a, b) => `نُقل ${a}، وبقي ${b}…`, moveDone: (n) => `نُقل ${n} ملف إلى «تخزين نواة».`, moveSome: (a, b) => `نُقل ${a} ملف، وتعذّر نقل ${b}. حاول مرة أخرى لاحقًا.`, e_cloud_off: 'فعّل «تخزين نواة» أولًا.', mark: (n) => `علّم الخطوة ${n} كمنجزة`, unmark: (n) => `ألغِ إنجاز الخطوة ${n}`, stepsCount: (a, b) => `${a} من ${b} خطوات منجزة`, afterFb: 'يُفعَّل إنستغرام عبر صفحتك على فيسبوك، فابدأ بفيسبوك أولًا.', afterFbShort: 'بعد فيسبوك', goFb: 'اذهب إلى فيسبوك', tellLead: 'أنهيت الخطوات؟ أخبرنا لنتحقق ونفعّل المنصة.', tellNawa: 'أنهيت، أخبر نواة', reviewing: 'وصلنا إشعارك ✓ نتحقق الآن ونفعّل المنصة قريبًا.', activeLine: (n) => `${n} مفعّل`, stepsAgain: 'عرض الخطوات من جديد', allSetTitle: 'كل منصاتك جاهزة 🎉', goContent: 'اذهب إلى «المحتوى»', shotOpen: 'تكبير الصورة', shotNote: 'صورة توضيحية، وقد تختلف الواجهة قليلًا.', close: 'إغلاق', d_connected: 'رُبط Google Drive.', d_denied: 'لم تكتمل الموافقة على Google Drive.', d_failed: 'تعذّر ربط Google Drive. حاول مرة أخرى.',
   },
   en: {
     tabStorage: 'Storage', stTitle: 'Where your photos and videos are kept', stLead: 'We keep your files in your own Google Drive for free, up to 15 GB. Once it’s full, new files go to “Nawa storage” if you turn it on; older files stay where they are.',
@@ -92,7 +92,7 @@ const TS = {
     invMonth: 'Month', invGb: 'Average stored', invAmount: 'Amount', invStatus: 'Status', paid: 'Paid', unpaid: 'Unpaid', void: 'Void',
     payTitle: 'How to pay', payLead: 'Pay with one of these, then send us the payment receipt with the month.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Postal account (CCP)', ccpName: 'Name', ccpAccount: 'Account number', ccpKey: 'Key', redotpay: 'RedotPay', uid: 'UID', email2: 'Email',
-    copy: 'Copy', copied: 'Copied', mark: (n) => `Mark step ${n} as done`, unmark: (n) => `Mark step ${n} as not done`, stepsCount: (a, b) => `${a} of ${b} steps done`, afterFb: 'Instagram is activated through your Facebook Page, so start with Facebook first.', afterFbShort: 'After Facebook', goFb: 'Go to Facebook', tellLead: 'Finished the steps? Let us know and we’ll check and turn it on.', tellNawa: 'I’m done, tell Nawa', reviewing: 'We got your note ✓ We’re checking and will turn it on soon.', activeLine: (n) => `${n} is active`, stepsAgain: 'Show the steps again', allSetTitle: 'All your platforms are ready 🎉', goContent: 'Go to “Content”', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
+    copy: 'Copy', copied: 'Copied', prefTitle: 'Where should new files go?', prefAuto: 'Automatic (recommended)', prefAutoNote: 'Google Drive first, for free, then Nawa Storage once it’s full.', prefCloud: 'Always Nawa Storage', prefCloudNote: 'Every new file goes to Nawa Storage: steadier publishing, and your Google space stays yours.', prefSavedAuto: 'New files go to Google Drive first.', prefSavedCloud: 'New files go to Nawa Storage.', driveAlmostCloud: (p) => `Your Google Drive is almost full. New files will go to Nawa Storage at ${p} DZD per GB per month.`, driveAlmostOff: 'Your Google Drive is almost full. Turn on Nawa Storage to keep uploading once it’s full.', moveTitle: 'Move your files to Nawa Storage', moveLead: (n) => `${n} files are in Google Drive. We copy them to Nawa Storage, then move them to your Drive trash (recoverable for 30 days).`, moveBtn: 'Move my files', moveConfirm: 'Confirm move', moving: (a, b) => `${a} moved, ${b} left…`, moveDone: (n) => `${n} files moved to Nawa Storage.`, moveSome: (a, b) => `${a} files moved, ${b} couldn’t be moved. Please try again later.`, e_cloud_off: 'Turn on Nawa Storage first.', mark: (n) => `Mark step ${n} as done`, unmark: (n) => `Mark step ${n} as not done`, stepsCount: (a, b) => `${a} of ${b} steps done`, afterFb: 'Instagram is activated through your Facebook Page, so start with Facebook first.', afterFbShort: 'After Facebook', goFb: 'Go to Facebook', tellLead: 'Finished the steps? Let us know and we’ll check and turn it on.', tellNawa: 'I’m done, tell Nawa', reviewing: 'We got your note ✓ We’re checking and will turn it on soon.', activeLine: (n) => `${n} is active`, stepsAgain: 'Show the steps again', allSetTitle: 'All your platforms are ready 🎉', goContent: 'Go to “Content”', shotOpen: 'Enlarge picture', shotNote: 'Illustration: the real screen may look slightly different.', close: 'Close', d_connected: 'Google Drive connected.', d_denied: 'Google Drive approval wasn’t completed.', d_failed: 'Couldn’t connect Google Drive. Please try again.',
   },
   fr: {
     tabStorage: 'Stockage', stTitle: 'Où sont gardées vos photos et vidéos', stLead: 'Nous gardons vos fichiers dans votre propre Google Drive gratuitement, jusqu’à 15 Go. Une fois plein, les nouveaux fichiers vont dans « Stockage Nawa » si vous l’activez ; les anciens restent en place.',
@@ -113,7 +113,7 @@ const TS = {
     invMonth: 'Mois', invGb: 'Stockage moyen', invAmount: 'Montant', invStatus: 'Statut', paid: 'Payée', unpaid: 'Non payée', void: 'Annulée',
     payTitle: 'Comment payer', payLead: 'Payez avec l’un de ces moyens, puis envoyez-nous le reçu avec le mois concerné.',
     baridimob: 'BaridiMob (RIP)', ccp: 'Compte postal (CCP)', ccpName: 'Nom', ccpAccount: 'Numéro de compte', ccpKey: 'Clé', redotpay: 'RedotPay', uid: 'UID', email2: 'E-mail',
-    copy: 'Copier', copied: 'Copié', mark: (n) => `Marquer l’étape ${n} comme faite`, unmark: (n) => `Marquer l’étape ${n} comme non faite`, stepsCount: (a, b) => `${a} étapes faites sur ${b}`, afterFb: 'Instagram s’active via votre Page Facebook : commencez par Facebook.', afterFbShort: 'Après Facebook', goFb: 'Aller à Facebook', tellLead: 'Étapes terminées ? Prévenez-nous, nous vérifions et activons la plateforme.', tellNawa: 'C’est fait, prévenir Nawa', reviewing: 'Bien reçu ✓ Nous vérifions et activons la plateforme bientôt.', activeLine: (n) => `${n} est activé`, stepsAgain: 'Revoir les étapes', allSetTitle: 'Toutes vos plateformes sont prêtes 🎉', goContent: 'Aller à « Contenu »', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
+    copy: 'Copier', copied: 'Copié', prefTitle: 'Où enregistrer les nouveaux fichiers ?', prefAuto: 'Automatique (recommandé)', prefAutoNote: 'Google Drive d’abord, gratuitement, puis le Stockage Nawa quand il est plein.', prefCloud: 'Toujours le Stockage Nawa', prefCloudNote: 'Tous les nouveaux fichiers vont dans le Stockage Nawa : publication plus fiable, et votre espace Google reste libre.', prefSavedAuto: 'Les nouveaux fichiers vont d’abord dans Google Drive.', prefSavedCloud: 'Les nouveaux fichiers vont dans le Stockage Nawa.', driveAlmostCloud: (p) => `Votre Google Drive est presque plein. Les nouveaux fichiers iront dans le Stockage Nawa à ${p} DA par Go et par mois.`, driveAlmostOff: 'Votre Google Drive est presque plein. Activez le Stockage Nawa pour continuer à importer une fois plein.', moveTitle: 'Déplacer vos fichiers vers le Stockage Nawa', moveLead: (n) => `${n} fichiers sont dans Google Drive. Nous les copions dans le Stockage Nawa, puis les mettons dans la corbeille de Drive (récupérables 30 jours).`, moveBtn: 'Déplacer mes fichiers', moveConfirm: 'Confirmer le déplacement', moving: (a, b) => `${a} déplacés, ${b} restants…`, moveDone: (n) => `${n} fichiers déplacés vers le Stockage Nawa.`, moveSome: (a, b) => `${a} fichiers déplacés, ${b} n’ont pas pu l’être. Réessayez plus tard.`, e_cloud_off: 'Activez d’abord le Stockage Nawa.', mark: (n) => `Marquer l’étape ${n} comme faite`, unmark: (n) => `Marquer l’étape ${n} comme non faite`, stepsCount: (a, b) => `${a} étapes faites sur ${b}`, afterFb: 'Instagram s’active via votre Page Facebook : commencez par Facebook.', afterFbShort: 'Après Facebook', goFb: 'Aller à Facebook', tellLead: 'Étapes terminées ? Prévenez-nous, nous vérifions et activons la plateforme.', tellNawa: 'C’est fait, prévenir Nawa', reviewing: 'Bien reçu ✓ Nous vérifions et activons la plateforme bientôt.', activeLine: (n) => `${n} est activé`, stepsAgain: 'Revoir les étapes', allSetTitle: 'Toutes vos plateformes sont prêtes 🎉', goContent: 'Aller à « Contenu »', shotOpen: 'Agrandir l’image', shotNote: 'Illustration : l’écran réel peut légèrement différer.', close: 'Fermer', d_connected: 'Google Drive connecté.', d_denied: 'L’autorisation Google Drive n’a pas abouti.', d_failed: 'Connexion à Google Drive impossible. Réessayez.',
   },
 };
 for (const l of Object.keys(TS)) Object.assign(T[l], TS[l]);
@@ -346,6 +346,8 @@ function drawStorage(msg = '') {
   const room = Math.max(0, Math.min(d.cap - d.bytes, accountRoom ?? Infinity));
   const full = d.connected && room < PHOTO;
   const pctDrive = Math.min(100, (d.bytes / d.cap) * 100);
+  // "almost full" at 90% of what Drive can hold for us (the 15 GB cap, or less if the account has less room)
+  const usable = Math.min(d.cap, q?.limit || d.cap), almost = d.connected && usable > 0 && (usable - room) / usable >= 0.9;
   const row = (label, value) => `<div class="pt-payrow"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b>${copyButton(esc(value))}</div>`;
   const pay = s.payment || {};
   $('ptStorage').innerHTML = `
@@ -360,7 +362,8 @@ function drawStorage(msg = '') {
           <div><div class="pt-meter-label">${esc(t('driveUse', fmtGb(d.bytes), fmtGb(d.cap)))}</div>
           <div class="pt-bar"><i style="inline-size:${pctDrive.toFixed(1)}%"></i></div></div>
           ${accountRoom !== null ? `<p class="muted pt-small">${esc(t('accountLeft', fmtGb(accountRoom)))}</p>` : ''}
-          ${full ? `<p class="pt-warn">${esc(t('driveFull'))}</p>` : `<p class="pt-small">${esc(t('fits', num(room / PHOTO), num(room / REEL)))}</p>`}`
+          ${full ? `<p class="pt-warn">${esc(t('driveFull'))}</p>` : `<p class="pt-small">${esc(t('fits', num(room / PHOTO), num(room / REEL)))}</p>`}
+          ${!full && almost ? `<p class="pt-warn">${esc(c.enabled ? t('driveAlmostCloud', num(e.price_dzd)) : t('driveAlmostOff'))}</p>` : ''}`
         : `<ol class="pt-steps">${t('stepsDrive').map((x) => `<li>${esc(x)}</li>`).join('')}</ol>
            <p class="pt-small">${esc(t('fits', num(d.cap / PHOTO), num(d.cap / REEL)))}</p>`}
         <p class="muted pt-small">${esc(t('driveCapNote'))}</p>
@@ -381,6 +384,11 @@ function drawStorage(msg = '') {
           <div><span>${esc(t('monthSoFar', num(e.so_far_dzd)))}</span></div>
           <div><span>${esc(t('monthProjected', num(e.projected_dzd)))}</span></div>
         </div>
+        ${c.enabled ? `
+          <fieldset class="pt-pref"><legend>${esc(t('prefTitle'))}</legend>
+            ${['auto', 'cloud'].map((v) => `<label class="pt-prefopt${c.pref === v ? ' on' : ''}"><input type="radio" name="ptPref" value="${v}"${c.pref === v ? ' checked' : ''}><span><b>${esc(t(v === 'auto' ? 'prefAuto' : 'prefCloud'))}</b><small>${esc(t(v === 'auto' ? 'prefAutoNote' : 'prefCloudNote'))}</small></span></label>`).join('')}
+          </fieldset>
+          ${d.connected && s.driveFiles ? `<div class="pt-move"><b>${esc(t('moveTitle'))}</b><p class="muted pt-small">${esc(t('moveLead', num(s.driveFiles)))}</p><button type="button" class="btn btn-ghost-dark" id="ptMove">${esc(t('moveBtn'))}</button><p class="pt-small" id="ptMoveMsg" aria-live="polite"></p></div>` : ''}` : ''}
         <div class="pt-st-btns">${!c.available && !c.enabled ? `<p class="muted pt-small">${esc(t('cloudSoon'))}</p>`
           : c.enabled ? `<button type="button" class="btn btn-ghost-dark" id="ptCloudOff">${esc(t('disableCloud'))}</button>`
           : `<button type="button" class="btn btn-lime" id="ptCloudOn">${esc(t('enableCloud'))}</button>`}</div>
@@ -411,6 +419,24 @@ function drawStorage(msg = '') {
   arm($('ptDriveOff'), t('confirmDisconnect'), () => call('drive-disconnect', {}));
   arm($('ptCloudOn'), t('confirmEnable', num(e.price_dzd)), () => call('cloud', { enabled: true }));
   arm($('ptCloudOff'), t('disableCloud') + ' ✓', () => call('cloud', { enabled: false }));
+  $('ptStorage').querySelectorAll('input[name="ptPref"]').forEach((r) => r.addEventListener('change', async () => {
+    try { await call('storage-pref', { pref: r.value }); state.storage.cloud.pref = r.value; drawStorage(t(r.value === 'cloud' ? 'prefSavedCloud' : 'prefSavedAuto')); }
+    catch (err) { drawStorage(errMsg(err)); }
+  }));
+  const mv = $('ptMove');
+  if (mv) mv.addEventListener('click', async () => {
+    if (!mv.dataset.armed) { mv.dataset.armed = '1'; mv.textContent = t('moveConfirm'); mv.classList.add('armed'); return; }
+    mv.disabled = true; let moved = 0, failed = 0;
+    try {
+      for (;;) { // the server moves a batch per call
+        const r = await call('move-to-cloud', {});
+        moved += r.moved; failed = r.failed;
+        $('ptMoveMsg').textContent = t('moving', num(moved), num(r.remaining));
+        if (!r.remaining || !r.moved) break;
+      }
+      await loadStorage(failed ? t('moveSome', num(moved), num(failed)) : t('moveDone', num(moved)));
+    } catch (err) { drawStorage(errMsg(err)); }
+  });
 }
 
 function showTab(tab) {

@@ -581,3 +581,18 @@ input[type="datetime-local"], input[type="date"], input[type="time"] { -webkit-a
 input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .ct-up { min-width: 0; overflow-wrap: anywhere; }
 
+/* storage: where new files go, moving files, per-file store label */
+.pt-pref { border: 0; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; min-width: 0; }
+.pt-pref legend { font-weight: 700; font-size: 14.5px; margin-bottom: 6px; padding: 0; }
+.pt-prefopt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 14px; cursor: pointer; }
+.pt-prefopt.on { border-color: var(--violet, #5B4BFF); background: #F4F3FF; }
+.pt-prefopt input { margin-top: 4px; accent-color: var(--violet, #5B4BFF); flex: none; }
+.pt-prefopt span { display: grid; gap: 2px; min-width: 0; }
+.pt-prefopt small { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.pt-move { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.pt-move p { margin: 0; }
+.pt-move .btn { justify-self: start; }
+.pt-move .btn.armed { background: #9A5B00; border-color: #9A5B00; color: #fff; }
+.ct-store { position: absolute; inset-block-start: 6px; inset-inline-start: 6px; font: 700 10.5px var(--font); font-style: normal; padding: 2px 7px; border-radius: 999px; background: rgb(255 255 255 / .92); color: #1A73E8; }
+.ct-store.cloud { color: #5B4BFF; }
+

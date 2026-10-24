@@ -42,3 +42,8 @@ create table if not exists client_invoices (
 alter table client_content enable row level security;
 alter table client_usage_daily enable row level security;
 alter table client_invoices enable row level security;
+
+-- Where new uploads go: auto = the client's Google Drive first, then «تخزين نواة» when full;
+-- cloud = always «تخزين نواة» (only when cloud_enabled).
+alter table clients add column if not exists storage_pref text not null default 'auto'
+  check (storage_pref in ('auto', 'cloud'));
