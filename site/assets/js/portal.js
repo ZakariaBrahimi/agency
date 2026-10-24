@@ -327,7 +327,8 @@ $('ptShotView').addEventListener('click', (e) => { if (e.target === e.currentTar
 
 // ---------- storage ----------
 const fmtGb = (bytes) => { const gb = bytes / 1e9; return `${gb < 10 ? gb.toFixed(gb < 1 ? 2 : 1) : Math.round(gb)} ${lang === 'en' ? 'GB' : lang === 'fr' ? 'Go' : 'غ.ب'}`; };
-const num = (n) => Math.max(0, Math.floor(n)).toLocaleString(lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-FR' : 'en-US');
+// 14,997: ar-DZ would write 14.997, which reads like a decimal
+const num = (n) => Math.max(0, Math.floor(n)).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US');
 const PHOTO = 1e6, REEL = 50e6;
 
 async function loadStorage(msg) {

@@ -36,7 +36,7 @@ function toast(msg, bad = false) {
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 3200);
 }
 const gb = (b) => { const v = Number(b || 0) / 1e9; return `${v < 10 ? v.toFixed(v < 1 ? 2 : 1) : Math.round(v)} غ.ب`; };
-const dzd = (n) => `${Math.round(Number(n || 0)).toLocaleString('ar-DZ')} دج`;
+const dzd = (n) => `${Math.round(Number(n || 0)).toLocaleString('en-US')} دج`;
 const METHODS = { baridimob: 'بريدي موب', ccp: 'CCP', redotpay: 'RedotPay', cash: 'نقدًا', other: 'أخرى' };
 const INV = { paid: 'مدفوعة', unpaid: 'غير مدفوعة', void: 'ملغاة' };
 /** One line per client: where the files are, how much, this month, unpaid invoices. */

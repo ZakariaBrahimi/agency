@@ -13,7 +13,7 @@ const PAY = [
 ];
 const state = { loaded: false, settings: null };
 const price = (s) => Math.ceil((Number(s.cost_usd) + Number(s.fee_usd)) * Number(s.rate_dzd) - 1e-9);
-const dzd = (n) => Math.round(n).toLocaleString('ar-DZ');
+const dzd = (n) => Math.round(n).toLocaleString('en-US'); // 1,290 (ar-DZ writes 1.290, which reads like a decimal)
 
 async function call(body) {
   const r = await fetch(API, { method: body ? 'POST' : 'GET', credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });

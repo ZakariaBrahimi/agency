@@ -294,11 +294,33 @@ function renderCalendar() {
       <button type="button" class="btn btn-ghost-dark" id="ctNext" aria-label="الشهر التالي">←</button>
     </div>
     <div class="ct-cal-scroll"><div class="ct-cal">${DAYS.map((d) => `<div class="ct-dow">${d}</div>`).join('')}${cells}</div></div>
+    <div class="ct-dayview" id="ctDayView" aria-live="polite"></div>
     ${undated.length ? `<h3 class="ct-sub">بدون تاريخ</h3><div class="ct-grid">${undated.map(card).join('')}</div>` : ''}`;
   const shift = (n) => { const d = new Date(Date.UTC(y, m - 1 + n, 1)); state.month = d.toISOString().slice(0, 7); renderCalendar(); };
   $('ctPrev').onclick = () => shift(-1);
   $('ctNext').onclick = () => shift(1);
   bindOpen($('ctView'));
+  // phones: the month is compact (dots per post); tapping a day lists its posts underneath
+  if (!state.day?.startsWith(state.month)) {
+    state.day = today.startsWith(state.month) ? today : (posts.find((p) => p.date?.startsWith(state.month))?.date.slice(0, 10) || `${state.month}-01`);
+  }
+  $('ctView').querySelectorAll('.ct-day[data-day]').forEach((c) => c.addEventListener('click', (e) => {
+    if (!phone()) return;
+    e.preventDefault(); e.stopPropagation();
+    state.day = c.dataset.day; drawDay(posts);
+  }, true));
+  drawDay(posts);
+}
+
+const phone = () => matchMedia('(max-width: 640px)').matches;
+function drawDay(posts) {
+  const key = state.day, box = $('ctDayView'); if (!box) return;
+  $('ctView').querySelectorAll('.ct-day[data-day]').forEach((c) => c.classList.toggle('sel', c.dataset.day === key));
+  const list = posts.filter((p) => p.date?.startsWith(key)).sort(byDate);
+  const [, mm, dd] = key.split('-').map(Number);
+  box.innerHTML = `<div class="ct-dayview-head"><b><span dir="ltr">${dd}</span> ${MONTHS[mm - 1]}</b><button type="button" class="btn btn-ghost-dark" data-new="${key}">+ منشور في هذا اليوم</button></div>
+    ${list.length ? list.map((p) => `<button type="button" class="ct-dayitem st-${postStatus(p)}" data-open="${p.id}"><span class="pill ct-st st-${postStatus(p)}">${STATUS[postStatus(p)]}</span><b>${esc(p.title)}</b><span class="muted">${esc(fmtAt(p.date))}</span><span class="ct-pfs">${pfBadges(p)}</span></button>`).join('') : '<p class="muted">لا منشورات في هذا اليوم.</p>'}`;
+  bindOpen(box);
 }
 
 function card(p) {
