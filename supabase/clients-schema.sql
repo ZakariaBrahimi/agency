@@ -43,3 +43,19 @@ create table if not exists client_otps (
 alter table clients enable row level security;
 alter table client_users enable row level security;
 alter table client_otps enable row level security;
+
+-- The client's Claude connector: one private link per client (only its hash is stored).
+-- Claude can read the client's calendar and create draft proposals; the client approves them.
+create table if not exists client_ai_links (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null unique references clients(id) on delete cascade,
+  token_hash text not null unique,
+  created_by text not null default '',
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz,
+  drafts_total integer not null default 0,
+  day text not null default '',           -- YYYY-MM-DD of day_count
+  day_count integer not null default 0,   -- drafts created that day (limit)
+  digest_at timestamptz                   -- last daily email about new proposals
+);
+alter table client_ai_links enable row level security;

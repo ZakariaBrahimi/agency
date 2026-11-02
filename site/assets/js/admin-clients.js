@@ -77,6 +77,7 @@ function render() {
           <span class="muted">${activeCount(c)} من 4 مفعّلة</span></div>
         <div class="muted cl-users">${c.users.map((u) => `<bdi>${esc(u.name || u.email)}</bdi>`).join('، ') || 'لا أحد'}</div>
         ${storageLine(c)}
+        ${c.ai ? `<div class="cl-ai"><span>✦ Claude مربوط${c.ai.last_used_at ? ` · آخر استعمال ${esc(c.ai.last_used_at.slice(0, 10))}` : ' · لم يُستعمل بعد'} · ${c.ai.drafts_total} مسودة${c.ai.pending ? ` · <b>${c.ai.pending} بانتظار العميل</b>` : ''}</span><button type="button" class="link-btn ct-danger" data-ai-revoke="${c.id}">إلغاء الرابط</button></div>` : ''}
         <div class="cl-btns">
           <button type="button" class="btn btn-dark" data-manage="${c.id}">إدارة</button>
           <button type="button" class="btn btn-ghost-dark" data-content="${c.id}">المحتوى</button>
@@ -84,6 +85,12 @@ function render() {
       </li>`).join('')}</ul>`
     : `<div class="ct-card cl-empty"><b>لا يوجد عملاء بعد.</b><p class="muted">أضف أول عميل: اسم الشركة وبريد الشخص الذي سيدخل. يدخل بعدها من <a href="/portal" target="_blank" rel="noopener" dir="ltr">/portal ↗</a> برمز يصله على بريده أو بحساب Google.</p></div>`}`;
   body.querySelectorAll('[data-manage]').forEach((b) => b.addEventListener('click', () => openClient(b.dataset.manage)));
+  // an emergency stop for a client's Claude link (only the client creates links, from the portal)
+  body.querySelectorAll('[data-ai-revoke]').forEach((b) => b.addEventListener('click', async () => {
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'تأكيد الإلغاء'; return; }
+    try { absorb(await call('client-ai-revoke', { id: b.dataset.aiRevoke })); render(); toast('أُلغي رابط Claude لهذا العميل.'); }
+    catch { toast('تعذّر الإلغاء.', true); }
+  }));
   body.querySelectorAll('[data-content]').forEach((b) => b.addEventListener('click', () => {
     window.dispatchEvent(new CustomEvent('nawa:tenant', { detail: b.dataset.content }));
     history.replaceState(null, '', '#content');

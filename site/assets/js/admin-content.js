@@ -60,6 +60,7 @@ function absorb(d) {
   if (d.rootUrl) state.rootUrl = d.rootUrl;
   if (d.email !== undefined) state.email = d.email;
   if (d.post) state.posts = state.posts.map((p) => (p.id === d.post.id ? d.post : p));
+  if (CLIENT_MODE && d.posts) window.dispatchEvent(new CustomEvent('nawa:proposals', { detail: state.posts.filter((p) => p.proposal).length }));
 }
 
 function toast(msg, bad = false) {
@@ -157,7 +158,10 @@ const todayAt = () => {
   const d = new Date(Date.now() + 3600e3); // Algeria is UTC+1 all year
   return d.toISOString().slice(0, 10);
 };
-const filtered = () => state.posts.filter((p) => state.filter === 'all' || postStatus(p) === state.filter);
+// Claude's proposals (client portal connector) are drafts that wait for the client's approval
+const stOf = (p) => (p.proposal ? 'proposal' : postStatus(p));
+const LABEL = { ...STATUS, proposal: 'مقترح من Claude' };
+const filtered = () => state.posts.filter((p) => state.filter === 'all' || stOf(p) === state.filter);
 const byDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999');
 
 function pfBadges(p) {
@@ -177,8 +181,8 @@ function render() {
   }
   document.querySelectorAll('.ct-views button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
 
-  const counts = { draft: 0, scheduled: 0, published: 0 };
-  state.posts.forEach((p) => counts[postStatus(p)]++);
+  const counts = { draft: 0, scheduled: 0, published: 0, proposal: 0 };
+  state.posts.forEach((p) => counts[stOf(p)]++);
   const weekEnd = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10), today = todayAt();
   const thisWeek = state.posts.filter((p) => p.date && p.date.slice(0, 10) >= today && p.date.slice(0, 10) <= weekEnd).length;
 
@@ -194,7 +198,7 @@ function render() {
       <div class="stat"><b dir="ltr">${thisWeek}</b><span>هذا الأسبوع</span></div>
     </div>
     <div class="tabs" role="tablist" aria-label="تصفية حسب الحالة">
-      ${[['all', 'الكل', state.posts.length], ['draft', STATUS.draft, counts.draft], ['scheduled', STATUS.scheduled, counts.scheduled], ['published', STATUS.published, counts.published]]
+      ${[['all', 'الكل', state.posts.length], ...(counts.proposal ? [['proposal', '✦ مقترحات Claude', counts.proposal]] : []), ['draft', STATUS.draft, counts.draft], ['scheduled', STATUS.scheduled, counts.scheduled], ['published', STATUS.published, counts.published]]
         .map(([k, l, n]) => `<button type="button" role="tab" data-cf="${k}" aria-selected="${state.filter === k}">${l} <span dir="ltr">${n}</span></button>`).join('')}
     </div>
     <div id="ctView"></div>`;
@@ -284,7 +288,7 @@ function renderCalendar() {
     const list = posts.filter((p) => p.date?.startsWith(key)).sort(byDate);
     cells += `<div class="ct-day${key === today ? ' today' : ''}" data-day="${key}">
       <span class="ct-dnum" dir="ltr">${d}</span>
-      ${list.map((p) => `<button type="button" class="ct-chip st-${postStatus(p)}" data-open="${p.id}"><span class="ct-chip-t">${esc(p.title)}</span><span class="ct-chip-pf">${pfBadges(p)}</span></button>`).join('')}
+      ${list.map((p) => `<button type="button" class="ct-chip st-${stOf(p)}" data-open="${p.id}"><span class="ct-chip-t">${esc(p.title)}</span><span class="ct-chip-pf">${pfBadges(p)}</span></button>`).join('')}
       <button type="button" class="ct-add" data-new="${key}" aria-label="منشور جديد يوم ${d}">+</button>
     </div>`;
   }
@@ -321,18 +325,18 @@ function drawDay(posts) {
   const list = posts.filter((p) => p.date?.startsWith(key)).sort(byDate);
   const [, mm, dd] = key.split('-').map(Number);
   box.innerHTML = `<div class="ct-dayview-head"><b><span dir="ltr">${dd}</span> ${MONTHS[mm - 1]}</b><button type="button" class="btn btn-ghost-dark" data-new="${key}">+ منشور في هذا اليوم</button></div>
-    ${list.length ? list.map((p) => `<button type="button" class="ct-dayitem st-${postStatus(p)}" data-open="${p.id}"><span class="pill ct-st st-${postStatus(p)}">${STATUS[postStatus(p)]}</span><b>${esc(p.title)}</b><span class="muted">${esc(fmtAt(p.date))}</span><span class="ct-pfs">${pfBadges(p)}</span></button>`).join('') : '<p class="muted">لا منشورات في هذا اليوم.</p>'}`;
+    ${list.length ? list.map((p) => `<button type="button" class="ct-dayitem st-${stOf(p)}" data-open="${p.id}"><span class="pill ct-st st-${stOf(p)}">${LABEL[stOf(p)]}</span><b>${esc(p.title)}</b><span class="muted">${esc(fmtAt(p.date))}</span><span class="ct-pfs">${pfBadges(p)}</span></button>`).join('') : '<p class="muted">لا منشورات في هذا اليوم.</p>'}`;
   bindOpen(box);
 }
 
 function card(p) {
   const cover = (p.media || [])[0];
-  const st = postStatus(p);
-  return `<button type="button" class="ct-post" data-open="${p.id}">
+  const st = stOf(p);
+  return `<button type="button" class="ct-post${p.proposal ? ' proposal' : ''}" data-open="${p.id}">
     <span class="ct-cover">${cover ? `<img src="${thumb(cover)}" alt="" loading="lazy">${isVideo(cover) ? '<i class="ct-play">▶</i>' : ''}` : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
       ${(p.media || []).length > 1 ? `<i class="ct-count" dir="ltr">1/${p.media.length}</i>` : ''}</span>
     <span class="ct-post-body">
-      <span class="pill ct-st st-${st}">${STATUS[st]}</span>
+      <span class="pill ct-st st-${st}">${LABEL[st]}</span>
       <b>${esc(p.title)}</b>
       <span class="muted">${esc(fmtAt(p.date))} · ${esc(KINDS[p.kind] || '')}</span>
       <span class="ct-pfs">${pfBadges(p)}</span>
@@ -393,12 +397,23 @@ function formPatch() {
 
 function drawEditor(p) {
   const f = $('ctForm');
-  const st = postStatus(p);
+  const st = stOf(p);
   f.innerHTML = `
     <div class="ct-dlg-head">
-      <div><span class="pill ct-st st-${st}">${STATUS[st]}</span> <span class="muted">${esc(fmtAt(p.date))}</span></div>
+      <div><span class="pill ct-st st-${st}">${LABEL[st]}</span> <span class="muted">${esc(fmtAt(p.date))}</span>${p.from?.by === 'claude' ? ' <span class="pill ct-from">✦ من Claude</span>' : ''}</div>
       <button type="button" class="ct-x" id="ceClose" aria-label="إغلاق">✕</button>
     </div>
+    ${p.proposal ? `
+    <div class="ct-proposal">
+      <b>✦ مقترح من Claude</b>
+      <span class="muted">أُنشئ ${esc(fmtTime(p.proposal.at))} · ${p.date ? `الموعد المقترح ${esc(fmtAt(p.date))}` : 'بدون موعد مقترح'} · لم يُجدول بعد</span>
+      ${p.proposal.idea ? `<p><b>فكرة الصورة:</b> ${esc(p.proposal.idea)}</p>` : ''}
+      ${CLIENT_MODE ? `
+        <div class="ct-prop-acts"><button type="button" class="btn btn-lime" id="cePropOk">اعتماد وجدولة</button><button type="button" class="btn btn-ghost-dark" id="cePropNo">رفض</button></div>
+        <div class="ct-prop-why" id="cePropWhy" hidden><input id="cePropReason" maxlength="300" placeholder="سبب الرفض (اختياري، يتعلّم منه Claude)"><button type="button" class="btn btn-dark" id="cePropReject">تأكيد الرفض</button></div>
+        <small class="muted">يمكنك تعديل المقترح قبل اعتماده. الاعتماد يجدوله على المنصات المختارة في موعده.</small>`
+      : '<span class="muted">بانتظار موافقة العميل من حسابه.</span>'}
+    </div>` : ''}
     <label class="ct-field"><span id="ctDlgTitle">العنوان</span><input id="ceTitle" maxlength="200" value="${esc(p.title)}" required></label>
     <div class="ct-row">
       <label class="ct-field"><span>النوع</span><select id="ceKind">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}"${p.kind === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
@@ -445,6 +460,25 @@ function drawEditor(p) {
   $('ceCopy').onclick = (e) => copy(e.currentTarget, capTab === 'all' ? $('ceCaption').value : ($('ceCaption').value.trim() || current().captions?.all || ''));
   $('ceSave').onclick = () => save();
   $('ceClose').onclick = close;
+  if ($('cePropOk')) {
+    $('cePropOk').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try {
+        if (state.dirty) await save(true);
+        const d = await act('proposal-approve', { id: p.id }); absorb(d); render(); drawEditor(current());
+        toast(d.scheduled ? 'اعتُمد وجُدول في موعده.' : 'اعتُمد. اختر الموعد ثم جدوِله.');
+      } catch (err) { b.disabled = false; toast(errText(err), true); }
+    };
+    // (the editor is a form, so the reason box is a plain block, not a nested form)
+    $('cePropNo').onclick = () => { $('cePropWhy').hidden = !$('cePropWhy').hidden; if (!$('cePropWhy').hidden) $('cePropReason').focus(); };
+    const reject = async () => {
+      const b = $('cePropReject'); b.disabled = true;
+      try { absorb(await act('proposal-reject', { id: p.id, reason: $('cePropReason').value })); state.dirty = false; close(); render(); toast('رُفض المقترح.'); }
+      catch (err) { b.disabled = false; toast(errText(err), true); }
+    };
+    $('cePropReject').onclick = reject;
+    $('cePropReason').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); reject(); } };
+  }
   $('ceFiles').onchange = (e) => upload([...e.target.files]);
   $('ceDelete').onclick = (e) => {
     if (e.target.dataset.armed) return remove();

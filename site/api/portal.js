@@ -17,6 +17,10 @@
 // POST ?action=storage-pref { pref }       where new uploads go: 'auto' (Drive first) | 'cloud' («تخزين نواة» always)
 // POST ?action=move-to-cloud              moves Drive files into «تخزين نواة», a batch per call -> { moved, failed, remaining }
 // POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram
+// GET  ?action=ai-link                     the Claude connector link (no token: it is shown once)
+// POST ?action=ai-link                     a new private link -> { url } (replaces the old one)
+// POST ?action=ai-revoke                   stops the link
+// POST /mcp/<token> (?action=mcp&t=)       the Claude connector itself (see _lib/mcp.js)
 // anything else            -> the content API for this client's own posts (list, create, update, upload,
 //                             schedule, publish… exactly like /api/admin/content)
 import { json, readJson } from './_lib/http.js';
@@ -29,6 +33,7 @@ import { clientSession, clearClientSession, requestCode, verifyCode, signedIn, n
 import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin.js';
 import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
 import { sb } from './_lib/supabase.js';
+import * as AI from './_lib/mcp.js';
 
 export default async function handler(req, res) {
   const url = new URL(req.url, 'http://x');
@@ -36,6 +41,8 @@ export default async function handler(req, res) {
   if (!sb.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
 
   try {
+    // the Claude connector authenticates with its own private link, not the portal session
+    if (action === 'mcp') return await AI.handleMcp(req, res, url.searchParams.get('t'));
     if (action === 'otp-send' && req.method === 'POST') {
       const email = normEmail((await readJson(req)).email);
       if (!validEmail(email)) return json(res, 400, { ok: false, error: 'bad_email' });
@@ -72,10 +79,16 @@ export default async function handler(req, res) {
         user: { name: user.name, email: user.email, role: user.role },
         client: { name: client.name, industry: client.industry, city: client.city, website: client.website },
         status: platformStatus(client, pages),
+        proposals: await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`).then(([r]) => (r?.data?.posts || []).filter((p) => p.proposal).length).catch(() => 0),
       });
     }
 
     // ---- a manual platform's steps are done: Nawa checks and turns it on
+    if (action === 'ai-link') {
+      if (req.method === 'POST') return json(res, 200, { ok: true, ...(await AI.createLink(client, user)) });
+      return json(res, 200, { ok: true, link: await AI.linkOf(client.id), daily: AI.DAILY_DRAFTS });
+    }
+    if (action === 'ai-revoke' && req.method === 'POST') { await AI.revokeLink(client.id); return json(res, 200, { ok: true }); }
     if (action === 'platform-done' && req.method === 'POST') {
       const k = (await readJson(req)).platform;
       if (!['linkedin', 'tiktok'].includes(k)) return json(res, 400, { ok: false, error: 'bad_platform' });

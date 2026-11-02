@@ -22,6 +22,10 @@
     {
       "source": "/media/:k",
       "destination": "/api/admin/content?action=pub-media&k=:k"
+    },
+    {
+      "source": "/mcp/:t",
+      "destination": "/api/portal?action=mcp&t=:t"
     }
   ],
   "headers": [
@@ -92,6 +96,19 @@
         {
           "key": "X-Frame-Options",
           "value": "SAMEORIGIN"
+        }
+      ]
+    },
+    {
+      "source": "/mcp/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
     }

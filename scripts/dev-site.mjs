@@ -16,6 +16,10 @@ http.createServer(async (req, res) => {
     req.url = '/api/admin/content?action=pub-media&k=' + encodeURIComponent(p.slice(7));
     p = '/api/admin/content';
   }
+  if (p.startsWith('/mcp/')) { // vercel.json rewrite: the client's Claude connector
+    req.url = '/api/portal?action=mcp&t=' + encodeURIComponent(p.slice(5));
+    p = '/api/portal';
+  }
   if (p === '/madar' || p.startsWith('/madar/')) { // vercel.json rewrite
     url.searchParams.set('p', p.replace(/^\/madar\/?/, ''));
     req.url = '/api/madar/render?' + url.searchParams;

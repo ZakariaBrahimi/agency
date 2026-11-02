@@ -57,6 +57,7 @@ import { getClient } from '../_lib/clients.js';
 import { adminClients, CLIENT_ACTIONS } from '../_lib/clients-admin.js';
 import * as B from '../_lib/billing.js';
 import * as P from '../_lib/plans.js';
+import * as AI from '../_lib/mcp.js';
 import { STORY_SETS, storyFiles } from '../../assets/js/stories-schema.js';
 
 const now = () => new Date().toISOString();
@@ -129,7 +130,8 @@ async function runAll(g) {
 }
 
 // Cron, once a day: each client's stored bytes, and «تخزين نواة» plans (a smaller size chosen at
-// renewal starting, alerts before and after a plan ends; see _lib/plans.js). Guarded in app_state so
+// renewal starting, alerts before and after a plan ends; see _lib/plans.js), and the daily email
+// about Claude's new proposals (_lib/mcp.js). Guarded in app_state so
 // the 5-minute runs do it only once. (Monthly invoices are no longer issued; past ones stay visible.)
 async function runBilling() {
   if (!sb.ready() || !kv.ready()) return null;
@@ -147,7 +149,8 @@ async function runBilling() {
     await B.recordUsage(c.id, usage).catch((e) => console.error('usage', c.id, e.message));
     if (c.plan_gb) await P.dailyPlan(c, usage.cloud, settings, day).then(() => plans++).catch((e) => console.error('plan', c.id, e.message));
   }
-  return { day, clients: clients.length, plans };
+  const digests = await AI.dailyDigest(contents).catch((e) => { console.error('ai digest', e.message); return 0; });
+  return { day, clients: clients.length, plans, digests };
 }
 
 // Cron: the next queued set, if any. Returns null when there is nothing to do.

@@ -228,8 +228,34 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         await save();
         return reply({ post });
       }
+      // ---- Claude's proposals (client portal): approve = schedule as suggested; reject = delete, keeping the reason for Claude
+      case 'proposal-approve': {
+        if (!post?.proposal) return json(res, 400, { ok: false, error: 'not_a_proposal' });
+        const at = isAt(body.at) ? body.at : post.date;
+        const future = isAt(at) && at > new Date(Date.now() + 3600e3).toISOString().slice(0, 16); // Algiers = UTC+1
+        post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() };
+        delete post.proposal;
+        if (future && post.platforms.length) {
+          post.date = at; post.schedule ||= {};
+          for (const pf of post.platforms) post.schedule[pf] = { at, status: 'scheduled', approvedAt: now() };
+        }
+        post.updatedAt = now();
+        await syncEvents(store, data, post);
+        await save();
+        return reply({ post, scheduled: Boolean(future && post.platforms.length) });
+      }
+      case 'proposal-reject': {
+        if (!post?.proposal) return json(res, 400, { ok: false, error: 'not_a_proposal' });
+        const reason = String(body.reason || '').trim().slice(0, 300);
+        data.settings.aiFeedback = [...(data.settings.aiFeedback || []), { at: now(), title: post.title, ...(reason ? { reason } : {}) }].slice(-20);
+        await Promise.resolve(store.removePost(post)).catch(() => {});
+        data.posts = data.posts.filter((p) => p.id !== post.id);
+        await save();
+        return reply();
+      }
       case 'schedule': {
         if (!post) return json(res, 400, { ok: false, error: 'bad_id' });
+        if (post.proposal) { post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() }; delete post.proposal; } // scheduling it is approving it
         const pfs = Array.isArray(body.platforms) ? body.platforms.filter((x) => post.platforms.includes(x)) : [];
         if (!pfs.length) return json(res, 400, { ok: false, error: 'no_platforms' });
         if (!isAt(body.at)) return json(res, 400, { ok: false, error: 'bad_date' });
@@ -265,6 +291,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
       }
       case 'publish': {
         if (!post || !META_PLATFORMS.includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: 'bad_platform' });
+        if (post.proposal) { post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() }; delete post.proposal; }
         if (!M.metaTokenConfigured() || !(body.platform === 'facebook' ? target.page : target.ig)) return json(res, 409, { ok: false, error: store.kind === 'client' ? 'platform_not_connected' : 'meta_not_configured' });
         post.schedule ||= {};
         const s = post.schedule[body.platform];

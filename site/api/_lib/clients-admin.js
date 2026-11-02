@@ -11,7 +11,7 @@ import * as M from './meta.js';
 import * as B from './billing.js';
 import { listClients, getClient, cleanClient, cleanUser, validEmail, findUserByEmail, mailConfigured, PLATFORM_KEYS, MANUAL_STATUS } from './clients.js';
 
-export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove', 'client-cloud', 'invoice-mark'];
+export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove', 'client-cloud', 'invoice-mark', 'client-ai-revoke'];
 export const PAY_METHODS = ['baridimob', 'ccp', 'redotpay', 'cash', 'other'];
 const enc = encodeURIComponent;
 
@@ -90,11 +90,14 @@ export async function adminClients(req, res, action) {
     // «تخزين نواة» plan per client
     const P = await import('./plans.js');
     for (const [i, c] of clients.entries()) if (storage[i]) storage[i].plan = P.planState(c, storage[i].cloud.bytes);
+    // the client's Claude connector (never the token)
+    const links = await sb.select('client_ai_links', 'select=client_id,created_at,created_by,last_used_at,drafts_total').catch(() => []);
+    const pending = (id) => (contents.find((x) => x.client_id === id)?.data?.posts || []).filter((p) => p.proposal).length;
     return json(res, 200, {
       ok: true, mail: mailConfigured(), meta: M.metaTokenConfigured(), price_dzd: B.priceDzd(settings),
       pages: pages ? pages.map((p) => ({ ...p, used: used.has(p.id) })) : null,
       // the sealed Drive connection never leaves the server
-      clients: clients.map(({ drive_conn, ...c }, i) => ({ ...c, status: platformStatus(c, pages), storage: storage[i] })), ...extra,
+      clients: clients.map(({ drive_conn, ...c }, i) => ({ ...c, status: platformStatus(c, pages), storage: storage[i], ai: links.find((l) => l.client_id === c.id) ? { ...links.find((l) => l.client_id === c.id), pending: pending(c.id) } : null })), ...extra,
     });
   };
   if (req.method === 'GET') return reply({ fresh: new URL(req.url, 'http://x').searchParams.has('fresh') });
@@ -145,6 +148,10 @@ export async function adminClients(req, res, action) {
       if (!validEmail(user.email)) return json(res, 400, { ok: false, error: 'bad_email' });
       if (await findUserByEmail(user.email)) return json(res, 409, { ok: false, error: 'email_taken' });
       await sb.insert('client_users', { ...user, client_id: c.id, role: 'member' });
+      return reply();
+    }
+    case 'client-ai-revoke': { // an emergency stop; only the client creates links
+      await sb.remove('client_ai_links', `client_id=eq.${enc(body.id)}`);
       return reply();
     }
     case 'client-cloud': {
