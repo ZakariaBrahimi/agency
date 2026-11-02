@@ -5,8 +5,14 @@
 // read the client's account and calendar and create DRAFT proposals; it can never schedule, publish
 // or delete. Proposals carry post.proposal = { by: 'claude', at, idea } until the client approves
 // them in «المحتوى» (approval schedules them) or rejects them (the reason is kept for Claude).
+//
+// Files: images from public https links (attach_image), or any file Claude has in its code workspace
+// (attached in the chat, or made there): start_upload gives a one-hour link straight to the client's
+// storage (their Drive or «تخزين نواة»), Claude PUTs the bytes from its workspace, finish_upload checks
+// the file arrived and attaches it. Claude's workspace needs network access to the upload host.
 import crypto from 'node:crypto';
 import { json, readJson, siteUrl, env } from './http.js';
+import { seal, unseal } from './seal.js';
 import { sb } from './supabase.js';
 import { clientStore, StorageError } from './storage.js';
 import { platformStatus, pagesOrNull } from './clients-admin.js';
@@ -100,11 +106,15 @@ const INSTRUCTIONS = (c) => `You are connected to the Nawa social media planner 
 - Call get_account first: it gives the active platforms, today's date in Algiers (UTC+1), the rules, and the client's recent rejection reasons, so you can follow their taste.
 - Call list_posts before planning so you don't repeat topics or crowd a day.
 - Write captions in the client's language (Arabic by default unless the client asks otherwise), ready to post, with relevant hashtags.
-- Give each draft a suggested time (suggested_at, Algiers time). Images: attach public https image links if you have them; otherwise describe the visual in image_idea so a designer can make it.`;
+- Give each draft a suggested time (suggested_at, Algiers time).
+- Files (videos and images): if the user attached files in the chat or you created them in your code workspace, upload them yourself: create the draft, call start_upload with the file's name, type and exact size in bytes, run the returned command in your code workspace (bash/python), then call finish_upload. Do one file at a time, in the order they should appear. For public https image links use attach_image. If you have no file, describe the visual in image_idea.
+- If the upload command fails with a network or host error, your workspace can't reach the upload address: tell the user to turn on code execution and allow network access ("All domains", or add the host from the error) in Claude → Settings → Capabilities, then try again. Never paste file contents into a tool call.`;
 
 // ---------- tools ----------
 
 const KIND_IDS = Object.keys(KINDS), PF_IDS = Object.keys(PLATFORMS);
+const UPLOAD_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/quicktime': 'mov' };
+const MAX_UPLOAD = 1e9;
 const draftProps = {
   title: { type: 'string', description: 'Short internal title of the post (max 200 chars).' },
   kind: { type: 'string', enum: KIND_IDS, description: 'image (one photo), carousel (several photos), video (reel / video), text (text only).' },
@@ -121,6 +131,8 @@ const TOOLS = [
   { name: 'create_draft', title: 'Create a draft proposal', description: `Creates a DRAFT post proposal in the client's calendar, marked "suggested by Claude". It is never scheduled or published: the client approves it in Nawa. At most ${DAILY_DRAFTS} drafts a day.`, inputSchema: { type: 'object', properties: draftProps, required: ['title', 'suggested_at'], additionalProperties: false } },
   { name: 'update_draft', title: 'Update one of your proposals', description: 'Changes a proposal you created that the client has not approved or rejected yet. Only the given fields change; image_urls are added to the existing images.', inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'The post id from create_draft or list_posts.' }, ...draftProps }, required: ['id'], additionalProperties: false } },
   { name: 'attach_image', title: 'Attach an image to a proposal', description: 'Adds one image from a public https link to one of your pending proposals.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, url: { type: 'string' } }, required: ['id', 'url'], additionalProperties: false } },
+  { name: 'start_upload', title: 'Upload a file (step 1 of 2)', description: `For a video or image you have in your code workspace (attached in the chat, or created there). Returns a one-hour upload link straight to the client's storage and the exact command to run in your workspace. Then call finish_upload. JPG, PNG, WebP, MP4 or MOV, up to 1 GB.`, inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'One of your pending proposals (from create_draft).' }, name: { type: 'string', description: 'The file name, e.g. demo.mp4.' }, mime_type: { type: 'string', enum: Object.keys(UPLOAD_TYPES), description: 'The file type.' }, size: { type: 'integer', description: 'The exact file size in bytes (e.g. from `stat -c %s file` or os.path.getsize).' } }, required: ['id', 'name', 'mime_type', 'size'], additionalProperties: false } },
+  { name: 'finish_upload', title: 'Upload a file (step 2 of 2)', description: 'After the upload command finished: checks the file arrived and attaches it to the proposal (videos make it a reel/video post, several images a carousel).', inputSchema: { type: 'object', properties: { upload_token: { type: 'string', description: 'The upload_token from start_upload.' } }, required: ['upload_token'], additionalProperties: false } },
 ];
 
 async function load(client) {
@@ -190,6 +202,62 @@ const HANDLERS = {
     await save();
     const images = await attachAll(store, data, save, post, args.image_urls);
     return { updated: slim(post), images };
+  },
+
+  async start_upload(args, { client }) {
+    const { store, data, save } = await load(client);
+    const post = data.posts.find((p) => p.id === args.id);
+    need(post?.proposal?.by === 'claude', 'This post is not one of your pending proposals. Create a draft first, then upload to it.');
+    need(UPLOAD_TYPES[args.mime_type], `mime_type must be one of: ${Object.keys(UPLOAD_TYPES).join(', ')}.`);
+    const size = Math.round(Number(args.size));
+    need(Number.isFinite(size) && size > 0, 'size must be the exact file size in bytes.');
+    need(size <= MAX_UPLOAD, 'The file is larger than 1 GB.');
+    const ext = UPLOAD_TYPES[args.mime_type];
+    const name = String(args.name || 'file').replace(/[^\w.-]+/g, '-').replace(/^-+/, '').slice(-80) || `file.${ext}`;
+    let up;
+    try { up = await store.startUpload(post, { name, mimeType: args.mime_type, size, origin: siteUrl() }); }
+    catch (e) { throw new ToolError(imageError(e).replace('images can\'t be saved', 'files can\'t be saved').replace('The image', 'The file')); }
+    await save(); // a Drive upload may have created the post's folder
+    const token = seal('nawa-upload', { c: client.id, p: post.id, u: up.uploadUrl, f: up.fileId || null, s: size, m: args.mime_type, e: Date.now() + 3600e3 });
+    const host = new URL(up.uploadUrl).host;
+    return {
+      upload_url: up.uploadUrl, method: 'PUT', headers: { 'Content-Type': args.mime_type }, size, expires_in_minutes: 60, upload_host: host,
+      command: `curl -sS --fail -X PUT -H 'Content-Type: ${args.mime_type}' --data-binary @'${name}' '${up.uploadUrl}'`,
+      python: `import requests\nwith open('${name}', 'rb') as f:\n    r = requests.put('${up.uploadUrl}', data=f, headers={'Content-Type': '${args.mime_type}'})\nprint(r.status_code)`,
+      next: 'Run the command (or the python) in your code workspace with the path of the file, check it succeeded (HTTP 200), then call finish_upload with upload_token.',
+      upload_token: token,
+    };
+  },
+
+  async finish_upload(args, { client }) {
+    const t = unseal('nawa-upload', args.upload_token);
+    need(t && t.c === client.id, 'This upload_token is not valid. Call start_upload again.');
+    need(Date.now() < t.e, 'This upload link expired (1 hour). Call start_upload again.');
+    const { store, data, save } = await load(client);
+    const post = data.posts.find((p) => p.id === t.p);
+    need(post?.proposal?.by === 'claude', 'The proposal was approved, rejected or removed meanwhile, so the file can\'t be attached.');
+    let fileId = t.f;
+    if (!fileId) {
+      // Drive: ask the upload session whether the whole file arrived
+      const r = await fetch(t.u, { method: 'PUT', headers: { 'Content-Range': `bytes */${t.s}`, 'Content-Length': '0' } }).catch(() => null);
+      need(r, 'Couldn\'t check the upload. Try finish_upload again in a moment.');
+      if (r.status === 308) {
+        const got = Number((r.headers.get('range') || '').split('-')[1] || -1) + 1;
+        throw new ToolError(`The upload isn't complete (${got} of ${t.s} bytes arrived). Run the upload command again, then call finish_upload.`);
+      }
+      need(r.ok, 'The upload link is no longer valid. Call start_upload again.');
+      fileId = (await r.json().catch(() => ({}))).id;
+      need(fileId, 'Couldn\'t confirm the upload. Call start_upload again.');
+    }
+    let m;
+    try { m = await store.attach(post, { id: fileId }); }
+    catch { throw new ToolError('The file didn\'t arrive (or isn\'t an image/video). Check the upload command printed 200, then call finish_upload again.'); }
+    post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
+    if (/^video\//.test(m.mimeType)) post.kind = 'video';
+    else if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
+    post.updatedAt = now();
+    await save();
+    return { attached: { name: m.name, type: m.mimeType, size: m.size }, updated: slim(post) };
   },
 
   async attach_image(args, { client }) {
