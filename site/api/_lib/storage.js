@@ -37,6 +37,12 @@ async function drivePreview(g, id, size) {
   return { type: r.headers.get('content-type') || 'image/jpeg', body: Buffer.from(await r.arrayBuffer()) };
 }
 
+/** A Drive video with the browser's Range (a fetch Response: 200 or 206), or null. */
+async function driveVideo(g, id, range) {
+  const r = await g.call(`/drive/v3/files/${encodeURIComponent(id)}?alt=media`, { raw: true, headers: range ? { Range: range } : {} });
+  return r.ok ? r : null;
+}
+
 async function driveFolder(g, root, post) {
   if (post.folderId) return post.folderId;
   const f = await G.createPostFolder(g, root, folderName(post));
@@ -65,6 +71,7 @@ export function nawaStore(g) {
     },
     attach: (post, file) => driveAttach(g, post, file.id),
     preview: (m, size) => drivePreview(g, m.id, size),
+    openVideo: (m, range) => driveVideo(g, m.id, range),
     trash: (m) => G.trashFile(g, m.id),
     removePost: (post) => (post.folderId ? G.trashFile(g, post.folderId) : null),
     rename: (post) => (post.folderId ? G.renameFile(g, post.folderId, folderName(post)) : null),
@@ -164,6 +171,11 @@ export async function clientStore(client) {
       }
       return g ? drivePreview(g, m.id, size) : null;
     },
+    /** A video to play: { redirect } to a one-hour signed link («تخزين نواة»), or a Drive Response. */
+    async openVideo(m, range) {
+      if (m.store === 'cloud') return { redirect: R2.presign('GET', m.key, 3600) };
+      return g ? driveVideo(g, m.id, range) : null;
+    },
     async trash(m) {
       if (m.store === 'cloud') return R2.remove(m.key);
       if (g) return G.trashFile(g, m.id);
@@ -210,8 +222,11 @@ export async function clientStore(client) {
     },
     urlFor(m, platform) {
       if (m.store === 'cloud') {
-        const k = seal('nawa-media', { k: m.key, e: Date.now() + 30 * 60e3, m: m.video ? 'raw' : platform === 'instagram' ? 'ig' : 'fb' });
-        return `${siteUrl()}/media/${k}.${m.video ? 'mp4' : 'jpg'}`;
+        // videos: Meta downloads the MP4 straight from storage (a signed link, valid 6 hours: Instagram may
+        // fetch it again while processing); images go through /media, which converts them to JPEG
+        if (m.video || /^video\//.test(m.mimeType || '')) return R2.presign('GET', m.key, 6 * 3600);
+        const k = seal('nawa-media', { k: m.key, e: Date.now() + 30 * 60e3, m: platform === 'instagram' ? 'ig' : 'fb' });
+        return `${siteUrl()}/media/${k}.jpg`;
       }
       if (!g) throw new StorageError('drive_disconnected');
       return mediaUrl(g, m, platform);

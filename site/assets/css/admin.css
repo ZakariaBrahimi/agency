@@ -753,3 +753,10 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .ct-trash-why { font-size: 13.5px; color: #3E31C9; }
 .ct-trash-acts { display: flex; align-items: center; gap: 10px; }
 
+/* videos: an early frame as the thumbnail, and a player window */
+.ct-cover video, .ct-mthumb video { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; pointer-events: none; background: #0B1220; }
+.ct-player { border: 0; padding: 0; background: #000; border-radius: 18px; max-inline-size: min(960px, 96vw); max-block-size: 92dvh; overflow: hidden; }
+.ct-player::backdrop { background: rgb(11 18 32 / .8); }
+.ct-player video { display: block; inline-size: 100%; max-block-size: 92dvh; background: #000; }
+.ct-player .ct-x { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; z-index: 2; background: rgb(255 255 255 / .9); }
+

@@ -155,6 +155,26 @@ const fmtAt = (at) => {
 };
 const thumb = (m, size = 300) => api('media', { id: m.id, size: String(size) });
 const isVideo = (m) => m.video || /^video\//.test(m.mimeType);
+// a video plays from its original file (the server redirects to a signed link or streams with Range);
+// "#t=0.5" makes the browser show an early frame as the thumbnail
+const videoSrc = (m) => api('media', { id: m.id });
+const videoThumb = (m) => `<video src="${videoSrc(m)}#t=0.5" preload="metadata" muted playsinline aria-hidden="true" tabindex="-1"></video><i class="ct-play">▶</i>`;
+/** Plays a post's video in a window (controls, playsinline). */
+function playVideo(m) {
+  let d = document.getElementById('ctPlayer');
+  if (!d) {
+    d = document.createElement('dialog'); d.id = 'ctPlayer'; d.className = 'ct-player';
+    d.innerHTML = '<button type="button" class="ct-x" aria-label="إغلاق">✕</button><video controls playsinline preload="metadata"></video>';
+    document.body.appendChild(d);
+    const close = () => { d.querySelector('video').pause(); d.close(); };
+    d.querySelector('button').onclick = close;
+    d.addEventListener('click', (e) => { if (e.target === d) close(); });
+    d.addEventListener('close', () => d.querySelector('video').pause());
+  }
+  const v = d.querySelector('video');
+  v.src = videoSrc(m); v.setAttribute('aria-label', m.name || 'video');
+  d.showModal(); v.play().catch(() => {});
+}
 const todayAt = () => {
   const d = new Date(Date.now() + 3600e3); // Algeria is UTC+1 all year
   return d.toISOString().slice(0, 10);
@@ -360,7 +380,7 @@ function card(p) {
   const cover = (p.media || [])[0];
   const st = stOf(p);
   return `<button type="button" class="ct-post${p.proposal ? ' proposal' : ''}" data-open="${p.id}">
-    <span class="ct-cover">${cover ? `<img src="${thumb(cover)}" alt="" loading="lazy">${isVideo(cover) ? '<i class="ct-play">▶</i>' : ''}` : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
+    <span class="ct-cover">${cover ? (isVideo(cover) ? videoThumb(cover) : `<img src="${thumb(cover)}" alt="" loading="lazy">`) : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
       ${(p.media || []).length > 1 ? `<i class="ct-count" dir="ltr">1/${p.media.length}</i>` : ''}</span>
     <span class="ct-post-body">
       <span class="pill ct-st st-${st}">${LABEL[st]}</span>
@@ -573,8 +593,8 @@ function drawMedia() {
   const media = p.media || [];
   $('ceMedia').innerHTML = media.length ? `<ol class="ct-media">${media.map((m, i) => `
     <li>
-      <a class="ct-mthumb" href="${CLIENT_MODE ? esc(thumb(m, 1600)) : `https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view`}" target="_blank" rel="noopener" title="${esc(m.name)}">
-        <img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">${isVideo(m) ? '<i class="ct-play">▶</i>' : ''}<i class="ct-idx" dir="ltr">${i + 1}</i>${CLIENT_MODE ? `<i class="ct-store${m.store === 'cloud' ? ' cloud' : ''}">${m.store === 'cloud' ? 'تخزين نواة' : 'Drive'}</i>` : ''}</a>
+      <a class="ct-mthumb" href="${isVideo(m) ? esc(videoSrc(m)) : CLIENT_MODE || tenant || m.store ? esc(thumb(m, 1600)) : `https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view`}" target="_blank" rel="noopener" title="${esc(m.name)}"${isVideo(m) ? ` data-play="${i}"` : ''}>
+        ${isVideo(m) ? videoThumb(m) : `<img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">`}<i class="ct-idx" dir="ltr">${i + 1}</i>${CLIENT_MODE ? `<i class="ct-store${m.store === 'cloud' ? ' cloud' : ''}">${m.store === 'cloud' ? 'تخزين نواة' : 'Drive'}</i>` : ''}</a>
       <span class="ct-mtools">
         <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="تقديم">→</button>
         <button type="button" data-mv="${i}" data-d="1" ${i === media.length - 1 ? 'disabled' : ''} aria-label="تأخير">←</button>
@@ -582,6 +602,7 @@ function drawMedia() {
         <button type="button" data-rm="${m.id}" aria-label="حذف">✕</button>
       </span>
     </li>`).join('')}</ol>` : '<p class="muted">لا توجد ملفات بعد. للكاروسيل ارفع عدة صور بالترتيب.</p>';
+  $('ceMedia').querySelectorAll('[data-play]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); playVideo(media[Number(a.dataset.play)]); }));
   $('ceMedia').querySelectorAll('[data-mv]').forEach((b) => b.addEventListener('click', async () => {
     const i = Number(b.dataset.mv), j = i + Number(b.dataset.d);
     const order = media.map((m) => m.id); [order[i], order[j]] = [order[j], order[i]];

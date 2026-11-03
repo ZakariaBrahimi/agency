@@ -3,6 +3,7 @@
 // content in Nawa's Google Drive (with events in a Google Calendar), a client's in Supabase plus the
 // client's own Drive or «تخزين نواة». Each tenant publishes to its own Page / Instagram (target).
 import crypto from 'node:crypto';
+import { Readable } from 'node:stream';
 import { json, readJson, siteUrl } from './http.js';
 import * as G from './google.js';
 import * as M from './meta.js';
@@ -121,6 +122,19 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
       if (!/^[\w-]{10,}$/.test(id)) return json(res, 400, { ok: false, error: 'bad_id' });
       const size = Math.min(1600, Math.max(64, Number(url.searchParams.get('size')) || 400));
       const m = mediaOf(id) || (store.kind === 'nawa' && !asClient ? { id } : null);
+      // videos play from the original file ("size" means nothing for them): «تخزين نواة» redirects to
+      // a one-hour signed link (the storage handles Range, so the browser can seek); Drive is passed
+      // through with the requested Range
+      if (m && (m.video || /^video\//.test(m.mimeType || ''))) {
+        const v = store.openVideo && await store.openVideo(m, req.headers.range);
+        if (!v) { res.statusCode = 404; return res.end(); }
+        if (v.redirect) { res.statusCode = 302; res.setHeader('Location', v.redirect); res.setHeader('Cache-Control', 'private, max-age=600'); return res.end(); }
+        res.statusCode = v.status;
+        for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges']) if (v.headers.get(h)) res.setHeader(h, v.headers.get(h));
+        res.setHeader('Accept-Ranges', 'bytes'); res.setHeader('Cache-Control', 'private, max-age=600');
+        if (req.method === 'HEAD') return res.end();
+        return Readable.fromWeb(v.body).pipe(res);
+      }
       const r = m && await store.preview(m, size);
       if (!r) { res.statusCode = 404; return res.end(); }
       res.statusCode = 200;
