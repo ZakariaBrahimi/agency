@@ -744,3 +744,12 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .pt-ai .btn.armed, .pt-ai .link-btn.armed { color: #B42318; }
 .pt-badge { display: inline-grid; place-items: center; min-inline-size: 20px; block-size: 20px; padding: 0 6px; margin-inline-start: 6px; border-radius: 999px; background: #7A5CFF; color: #fff; font: 800 12px var(--font-lat, var(--font)); font-style: normal; vertical-align: 1px; }
 
+/* «المحذوفات» */
+.ct-trash-lead { margin: 0 0 10px; font-size: 14px; }
+.ct-trash { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ct-trash li { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.ct-trash li > div { display: grid; gap: 3px; min-width: 0; flex: 1 1 260px; }
+.ct-trash .muted { font-size: 13px; }
+.ct-trash-why { font-size: 13.5px; color: #3E31C9; }
+.ct-trash-acts { display: flex; align-items: center; gap: 10px; }
+

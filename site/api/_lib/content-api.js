@@ -133,6 +133,8 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
     const strip = (p) => (p && (asClient || store.kind !== 'nawa') ? (({ folderUrl, ...rest }) => ({ ...rest, media: (rest.media || []).map(({ key, ...m }) => m) }))(p) : p);
     const reply = (extra = {}) => json(res, 200, {
       ok: true, posts: data.posts.map(strip), settings: { seeded: Boolean(data.settings.seeded), calendar: Boolean(data.settings.calendarId) },
+      // posts Claude deleted (client content): restorable for 30 days
+      trash: (data.trash || []).map((t) => ({ id: t.post.id, title: t.post.title, kind: t.post.kind, date: t.post.date || '', media: (t.post.media || []).length, deletedAt: t.deletedAt, by: t.by, reason: t.reason || '' })).reverse(),
       ...(rootUrl && !asClient ? { rootUrl, email: conn?.email || '' } : {}), ...extra,
       ...(extra.post ? { post: strip(extra.post) } : {}),
     });
@@ -227,6 +229,29 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         post.updatedAt = now();
         await save();
         return reply({ post });
+      }
+      // ---- «المحذوفات»: posts Claude deleted, restorable for 30 days
+      // (the trashed post's id comes as `tid`: `id` must name a post that is still in the calendar)
+      case 'trash-restore': {
+        const t = (data.trash || []).find((x) => x.post.id === body.tid);
+        if (!t) return json(res, 404, { ok: false, error: 'not_found' });
+        const p = t.post;
+        // a time that passed while it was deleted must not publish at once: back as a draft for those platforms
+        const nowAt = new Date(Date.now() + 3600e3).toISOString().slice(0, 16); // Algiers = UTC+1
+        for (const [pf, sc] of Object.entries(p.schedule || {})) if (sc.status !== 'published' && sc.at <= nowAt) delete p.schedule[pf];
+        p.updatedAt = now();
+        data.trash = data.trash.filter((x) => x !== t);
+        data.posts.push(p);
+        await save();
+        return reply({ post: p });
+      }
+      case 'trash-purge': {
+        const t = (data.trash || []).find((x) => x.post.id === body.tid);
+        if (!t) return json(res, 404, { ok: false, error: 'not_found' });
+        await Promise.resolve(store.removePost(t.post)).catch(() => {});
+        data.trash = data.trash.filter((x) => x !== t);
+        await save();
+        return reply();
       }
       // ---- Claude's proposals (client portal): approve = schedule as suggested; reject = delete, keeping the reason for Claude
       case 'proposal-approve': {

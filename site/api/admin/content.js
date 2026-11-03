@@ -131,7 +131,7 @@ async function runAll(g) {
 
 // Cron, once a day: each client's stored bytes, and «تخزين نواة» plans (a smaller size chosen at
 // renewal starting, alerts before and after a plan ends; see _lib/plans.js), and the daily email
-// about Claude's new proposals (_lib/mcp.js). Guarded in app_state so
+// about Claude's new proposals and deletions, and removing what stayed 30 days in «المحذوفات» (_lib/mcp.js). Guarded in app_state so
 // the 5-minute runs do it only once. (Monthly invoices are no longer issued; past ones stay visible.)
 async function runBilling() {
   if (!sb.ready() || !kv.ready()) return null;
@@ -150,7 +150,8 @@ async function runBilling() {
     if (c.plan_gb) await P.dailyPlan(c, usage.cloud, settings, day).then(() => plans++).catch((e) => console.error('plan', c.id, e.message));
   }
   const digests = await AI.dailyDigest(contents).catch((e) => { console.error('ai digest', e.message); return 0; });
-  return { day, clients: clients.length, plans, digests };
+  const purged = await AI.purgeTrash(contents).catch((e) => { console.error('trash', e.message); return 0; });
+  return { day, clients: clients.length, plans, digests, purged };
 }
 
 // Cron: the next queued set, if any. Returns null when there is nothing to do.

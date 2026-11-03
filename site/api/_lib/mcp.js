@@ -2,8 +2,9 @@
 // /mcp/<token>, rewritten to /api/portal?action=mcp&t=<token>.
 //
 // The client creates the private link in the portal (only its hash is stored). Through it Claude can
-// read the client's account and calendar and create DRAFT proposals; it can never schedule, publish
-// or delete. Proposals carry post.proposal = { by: 'claude', at, idea } until the client approves
+// read the client's account and calendar, create DRAFT proposals and delete posts; it can never
+// schedule or publish. Deleted posts go to the client's «المحذوفات» for 30 days (restorable), then are
+// removed with their files. Proposals carry post.proposal = { by: 'claude', at, idea } until the client approves
 // them in «المحتوى» (approval schedules them) or rejects them (the reason is kept for Claude).
 //
 // Files: images from public https links (attach_image), or any file Claude has in its code workspace
@@ -19,6 +20,7 @@ import { platformStatus, pagesOrNull } from './clients-admin.js';
 import { PLATFORMS, KINDS, checkPost, postStatus, captionFor } from '../../assets/js/content-schema.js';
 
 export const DAILY_DRAFTS = 30;
+export const TRASH_DAYS = 30;
 const MAX_IMAGE = 15e6;
 const VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const enc = encodeURIComponent;
@@ -102,11 +104,12 @@ class ToolError extends Error {}
 const need = (ok, message) => { if (!ok) throw new ToolError(message); };
 
 const INSTRUCTIONS = (c) => `You are connected to the Nawa social media planner of "${c.name}"${c.industry ? ` (${c.industry}${c.city ? `, ${c.city}` : ''})` : ''}.
-- You can read the account and its content calendar, and create DRAFT post proposals. You can never schedule, publish or delete: the client reviews every proposal in the Nawa portal («المحتوى») and approves or rejects it.
+- You can read the account and its content calendar, create DRAFT post proposals, and delete posts. You can never schedule or publish: the client reviews every proposal in the Nawa portal («المحتوى») and approves or rejects it.
 - Call get_account first: it gives the active platforms, today's date in Algiers (UTC+1), the rules, and the client's recent rejection reasons, so you can follow their taste.
 - Call list_posts before planning so you don't repeat topics or crowd a day.
 - Write captions in the client's language (Arabic by default unless the client asks otherwise), ready to post, with relevant hashtags.
 - Give each draft a suggested time (suggested_at, Algiers time).
+- delete_post removes a post from the calendar when the user asks (or a draft you made is no longer wanted). It goes to the client's trash for 30 days, where they can restore it. Give a short reason. Deleting a published post only removes it from Nawa, not from Facebook/Instagram.
 - Files (videos and images): if the user attached files in the chat or you created them in your code workspace, upload them yourself: create the draft, call start_upload with the file's name, type and exact size in bytes, run the returned command in your code workspace (bash/python), then call finish_upload. Do one file at a time, in the order they should appear. For public https image links use attach_image. If you have no file, describe the visual in image_idea.
 - If the upload command fails with a network or host error, your workspace can't reach the upload address: tell the user to turn on code execution and allow network access ("All domains", or add the host from the error) in Claude → Settings → Capabilities, then try again. Never paste file contents into a tool call.`;
 
@@ -131,6 +134,7 @@ const TOOLS = [
   { name: 'create_draft', title: 'Create a draft proposal', description: `Creates a DRAFT post proposal in the client's calendar, marked "suggested by Claude". It is never scheduled or published: the client approves it in Nawa. At most ${DAILY_DRAFTS} drafts a day.`, inputSchema: { type: 'object', properties: draftProps, required: ['title', 'suggested_at'], additionalProperties: false } },
   { name: 'update_draft', title: 'Update one of your proposals', description: 'Changes a proposal you created that the client has not approved or rejected yet. Only the given fields change; image_urls are added to the existing images.', inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'The post id from create_draft or list_posts.' }, ...draftProps }, required: ['id'], additionalProperties: false } },
   { name: 'attach_image', title: 'Attach an image to a proposal', description: 'Adds one image from a public https link to one of your pending proposals.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, url: { type: 'string' } }, required: ['id', 'url'], additionalProperties: false } },
+  { name: 'delete_post', title: 'Delete a post', description: 'Deletes a post from the client\'s calendar: any draft, scheduled post or your proposals (a scheduled post will then not be published). It goes to the client\'s trash («المحذوفات») for 30 days, where they can restore it; then it is removed with its files. A published post stays online on Facebook/Instagram: this only removes it from Nawa.', inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'The post id from list_posts.' }, reason: { type: 'string', description: 'Why it is deleted (shown to the client), e.g. "duplicate of Thursday\'s post".' } }, required: ['id'], additionalProperties: false }, annotations: { destructiveHint: true } },
   { name: 'start_upload', title: 'Upload a file (step 1 of 2)', description: `For a video or image you have in your code workspace (attached in the chat, or created there). Returns a one-hour upload link straight to the client's storage and the exact command to run in your workspace. Then call finish_upload. JPG, PNG, WebP, MP4 or MOV, up to 1 GB.`, inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'One of your pending proposals (from create_draft).' }, name: { type: 'string', description: 'The file name, e.g. demo.mp4.' }, mime_type: { type: 'string', enum: Object.keys(UPLOAD_TYPES), description: 'The file type.' }, size: { type: 'integer', description: 'The exact file size in bytes (e.g. from `stat -c %s file` or os.path.getsize).' } }, required: ['id', 'name', 'mime_type', 'size'], additionalProperties: false } },
   { name: 'finish_upload', title: 'Upload a file (step 2 of 2)', description: 'After the upload command finished: checks the file arrived and attaches it to the proposal (videos make it a reel/video post, several images a carousel).', inputSchema: { type: 'object', properties: { upload_token: { type: 'string', description: 'The upload_token from start_upload.' } }, required: ['upload_token'], additionalProperties: false } },
 ];
@@ -202,6 +206,17 @@ const HANDLERS = {
     await save();
     const images = await attachAll(store, data, save, post, args.image_urls);
     return { updated: slim(post), images };
+  },
+
+  async delete_post(args, { client }) {
+    const { data, save } = await load(client);
+    const post = data.posts.find((p) => p.id === args.id);
+    need(post, 'No post with this id (it may already be deleted).');
+    const published = Object.values(post.schedule || {}).some((x) => x.status === 'published');
+    data.posts = data.posts.filter((p) => p.id !== post.id);
+    data.trash = [...(data.trash || []), { post, deletedAt: now(), by: 'claude', ...(args.reason ? { reason: String(args.reason).slice(0, 300) } : {}) }].slice(-200);
+    await save();
+    return { deleted: { id: post.id, title: post.title }, note: `Moved to the client's trash for ${TRASH_DAYS} days (they can restore it).${published ? ' It was already published: it stays online on the platforms.' : ''}` };
   },
 
   async start_upload(args, { client }) {
@@ -340,6 +355,25 @@ async function attachOne(store, post, url) {
 
 // ---------- the daily email about new proposals (cron) ----------
 
+/** Removes trashed posts older than TRASH_DAYS for good, with their files (cron, once a day). */
+export async function purgeTrash(contents) {
+  const limit = new Date(Date.now() - TRASH_DAYS * 864e5).toISOString();
+  let removed = 0;
+  for (const row of contents) {
+    if (!(row.data?.trash || []).some((t) => t.deletedAt < limit)) continue;
+    const [client] = await sb.select('clients', `select=*&id=eq.${enc(row.client_id)}`).catch(() => []);
+    if (!client) continue;
+    const store = await clientStore(client);
+    const { data, save } = await store.load();
+    const old = (data.trash || []).filter((t) => t.deletedAt < limit);
+    for (const t of old) await Promise.resolve(store.removePost(t.post)).catch(() => {});
+    data.trash = (data.trash || []).filter((t) => t.deletedAt >= limit);
+    await save();
+    removed += old.length;
+  }
+  return removed;
+}
+
 /** Emails each client's users once a day when Claude added proposals since the last email. */
 export async function dailyDigest(contents) {
   const { sendNotice } = await import('./clients.js');
@@ -347,13 +381,20 @@ export async function dailyDigest(contents) {
   let sent = 0;
   for (const l of links) {
     const since = l.digest_at || l.created_at;
-    const posts = (contents.find((x) => x.client_id === l.client_id)?.data?.posts || []).filter((p) => p.proposal && p.proposal.at > since);
-    if (!posts.length) continue;
+    const data = contents.find((x) => x.client_id === l.client_id)?.data || {};
+    const posts = (data.posts || []).filter((p) => p.proposal && p.proposal.at > since);
+    const gone = (data.trash || []).filter((t) => t.by === 'claude' && t.deletedAt > since);
+    if (!posts.length && !gone.length) continue;
     const users = await sb.select('client_users', `select=name,email&client_id=eq.${enc(l.client_id)}`).catch(() => []);
-    const subject = posts.length === 1 ? 'Claude اقترح منشورًا جديدًا' : `Claude اقترح ${posts.length} منشورات جديدة`;
+    const subject = posts.length ? (posts.length === 1 ? 'Claude اقترح منشورًا جديدًا' : `Claude اقترح ${posts.length} منشورات جديدة`) : `Claude حذف ${gone.length === 1 ? 'منشورًا' : `${gone.length} منشورات`}`;
     const list = posts.slice(0, 8).map((p) => `• ${p.title}${p.date ? ` (${p.date.replace('T', ' ')})` : ''}`).join('\n');
+    const goneList = gone.slice(0, 8).map((t) => `• ${t.post.title}${t.reason ? ` — ${t.reason}` : ''}`).join('\n');
+    const lines = [
+      ...(posts.length ? [`أضاف Claude مقترحات جديدة إلى «المحتوى» في نواة:\n${list}`, 'لا يُنشر شيء قبل موافقتك: افتح المقترح واضغط «اعتماد وجدولة» أو «رفض».'] : []),
+      ...(gone.length ? [`حذف Claude من التقويم:\n${goneList}`, `تبقى في «المحذوفات» ${TRASH_DAYS} يومًا، ويمكنك استعادتها.`] : []),
+    ];
     for (const u of users) {
-      await sendNotice(u.email, subject, [`مرحبًا ${u.name || ''}،`, `أضاف Claude مقترحات جديدة إلى «المحتوى» في نواة:\n${list}`, 'لا يُنشر شيء قبل موافقتك: افتح المقترح واضغط «اعتماد وجدولة» أو «رفض».'], { path: '/portal#content', button: 'راجع المقترحات' }).catch(() => {});
+      await sendNotice(u.email, subject, [`مرحبًا ${u.name || ''}،`, ...lines], { path: '/portal#content', button: posts.length ? 'راجع المقترحات' : 'افتح «المحتوى»' }).catch(() => {});
     }
     await sb.update('client_ai_links', `id=eq.${enc(l.id)}`, { digest_at: now() }).catch(() => {});
     sent++;

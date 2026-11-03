@@ -59,6 +59,7 @@ function absorb(d) {
   if (d.settings) state.settings = d.settings;
   if (d.rootUrl) state.rootUrl = d.rootUrl;
   if (d.email !== undefined) state.email = d.email;
+  if (d.trash) state.trash = d.trash;
   if (d.post) state.posts = state.posts.map((p) => (p.id === d.post.id ? d.post : p));
   if (CLIENT_MODE && d.posts) window.dispatchEvent(new CustomEvent('nawa:proposals', { detail: state.posts.filter((p) => p.proposal).length }));
 }
@@ -200,6 +201,7 @@ function render() {
     <div class="tabs" role="tablist" aria-label="تصفية حسب الحالة">
       ${[['all', 'الكل', state.posts.length], ...(counts.proposal ? [['proposal', '✦ مقترحات Claude', counts.proposal]] : []), ['draft', STATUS.draft, counts.draft], ['scheduled', STATUS.scheduled, counts.scheduled], ['published', STATUS.published, counts.published]]
         .map(([k, l, n]) => `<button type="button" role="tab" data-cf="${k}" aria-selected="${state.filter === k}">${l} <span dir="ltr">${n}</span></button>`).join('')}
+      ${(state.trash || []).length ? `<button type="button" role="tab" data-cf="trash" aria-selected="${state.filter === 'trash'}">🗑 المحذوفات <span dir="ltr">${state.trash.length}</span></button>` : ''}
     </div>
     <div id="ctView"></div>`;
   body.querySelectorAll('[data-cf]').forEach((b) => b.addEventListener('click', () => { state.filter = b.dataset.cf; render(); }));
@@ -208,7 +210,32 @@ function render() {
     try { absorb(await act('seed')); toast('أُضيفت خطة الشهر الأول.'); jumpToFirst(); render(); } catch (err) { toast(errText(err), true); e.target.disabled = false; }
   };
   drawStories();
-  if (state.view === 'list') renderList(); else renderCalendar();
+  if (state.filter === 'trash') renderTrash();
+  else if (state.view === 'list') renderList(); else renderCalendar();
+}
+
+// ---------- «المحذوفات»: posts Claude deleted, restorable for 30 days ----------
+function renderTrash() {
+  const items = state.trash || [];
+  if (!items.length) { state.filter = 'all'; return render(); }
+  const left = (iso) => Math.max(0, 30 - Math.floor((Date.now() - Date.parse(iso)) / 864e5));
+  $('ctView').innerHTML = `
+    <p class="muted ct-trash-lead">تبقى المنشورات المحذوفة هنا 30 يومًا ثم تُحذف نهائيًا مع ملفاتها. الاستعادة تعيدها كما كانت (وما فات موعده يعود مسودة).</p>
+    <ul class="ct-trash">${items.map((t) => `<li>
+      <div><b>${esc(t.title)}</b>
+        <span class="muted">${t.by === 'claude' ? '✦ حذفه Claude' : 'محذوف'} · ${esc(fmtTime(t.deletedAt))}${t.date ? ` · كان موعده ${esc(fmtAt(t.date))}` : ''} · يُحذف نهائيًا بعد ${left(t.deletedAt)} يومًا</span>
+        ${t.reason ? `<span class="ct-trash-why">السبب: ${esc(t.reason)}</span>` : ''}</div>
+      <span class="ct-trash-acts"><button type="button" class="btn btn-dark" data-restore="${esc(t.id)}">استعادة</button><button type="button" class="link-btn ct-danger" data-purge="${esc(t.id)}">حذف نهائي</button></span>
+    </li>`).join('')}</ul>`;
+  $('ctView').querySelectorAll('[data-restore]').forEach((b) => b.addEventListener('click', async () => {
+    b.disabled = true;
+    try { absorb(await act('trash-restore', { tid: b.dataset.restore })); render(); toast('استُعيد المنشور.'); } catch (err) { b.disabled = false; toast(errText(err), true); }
+  }));
+  $('ctView').querySelectorAll('[data-purge]').forEach((b) => b.addEventListener('click', async () => {
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'تأكيد الحذف النهائي'; return; }
+    b.disabled = true;
+    try { absorb(await act('trash-purge', { tid: b.dataset.purge })); render(); toast('حُذف نهائيًا.'); } catch (err) { b.disabled = false; toast(errText(err), true); }
+  }));
 }
 
 // ---------- highlight stories ----------
