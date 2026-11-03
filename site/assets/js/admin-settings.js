@@ -43,8 +43,13 @@ function render() {
       <h2>معلومات التواصل</h2>
       <p class="muted">البريد الذي يظهر للزوار في الموقع (زر «راسلنا» ونسخ البريد)، وفي نموذج الطلب وسياسة الخصوصية.</p>
       <div class="st-grid"><label class="ct-field"><span>بريد التواصل</span><input name="email" type="email" dir="ltr" maxlength="120" required value="${esc(s.contact?.email || '')}"></label></div>
+      <p class="muted">الشخص الذي يضيفه العملاء مسؤولًا (Content admin) على صفحة شركتهم في LinkedIn. يظهر اسمه ورابط ملفه في خطوات تفعيل LinkedIn في بوابة العملاء. LinkedIn يقبل الأشخاص فقط، لا الصفحات.</p>
+      <div class="st-grid">
+        <label class="ct-field"><span>الاسم كما يظهر على LinkedIn</span><input name="linkedin_name" maxlength="80" value="${esc(s.contact?.linkedin_name || '')}" placeholder="مثال: Zakaria Brahimi"></label>
+        <label class="ct-field"><span>رابط ملفه الشخصي</span><input name="linkedin_url" type="url" dir="ltr" maxlength="200" value="${esc(s.contact?.linkedin_url || '')}" placeholder="https://www.linkedin.com/in/…"></label>
+      </div>
       <p class="muted st-small">قد يستغرق ظهور التغيير في الموقع حتى 5 دقائق.</p>
-      <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ البريد</button></div>
+      <div class="ct-save"><button type="submit" class="btn btn-dark">حفظ</button></div>
     </form>
 
     <form class="ct-card st-card" id="stPrice">
@@ -142,8 +147,9 @@ function render() {
   };
   $('stContact').onsubmit = async (e) => {
     e.preventDefault();
-    try { state.settings = (await call({ contact: { email: $('stContact').email.value } })).settings; render(); toast('حُفظ بريد التواصل.'); }
-    catch (err) { toast(err.code === 'bad_email' ? 'تحقّق من البريد.' : 'تعذّر الحفظ.', true); }
+    const f = $('stContact');
+    try { state.settings = (await call({ contact: { email: f.email.value, linkedin_name: f.linkedin_name.value, linkedin_url: f.linkedin_url.value } })).settings; render(); toast('حُفظت معلومات التواصل.'); }
+    catch (err) { toast(err.code === 'bad_email' ? 'تحقّق من البريد.' : err.code === 'bad_linkedin' ? 'رابط الملف يجب أن يكون مثل https://www.linkedin.com/in/الاسم' : 'تعذّر الحفظ.', true); }
   };
   $('stPay').onsubmit = async (e) => {
     e.preventDefault();

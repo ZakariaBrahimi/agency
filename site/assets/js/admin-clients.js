@@ -1,6 +1,6 @@
 // /admin → «العملاء»: companies Nawa manages. Create a client with its first contact (who can then
 // sign in at /portal), follow each platform's activation, add or remove people, open its content.
-import { PLATFORMS, PLATFORM_ORDER, STATUS, MANUAL_STATUS, icon, L } from './portal-schema.js?v=20261023b';
+import { PLATFORMS, PLATFORM_ORDER, STATUS, MANUAL_STATUS, icon, L } from './portal-schema.js?v=20261103d';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);

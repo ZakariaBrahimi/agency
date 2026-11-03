@@ -12,7 +12,8 @@ import { kv, sb } from './supabase.js';
 
 export const DEFAULTS = { cost_usd: 0.015, fee_usd: 0.5, rate_dzd: 250 };
 export const PAYMENT_FIELDS = ['baridimob_rip', 'ccp_name', 'ccp_account', 'ccp_key', 'redotpay_uid', 'redotpay_email'];
-export const CONTACT_DEFAULTS = { email: 'nawa.studio.ai@gmail.com' };
+// email: shown on the site; linkedin_*: the Nawa person clients add as admin of their LinkedIn page
+export const CONTACT_DEFAULTS = { email: 'nawa.studio.ai@gmail.com', linkedin_name: '', linkedin_url: '' };
 // «تخزين نواة» plans: what the client can pick in the portal; Nawa sets the discounts
 export const PLAN_MONTHS = [1, 3, 6, 12];
 export const PLAN_DEFAULTS = {
@@ -59,6 +60,12 @@ export async function saveSettings(input) {
   }
   if (input.payment) for (const k of PAYMENT_FIELDS) if (input.payment[k] !== undefined) next.payment[k] = String(input.payment[k]).trim().slice(0, 120);
   if (input.plans) next.plans = cleanPlans({ ...cur.plans, ...input.plans });
+  if (input.contact?.linkedin_name !== undefined) next.contact = { ...next.contact, linkedin_name: String(input.contact.linkedin_name).trim().slice(0, 80) };
+  if (input.contact?.linkedin_url !== undefined) {
+    const url = String(input.contact.linkedin_url).trim().slice(0, 200);
+    if (url && !/^https:\/\/([a-z]{2,3}\.)?(www\.)?linkedin\.com\/in\/[^\s/?#]+\/?$/i.test(url)) throw Object.assign(new Error('bad_linkedin'), { code: 'bad_linkedin', field: 'linkedin_url' });
+    next.contact = { ...next.contact, linkedin_url: url };
+  }
   if (input.contact?.email !== undefined) {
     const email = String(input.contact.email).trim().toLowerCase().slice(0, 120);
     if (!EMAIL.test(email)) throw Object.assign(new Error('bad_email'), { code: 'bad_email', field: 'email' });

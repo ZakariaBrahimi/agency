@@ -137,21 +137,22 @@
         <div class="card"><div class="row"><span style="width:38px;height:38px;border-radius:10px;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)"></span><div><b>Instagram</b><div class="muted">Not connected</div></div><span class="sp"></span><span class="btn p hl">Connect account</span></div></div>
         <div class="card"><div class="row"><span style="width:38px;height:38px;border-radius:10px;background:#25D366"></span><div><b>WhatsApp</b><div class="muted">Optional</div></div></div></div></div>`),
 
-    'linkedin-1': () => browser('linkedin.com/company/your-company/admin', `<div class="main" style="padding:0">
-      <div style="height:70px;background:linear-gradient(90deg,#DCE6F2,#EEF2F8)"></div>
-      <div style="padding:0 22px;display:grid;gap:10px;margin-top:-26px">
-        <div class="row"><span style="width:62px;height:62px;border-radius:10px;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;font-weight:800;color:#0A66C2">YC</span></div>
-        <div class="row"><div><h3>Your company</h3><span class="muted">Admin view</span></div><span class="sp"></span><span class="btn">View as member</span><span class="btn li hl">Admin tools ▾</span></div>
-        ${ghost(3)}</div>
-      <div class="menu" style="top:178px;right:22px"><a>Edit Page</a><a>Post a job</a><a style="background:#EEF3FB;color:#0A66C2;font-weight:600" class="hl">Manage admins</a><a>Page settings</a></div></div>`),
+    // LinkedIn's page admin view: Settings → Manage admins → + Add admin
+    'linkedin-1': () => browser('linkedin.com/company/your-company/admin/settings/manage-admins', `<div class="side"><h4>Your company</h4>
+      <a>Dashboard</a><a>Page posts</a><a>Analytics</a><a>Inbox</a><a>Edit page</a>
+      <span class="grp">Settings</span><a class="on hl" style="background:#EEF3FB;color:#0A66C2">Manage admins</a><a>Notifications</a></div>
+      <div class="main"><div class="row"><h3>Manage admins</h3><span class="sp"></span><span class="btn li hl">+ Add admin</span></div>
+        <div class="card"><div class="row" style="font-size:13px"><span style="width:34px;height:34px;border-radius:50%;background:#C9D3E3"></span><div><b>You</b><div class="muted">Super admin</div></div></div></div>
+        <div class="card">${ghost(2)}</div></div>`),
 
+    // the search finds PEOPLE (1st-degree connections), never a company page
     'linkedin-2': () => browser('linkedin.com/company/your-company/admin/settings/manage-admins', `<div class="main">${ghost(5)}</div>
-      <div class="dim"><div class="modal"><h3>Add admin</h3>
-        <div class="field"><label>Search for a member</label><div class="input" style="font:500 14px inherit;letter-spacing:0">Nawa</div></div>
-        <div class="row" style="font-size:13px"><span style="width:30px;height:30px;border-radius:50%;background:#5B4BFF"></span><b>Nawa</b><span class="muted">· the account we send you</span></div>
-        <div style="display:grid;gap:9px;font-size:13.5px"><span class="muted">Page admin role</span>
+      <div class="dim"><div class="modal"><h3>Add page admin</h3>
+        <div class="field"><label>Search for a person (your connections)</label><div class="input" style="font:500 14px inherit;letter-spacing:0">Your Nawa contact</div></div>
+        <div class="row hl" style="font-size:13px;padding:6px;margin:-6px"><span style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5B4BFF,#9B8CFF);display:grid;place-items:center;color:#fff;font-weight:800">N</span><div><b>Your Nawa contact</b> <span class="muted">· 1st</span><div class="muted">Person · Nawa Studio</div></div></div>
+        <div style="display:grid;gap:9px;font-size:13.5px"><span class="muted">Assign an admin role</span>
           <span class="row"><i class="radio"></i>Super admin</span>
-          <span class="row hl" style="padding:6px;margin:-6px"><i class="radio on"></i><b>Content admin</b><span class="muted">post and manage content</span></span>
+          <span class="row hl" style="padding:6px;margin:-6px"><i class="radio on"></i><b>Content admin</b><span class="muted">posts and manages content</span></span>
           <span class="row"><i class="radio"></i>Analyst</span></div>
         <div class="foot"><span class="btn" style="border-radius:999px">Cancel</span><span class="btn li">Save</span></div></div></div>`),
 

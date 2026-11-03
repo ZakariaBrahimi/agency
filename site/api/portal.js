@@ -79,6 +79,7 @@ export default async function handler(req, res) {
         user: { name: user.name, email: user.email, role: user.role },
         client: { name: client.name, industry: client.industry, city: client.city, website: client.website },
         status: platformStatus(client, pages),
+        nawa: await B.getSettings().then(({ contact }) => ({ linkedin_name: contact.linkedin_name, linkedin_url: contact.linkedin_url })).catch(() => ({})),
         proposals: await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`).then(([r]) => (r?.data?.posts || []).filter((p) => p.proposal).length).catch(() => 0),
       });
     }

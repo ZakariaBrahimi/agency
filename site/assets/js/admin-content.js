@@ -4,7 +4,7 @@
 // - /admin  (window.NAWA_CT unset): Nawa's own content, or any client's (the switcher at the top)
 // - /portal (window.NAWA_CT = { api: '/api/portal', mode: 'client' }): a client's own content
 import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261023b';
-import { COPY_ICON } from './portal-schema.js?v=20261023b';
+import { COPY_ICON } from './portal-schema.js?v=20261103d';
 import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261023b';
 
 const $ = (id) => document.getElementById(id);

@@ -77,23 +77,27 @@ export const PLATFORMS = {
   },
   linkedin: {
     color: '#0A66C2', auto: false,
-    shots: ['linkedin-1', 'linkedin-2', null], // illustrations in /assets/guides/<name>.webp, one per step
+    shots: [null, 'linkedin-1', 'linkedin-2', null], // illustrations in /assets/guides/<name>.webp, one per step
     name: { ar: 'لينكدإن', en: 'LinkedIn', fr: 'LinkedIn' },
+    // {person}: the Nawa person to add as admin (name + profile link from admin «الإعدادات»)
     steps: {
       ar: [
-        'افتح صفحة شركتك على لينكدإن كمسؤول ← <b>أدوات المسؤول</b> ← إدارة المسؤولين.',
-        'أضف حساب نواة الذي نرسله لك بصلاحية <b>مسؤول المحتوى</b>.',
-        'أخبرنا عند الانتهاء: نتحقق ونفعّل المنصة.',
+        'يقوم بهذه الخطوات <b>مسؤول صفحة شركتك على LinkedIn</b> (Super admin) من حسابه الشخصي. أولًا أرسل <b>طلب تواصل (Connect)</b> إلى {person} وانتظر قبوله: LinkedIn لا يسمح بإضافة مسؤول إلا من جهات تواصلك.',
+        'افتح صفحة شركتك على LinkedIn ← <b>Settings</b> (أدوات المسؤول) ← <b>Manage admins</b> ← اضغط <b>«+ Add admin»</b>.',
+        'اكتب في البحث اسم {person}: <b>شخص وليس صفحة</b>. صفحة «Nawa Studio» لا تظهر في البحث لأن LinkedIn يقبل الأشخاص فقط مسؤولين. اختر الدور <b>Content admin</b> (مسؤول المحتوى) ثم <b>Save</b>.',
+        'اضغط «أنهيت، أخبر نواة» في الأسفل: نتحقق ونفعّل المنصة.',
       ],
       en: [
-        'Open your LinkedIn company page as an admin → <b>Admin tools</b> → Manage admins.',
-        'Add the Nawa account we send you as a <b>Content admin</b>.',
-        'Let us know when it’s done: we check and turn the platform on.',
+        'These steps are done by <b>your company page’s Super admin</b> on LinkedIn, from their personal account. First send a <b>connection request (Connect)</b> to {person} and wait until it’s accepted: LinkedIn only lets you add your own connections as admins.',
+        'Open your company page on LinkedIn → <b>Settings</b> (admin tools) → <b>Manage admins</b> → click <b>“+ Add admin”</b>.',
+        'Search for {person} by name: <b>a person, not a page</b>. The “Nawa Studio” page won’t appear, because LinkedIn only accepts people as admins. Choose the <b>Content admin</b> role, then <b>Save</b>.',
+        'Press “I’m done, tell Nawa” below: we check and turn the platform on.',
       ],
       fr: [
-        'Ouvrez la page de votre entreprise sur LinkedIn en tant qu’admin → <b>Outils d’administration</b> → Gérer les admins.',
-        'Ajoutez le compte Nawa que nous vous envoyons comme <b>admin de contenu</b>.',
-        'Prévenez-nous une fois terminé : nous vérifions et activons la plateforme.',
+        'Ces étapes sont faites par <b>le Super admin de la page de votre entreprise</b> sur LinkedIn, depuis son compte personnel. D’abord, envoyez une <b>demande de connexion (Se connecter)</b> à {person} et attendez qu’elle soit acceptée : LinkedIn n’autorise comme admins que vos relations.',
+        'Ouvrez la page de votre entreprise sur LinkedIn → <b>Paramètres</b> (outils d’administration) → <b>Gérer les admins</b> → cliquez sur <b>« + Ajouter un admin »</b>.',
+        'Recherchez {person} par son nom : <b>une personne, pas une page</b>. La page « Nawa Studio » n’apparaît pas, car LinkedIn n’accepte que des personnes comme admins. Choisissez le rôle <b>Admin de contenu</b>, puis <b>Enregistrer</b>.',
+        'Appuyez sur « C’est fait, prévenir Nawa » en bas : nous vérifions et activons la plateforme.',
       ],
     },
   },
