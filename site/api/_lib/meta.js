@@ -77,15 +77,31 @@ export async function accessiblePages({ fresh = false } = {}) {
 }
 
 // ---------- Facebook ----------
-/** items: [{ url, video }] in order. Returns { id, url }. */
-export async function publishFacebook({ caption, items }, t = nawaTarget()) {
+/** A POST with a file (multipart): Facebook takes a video's thumbnail only as an uploaded file. */
+async function graphUpload(path, { token, params = {}, file }) {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(params)) form.append(k, String(v));
+  form.append(file.field, new Blob([file.body], { type: file.type }), file.name);
+  form.append('access_token', token);
+  const r = await fetch(BASE() + path, { method: 'POST', body: form });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.error) throw new MetaError(d.error, r.status);
+  return d;
+}
+
+/** items: [{ url, video }] in order; cover: a JPEG link for a video's thumbnail. Returns { id, url }. */
+export async function publishFacebook({ caption, items, cover }, t = nawaTarget()) {
   if (!t.page) throw Object.assign(new Error('no_page'), { code: 'no_page' });
   const PAGE = () => t.page;
   const token = await pageToken(t.page);
   const videos = items.filter((m) => m.video);
   if (videos.length && items.length > 1) throw Object.assign(new Error('fb_mixed'), { code: 'fb_mixed' });
   if (videos.length) {
-    const d = await graph(`/${PAGE()}/videos`, { method: 'POST', token, params: { file_url: videos[0].url, description: caption } });
+    const params = { file_url: videos[0].url, description: caption };
+    // the cover goes as the video's thumbnail ("thumb", an uploaded file); without it if it can't be read
+    const thumb = cover ? await fetch(cover).then(async (x) => (x.ok ? Buffer.from(await x.arrayBuffer()) : null)).catch(() => null) : null;
+    const d = thumb ? await graphUpload(`/${PAGE()}/videos`, { token, params, file: { field: 'thumb', body: thumb, type: 'image/jpeg', name: 'cover.jpg' } })
+      : await graph(`/${PAGE()}/videos`, { method: 'POST', token, params });
     return { id: d.id, url: `https://www.facebook.com/${PAGE()}/videos/${d.id}` };
   }
   if (items.length === 1) {
@@ -124,8 +140,8 @@ async function publishContainer(id, t = nawaTarget()) {
   return { id: d.id, url };
 }
 
-/** items: [{ url, video }]. Returns { id, url }, or { pending: containerId } while a video is still processing. */
-export async function publishInstagram({ caption, items }, deadline, t = nawaTarget()) {
+/** items: [{ url, video }]; cover: a JPEG link for a reel's cover. Returns { id, url }, or { pending: containerId } while a video is still processing. */
+export async function publishInstagram({ caption, items, cover }, deadline, t = nawaTarget()) {
   if (!t.ig) throw Object.assign(new Error('no_ig'), { code: 'no_ig' });
   const IG = () => t.ig;
   if (!items.length) throw Object.assign(new Error('ig_needs_media'), { code: 'ig_needs_media' });
@@ -133,7 +149,7 @@ export async function publishInstagram({ caption, items }, deadline, t = nawaTar
   let container;
   if (items.length === 1) {
     const m = items[0];
-    const params = m.video ? { media_type: 'REELS', video_url: m.url, caption, share_to_feed: 'true' } : { image_url: m.url, caption };
+    const params = m.video ? { media_type: 'REELS', video_url: m.url, caption, share_to_feed: 'true', ...(cover ? { cover_url: cover } : {}) } : { image_url: m.url, caption };
     container = (await graph(`/${IG()}/media`, { method: 'POST', params })).id;
   } else {
     const children = [];

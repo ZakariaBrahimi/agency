@@ -109,6 +109,7 @@ const INSTRUCTIONS = (c) => `You are connected to the Nawa social media planner 
 - Call list_posts before planning so you don't repeat topics or crowd a day.
 - Write captions in the client's language (Arabic by default unless the client asks otherwise), ready to post, with relevant hashtags.
 - Give each draft a suggested time (suggested_at, Algiers time).
+- Video posts can have a cover image (sent as the reel cover on Instagram and the video thumbnail on Facebook): upload it with start_upload (as_cover: true) or attach_image (as_cover: true). Prefer a 9:16 image (e.g. 1080×1920) with the hook as text.
 - delete_post removes a post from the calendar when the user asks (or a draft you made is no longer wanted). It goes to the client's trash for 30 days, where they can restore it. Give a short reason. Deleting a published post only removes it from Nawa, not from Facebook/Instagram.
 - Files (videos and images): if the user attached files in the chat or you created them in your code workspace, upload them yourself: create the draft, call start_upload with the file's name, type and exact size in bytes, run the returned command in your code workspace (bash/python), then call finish_upload. Do one file at a time, in the order they should appear. For public https image links use attach_image. If you have no file, describe the visual in image_idea.
 - If the upload command fails with a network or host error, your workspace can't reach the upload address: tell the user to turn on code execution and allow network access ("All domains", or add the host from the error) in Claude → Settings → Capabilities, then try again. Never paste file contents into a tool call.`;
@@ -133,9 +134,9 @@ const TOOLS = [
   { name: 'list_posts', title: 'Content calendar', description: 'Posts in a date range (default: 14 days ago to 30 days ahead), with their status: draft, proposal (yours, waiting for the client), scheduled or published. Use it to avoid repeating topics or crowding a day.', inputSchema: { type: 'object', properties: { from: { type: 'string', description: 'YYYY-MM-DD' }, to: { type: 'string', description: 'YYYY-MM-DD' } }, additionalProperties: false }, annotations: { readOnlyHint: true } },
   { name: 'create_draft', title: 'Create a draft proposal', description: `Creates a DRAFT post proposal in the client's calendar, marked "suggested by Claude". It is never scheduled or published: the client approves it in Nawa. At most ${DAILY_DRAFTS} drafts a day.`, inputSchema: { type: 'object', properties: draftProps, required: ['title', 'suggested_at'], additionalProperties: false } },
   { name: 'update_draft', title: 'Update one of your proposals', description: 'Changes a proposal you created that the client has not approved or rejected yet. Only the given fields change; image_urls are added to the existing images.', inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'The post id from create_draft or list_posts.' }, ...draftProps }, required: ['id'], additionalProperties: false } },
-  { name: 'attach_image', title: 'Attach an image to a proposal', description: 'Adds one image from a public https link to one of your pending proposals.', inputSchema: { type: 'object', properties: { id: { type: 'string' }, url: { type: 'string' } }, required: ['id', 'url'], additionalProperties: false } },
+  { name: 'attach_image', title: 'Attach an image to a proposal', description: 'Adds one image from a public https link to one of your pending proposals (as_cover: true makes it the video post\'s cover instead).', inputSchema: { type: 'object', properties: { id: { type: 'string' }, url: { type: 'string' }, as_cover: { type: 'boolean', description: 'true: the video post\'s cover image.' } }, required: ['id', 'url'], additionalProperties: false } },
   { name: 'delete_post', title: 'Delete a post', description: 'Deletes a post from the client\'s calendar: any draft, scheduled post or your proposals (a scheduled post will then not be published). It goes to the client\'s trash («المحذوفات») for 30 days, where they can restore it; then it is removed with its files. A published post stays online on Facebook/Instagram: this only removes it from Nawa.', inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'The post id from list_posts.' }, reason: { type: 'string', description: 'Why it is deleted (shown to the client), e.g. "duplicate of Thursday\'s post".' } }, required: ['id'], additionalProperties: false }, annotations: { destructiveHint: true } },
-  { name: 'start_upload', title: 'Upload a file (step 1 of 2)', description: `For a video or image you have in your code workspace (attached in the chat, or created there). Returns a one-hour upload link straight to the client's storage and the exact command to run in your workspace. Then call finish_upload. JPG, PNG, WebP, MP4 or MOV, up to 1 GB.`, inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'One of your pending proposals (from create_draft).' }, name: { type: 'string', description: 'The file name, e.g. demo.mp4.' }, mime_type: { type: 'string', enum: Object.keys(UPLOAD_TYPES), description: 'The file type.' }, size: { type: 'integer', description: 'The exact file size in bytes (e.g. from `stat -c %s file` or os.path.getsize).' } }, required: ['id', 'name', 'mime_type', 'size'], additionalProperties: false } },
+  { name: 'start_upload', title: 'Upload a file (step 1 of 2)', description: `For a video or image you have in your code workspace (attached in the chat, or created there). Returns a one-hour upload link straight to the client's storage and the exact command to run in your workspace. Then call finish_upload. JPG, PNG, WebP, MP4 or MOV, up to 1 GB.`, inputSchema: { type: 'object', properties: { id: { type: 'string', description: 'One of your pending proposals (from create_draft).' }, name: { type: 'string', description: 'The file name, e.g. demo.mp4.' }, mime_type: { type: 'string', enum: Object.keys(UPLOAD_TYPES), description: 'The file type.' }, size: { type: 'integer', description: 'The exact file size in bytes (e.g. from `stat -c %s file` or os.path.getsize).' }, as_cover: { type: 'boolean', description: 'true: this image is the video post\'s cover (reel cover / video thumbnail), not one of its files. Images only.' } }, required: ['id', 'name', 'mime_type', 'size'], additionalProperties: false } },
   { name: 'finish_upload', title: 'Upload a file (step 2 of 2)', description: 'After the upload command finished: checks the file arrived and attaches it to the proposal (videos make it a reel/video post, several images a carousel).', inputSchema: { type: 'object', properties: { upload_token: { type: 'string', description: 'The upload_token from start_upload.' } }, required: ['upload_token'], additionalProperties: false } },
 ];
 
@@ -150,7 +151,7 @@ const slim = (p) => ({
   id: p.id, title: p.title, kind: p.kind, date: p.date || null,
   status: p.proposal ? 'proposal' : postStatus(p), platforms: p.platforms,
   caption: (captionFor(p, p.platforms?.[0] || 'instagram') || '').slice(0, 400),
-  images: (p.media || []).length, ...(p.proposal ? { suggested_by_claude: true } : {}),
+  images: (p.media || []).length, ...(p.cover ? { cover: true } : {}), ...(p.proposal ? { suggested_by_claude: true } : {}),
 });
 
 const HANDLERS = {
@@ -224,6 +225,7 @@ const HANDLERS = {
     const post = data.posts.find((p) => p.id === args.id);
     need(post?.proposal?.by === 'claude', 'This post is not one of your pending proposals. Create a draft first, then upload to it.');
     need(UPLOAD_TYPES[args.mime_type], `mime_type must be one of: ${Object.keys(UPLOAD_TYPES).join(', ')}.`);
+    need(!args.as_cover || /^image\//.test(args.mime_type), 'A cover must be an image (JPG, PNG or WebP).');
     const size = Math.round(Number(args.size));
     need(Number.isFinite(size) && size > 0, 'size must be the exact file size in bytes.');
     need(size <= MAX_UPLOAD, 'The file is larger than 1 GB.');
@@ -233,7 +235,7 @@ const HANDLERS = {
     try { up = await store.startUpload(post, { name, mimeType: args.mime_type, size, origin: siteUrl() }); }
     catch (e) { throw new ToolError(imageError(e).replace('images can\'t be saved', 'files can\'t be saved').replace('The image', 'The file')); }
     await save(); // a Drive upload may have created the post's folder
-    const token = seal('nawa-upload', { c: client.id, p: post.id, u: up.uploadUrl, f: up.fileId || null, s: size, m: args.mime_type, e: Date.now() + 3600e3 });
+    const token = seal('nawa-upload', { c: client.id, p: post.id, u: up.uploadUrl, f: up.fileId || null, s: size, m: args.mime_type, e: Date.now() + 3600e3, ...(args.as_cover ? { cv: 1 } : {}) });
     const host = new URL(up.uploadUrl).host;
     return {
       upload_url: up.uploadUrl, method: 'PUT', headers: { 'Content-Type': args.mime_type }, size, expires_in_minutes: 60, upload_host: host,
@@ -267,19 +269,22 @@ const HANDLERS = {
     let m;
     try { m = await store.attach(post, { id: fileId }); }
     catch { throw new ToolError('The file didn\'t arrive (or isn\'t an image/video). Check the upload command printed 200, then call finish_upload again.'); }
-    post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
-    if (/^video\//.test(m.mimeType)) post.kind = 'video';
-    else if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
+    if (t.cv) setCover(store, post, m);
+    else {
+      post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
+      if (/^video\//.test(m.mimeType)) post.kind = 'video';
+      else if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
+    }
     post.updatedAt = now();
     await save();
-    return { attached: { name: m.name, type: m.mimeType, size: m.size }, updated: slim(post) };
+    return { attached: { name: m.name, type: m.mimeType, size: m.size, ...(t.cv ? { as: 'cover' } : {}) }, updated: slim(post) };
   },
 
   async attach_image(args, { client }) {
     const { store, data, save } = await load(client);
     const post = data.posts.find((p) => p.id === args.id);
     need(post?.proposal?.by === 'claude', 'This post is not one of your pending proposals.');
-    const [r] = await attachAll(store, data, save, post, [args.url]);
+    const [r] = await attachAll(store, data, save, post, [args.url], { asCover: Boolean(args.as_cover) });
     need(r.ok, r.error);
     return { updated: slim(post), image: r };
   },
@@ -313,10 +318,16 @@ function draftFields(a, partial = false) {
 // ---------- images from links ----------
 
 const PRIVATE = /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.|\[?::1\]?|\[?f[cd])/i;
-async function attachAll(store, data, save, post, urls) {
+/** Makes an image the post's cover (the old cover file is removed). */
+function setCover(store, post, m) {
+  if (post.cover && post.cover.id !== m.id) Promise.resolve(store.trash(post.cover)).catch(() => {});
+  post.cover = m;
+}
+
+async function attachAll(store, data, save, post, urls, { asCover = false } = {}) {
   const out = [];
   for (const url of (Array.isArray(urls) ? urls : []).slice(0, 10)) {
-    try { out.push({ url, ok: true, ...(await attachOne(store, post, String(url))) }); }
+    try { out.push({ url, ok: true, ...(await attachOne(store, post, String(url), asCover)) }); }
     catch (e) { out.push({ url, ok: false, error: e instanceof ToolError ? e.message : imageError(e) }); }
     await save();
   }
@@ -329,7 +340,7 @@ const imageError = (e) => (e instanceof StorageError ? {
   plan_ended: 'The client\'s storage plan is not active. The draft is kept; describe the visual in image_idea instead.',
 }[e.code] || 'The image couldn\'t be saved.' : 'The image couldn\'t be downloaded or saved.');
 
-async function attachOne(store, post, url) {
+async function attachOne(store, post, url, asCover = false) {
   let u; try { u = new URL(url); } catch { throw new ToolError('Not a valid link.'); }
   need(u.protocol === 'https:' && !PRIVATE.test(u.hostname), 'Only public https image links are accepted.');
   const r = await fetch(u, { redirect: 'follow', signal: AbortSignal.timeout(20e3) }).catch(() => null);
@@ -347,10 +358,13 @@ async function attachOne(store, post, url) {
   need(put.ok, 'The image couldn\'t be saved to the client\'s storage.');
   const fileId = up.fileId || (await put.json().catch(() => ({}))).id;
   const m = await store.attach(post, { id: fileId });
-  post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
-  if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
+  if (asCover) setCover(store, post, m);
+  else {
+    post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
+    if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
+  }
   post.updatedAt = now();
-  return { name, size: bytes.length };
+  return { name, size: bytes.length, ...(asCover ? { as: 'cover' } : {}) };
 }
 
 // ---------- the daily email about new proposals (cron) ----------

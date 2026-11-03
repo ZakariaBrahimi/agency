@@ -760,3 +760,12 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .ct-player video { display: block; inline-size: 100%; max-block-size: 92dvh; background: #000; }
 .ct-player .ct-x { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; z-index: 2; background: rgb(255 255 255 / .9); }
 
+/* a video post's cover image */
+.ct-coverfield { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; padding: 12px; border: 1px dashed var(--line); border-radius: 14px; background: var(--paper); }
+.ct-coverthumb { flex: none; inline-size: 72px; aspect-ratio: 9 / 16; border-radius: 10px; overflow: hidden; background: var(--card); border: 1px solid var(--line); display: grid; place-items: center; }
+.ct-coverthumb img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.ct-coverthumb span { font-size: 11px; color: var(--muted); text-align: center; padding: 4px; }
+.ct-covertext { display: grid; gap: 6px; min-width: 0; }
+.ct-covertext .muted { font-size: 13px; line-height: 1.6; }
+.ct-coveracts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+

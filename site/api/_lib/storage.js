@@ -93,7 +93,7 @@ const countDrive = (data) => (data.posts || []).reduce((n, p) => n + (p.media ||
 /** Bytes a client's posts keep in each store. */
 export function usageOf(data) {
   const u = { drive: 0, cloud: 0 };
-  for (const p of data.posts || []) for (const m of p.media || []) u[m.store === 'cloud' ? 'cloud' : 'drive'] += Number(m.size || 0);
+  for (const p of data.posts || []) for (const m of [...(p.media || []), ...(p.cover ? [p.cover] : [])]) u[m.store === 'cloud' ? 'cloud' : 'drive'] += Number(m.size || 0);
   return u;
 }
 
@@ -181,7 +181,7 @@ export async function clientStore(client) {
       if (g) return G.trashFile(g, m.id);
     },
     async removePost(post) {
-      for (const m of post.media || []) if (m.store === 'cloud') await R2.remove(m.key).catch(() => {});
+      for (const m of [...(post.media || []), ...(post.cover ? [post.cover] : [])]) if (m.store === 'cloud') await R2.remove(m.key).catch(() => {});
       if (post.folderId && g) await G.trashFile(g, post.folderId).catch(() => {});
     },
     rename: (post) => (post.folderId && g ? G.renameFile(g, post.folderId, folderName(post)) : null),

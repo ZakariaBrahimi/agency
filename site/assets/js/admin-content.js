@@ -35,6 +35,7 @@ const ERR = {
   client_not_found: 'هذا العميل غير موجود.',
   no_storage: 'اختر مكان التخزين أولًا من «التخزين»: Google Drive مجانًا أو «تخزين نواة».',
   drive_full: 'مساحة Google Drive المجانية ممتلئة. اختر خطة «تخزين نواة» من «التخزين» لمتابعة الرفع.',
+  cover_not_image: 'الغلاف يجب أن يكون صورة (JPG أو PNG أو WebP).',
   plan_full: 'امتلأت مساحة خطة «تخزين نواة». رقِّها من «التخزين» لمتابعة الرفع.',
   plan_ended: 'خطة «تخزين نواة» غير نشطة. اختر خطة أو جدّدها من «التخزين» لمتابعة الرفع.',
   drive_disconnected: 'Google Drive غير مربوط. أعد ربطه من «التخزين».',
@@ -158,9 +159,10 @@ const isVideo = (m) => m.video || /^video\//.test(m.mimeType);
 // a video plays from its original file (the server redirects to a signed link or streams with Range);
 // "#t=0.5" makes the browser show an early frame as the thumbnail
 const videoSrc = (m) => api('media', { id: m.id });
-const videoThumb = (m) => `<video src="${videoSrc(m)}#t=0.5" preload="metadata" muted playsinline aria-hidden="true" tabindex="-1"></video><i class="ct-play">▶</i>`;
+// (with a cover image, the cover is the thumbnail)
+const videoThumb = (m, cover) => `${cover ? `<img src="${thumb(cover)}" alt="" loading="lazy">` : `<video src="${videoSrc(m)}#t=0.5" preload="metadata" muted playsinline aria-hidden="true" tabindex="-1"></video>`}<i class="ct-play">▶</i>`;
 /** Plays a post's video in a window (controls, playsinline). */
-function playVideo(m) {
+function playVideo(m, cover) {
   let d = document.getElementById('ctPlayer');
   if (!d) {
     d = document.createElement('dialog'); d.id = 'ctPlayer'; d.className = 'ct-player';
@@ -172,7 +174,7 @@ function playVideo(m) {
     d.addEventListener('close', () => d.querySelector('video').pause());
   }
   const v = d.querySelector('video');
-  v.src = videoSrc(m); v.setAttribute('aria-label', m.name || 'video');
+  v.poster = cover ? thumb(cover, 1200) : ''; v.src = videoSrc(m); v.setAttribute('aria-label', m.name || 'video');
   d.showModal(); v.play().catch(() => {});
 }
 const todayAt = () => {
@@ -380,7 +382,7 @@ function card(p) {
   const cover = (p.media || [])[0];
   const st = stOf(p);
   return `<button type="button" class="ct-post${p.proposal ? ' proposal' : ''}" data-open="${p.id}">
-    <span class="ct-cover">${cover ? (isVideo(cover) ? videoThumb(cover) : `<img src="${thumb(cover)}" alt="" loading="lazy">`) : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
+    <span class="ct-cover">${cover ? (isVideo(cover) ? videoThumb(cover, p.cover) : `<img src="${thumb(cover)}" alt="" loading="lazy">`) : `<span class="ct-kind">${esc(KINDS[p.kind] || '')}<small>بدون ملفات بعد</small></span>`}
       ${(p.media || []).length > 1 ? `<i class="ct-count" dir="ltr">1/${p.media.length}</i>` : ''}</span>
     <span class="ct-post-body">
       <span class="pill ct-st st-${st}">${LABEL[st]}</span>
@@ -474,6 +476,7 @@ function drawEditor(p) {
       <label class="btn btn-ghost-dark ct-upload">رفع ملفات<input type="file" id="ceFiles" accept="image/*,video/*" multiple hidden></label></div>
       <div id="ceMedia"></div>
       <div id="ceUploads"></div>
+      <div id="ceCover"></div>
       ${p.folderUrl ? `<p class="muted">الملفات في <a href="${esc(p.folderUrl)}" target="_blank" rel="noopener">مجلد المنشور على Drive ↗</a>. أي ملف تضيفه هناك يظهر هنا.</p>` : ''}
     </section>
 
@@ -594,7 +597,7 @@ function drawMedia() {
   $('ceMedia').innerHTML = media.length ? `<ol class="ct-media">${media.map((m, i) => `
     <li>
       <a class="ct-mthumb" href="${isVideo(m) ? esc(videoSrc(m)) : CLIENT_MODE || tenant || m.store ? esc(thumb(m, 1600)) : `https://drive.google.com/file/d/${encodeURIComponent(m.id)}/view`}" target="_blank" rel="noopener" title="${esc(m.name)}"${isVideo(m) ? ` data-play="${i}"` : ''}>
-        ${isVideo(m) ? videoThumb(m) : `<img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">`}<i class="ct-idx" dir="ltr">${i + 1}</i>${CLIENT_MODE ? `<i class="ct-store${m.store === 'cloud' ? ' cloud' : ''}">${m.store === 'cloud' ? 'تخزين نواة' : 'Drive'}</i>` : ''}</a>
+        ${isVideo(m) ? videoThumb(m, p.cover) : `<img src="${thumb(m, 360)}" alt="${esc(m.name)}" loading="lazy">`}<i class="ct-idx" dir="ltr">${i + 1}</i>${CLIENT_MODE ? `<i class="ct-store${m.store === 'cloud' ? ' cloud' : ''}">${m.store === 'cloud' ? 'تخزين نواة' : 'Drive'}</i>` : ''}</a>
       <span class="ct-mtools">
         <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="تقديم">→</button>
         <button type="button" data-mv="${i}" data-d="1" ${i === media.length - 1 ? 'disabled' : ''} aria-label="تأخير">←</button>
@@ -602,7 +605,8 @@ function drawMedia() {
         <button type="button" data-rm="${m.id}" aria-label="حذف">✕</button>
       </span>
     </li>`).join('')}</ol>` : '<p class="muted">لا توجد ملفات بعد. للكاروسيل ارفع عدة صور بالترتيب.</p>';
-  $('ceMedia').querySelectorAll('[data-play]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); playVideo(media[Number(a.dataset.play)]); }));
+  drawCover(p);
+  $('ceMedia').querySelectorAll('[data-play]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); playVideo(media[Number(a.dataset.play)], p.cover); }));
   $('ceMedia').querySelectorAll('[data-mv]').forEach((b) => b.addEventListener('click', async () => {
     const i = Number(b.dataset.mv), j = i + Number(b.dataset.d);
     const order = media.map((m) => m.id); [order[i], order[j]] = [order[j], order[i]];
@@ -614,7 +618,23 @@ function drawMedia() {
   }));
 }
 
-async function upload(files) {
+// ---------- a video post's cover image (sent as the reel cover / video thumbnail when publishing) ----------
+function drawCover(p) {
+  const box = $('ceCover'); if (!box) return;
+  const hasVideo = (p.media || []).some(isVideo) || p.kind === 'video';
+  if (!hasVideo && !p.cover) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="ct-coverfield">
+    <div class="ct-coverthumb">${p.cover ? `<img src="${thumb(p.cover, 360)}" alt="صورة الغلاف">` : '<span>بدون غلاف</span>'}</div>
+    <div class="ct-covertext"><b>صورة الغلاف</b><span class="muted">تُرسل غلافًا للريل على إنستغرام وصورةً مصغّرة للفيديو على فيسبوك. الأفضل صورة 9:16 (1080×1920). بدونها تختار المنصة إطارًا من الفيديو.</span>
+      <span class="ct-coveracts"><label class="btn btn-ghost-dark ct-upload">${p.cover ? 'تغيير الغلاف' : 'رفع غلاف'}<input type="file" id="ceCoverFile" accept="image/jpeg,image/png,image/webp" hidden></label>${p.cover ? '<button type="button" class="link-btn ct-danger" id="ceCoverRm">إزالة</button>' : ''}</span></div>
+  </div>`;
+  $('ceCoverFile').onchange = (e) => { const f = e.target.files?.[0]; if (f) upload([f], { asCover: true }); e.target.value = ''; };
+  if ($('ceCoverRm')) $('ceCoverRm').onclick = async () => {
+    try { absorb(await act('cover-remove', { id: p.id })); drawMedia(); render(); toast('أُزيل الغلاف.'); } catch (err) { toast(errText(err), true); }
+  };
+}
+
+async function upload(files, { asCover = false } = {}) {
   const p = current();
   if (state.dirty) await save(true);
   for (const file of files) {
@@ -635,7 +655,7 @@ async function upload(files) {
         x.onerror = () => reject(new Error('network'));
         x.send(file);
       });
-      absorb(await act('attach', { id: p.id, file: { id: uploaded.id } }));
+      absorb(await act('attach', { id: p.id, file: { id: uploaded.id }, ...(asCover ? { as: 'cover' } : {}) }));
       row.remove();
     } catch (e) {
       row.classList.add('bad'); row.querySelector('progress').remove();

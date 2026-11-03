@@ -114,7 +114,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
   try {
     const { data, save, rootUrl } = await store.load();
     const find = (id) => data.posts.find((p) => p.id === id);
-    const mediaOf = (id) => { for (const p of data.posts) for (const m of p.media || []) if (m.id === id) return m; return null; };
+    const mediaOf = (id) => { for (const p of data.posts) for (const m of [...(p.media || []), ...(p.cover ? [p.cover] : [])]) if (m.id === id) return m; return null; };
 
     // ---- image previews (only files of this tenant's posts)
     if (req.method === 'GET' && action === 'media') {
@@ -144,7 +144,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
     }
 
     // Drive links only for Nawa's own content in the admin
-    const strip = (p) => (p && (asClient || store.kind !== 'nawa') ? (({ folderUrl, ...rest }) => ({ ...rest, media: (rest.media || []).map(({ key, ...m }) => m) }))(p) : p);
+    const strip = (p) => (p && (asClient || store.kind !== 'nawa') ? (({ folderUrl, ...rest }) => ({ ...rest, media: (rest.media || []).map(({ key, ...m }) => m), ...(rest.cover ? { cover: (({ key, ...m }) => m)(rest.cover) } : {}) }))(p) : p);
     const reply = (extra = {}) => json(res, 200, {
       ok: true, posts: data.posts.map(strip), settings: { seeded: Boolean(data.settings.seeded), calendar: Boolean(data.settings.calendarId) },
       // posts Claude deleted (client content): restorable for 30 days
@@ -227,10 +227,24 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
       case 'attach': {
         if (!post || !body.file?.id) return json(res, 400, { ok: false, error: 'bad_file' });
         const m = await store.attach(post, body.file);
+        if (body.as === 'cover') { // a video post's cover image (sent with the reel when publishing)
+          if (!/^image\//.test(m.mimeType)) { await Promise.resolve(store.trash(m)).catch(() => {}); return json(res, 400, { ok: false, error: 'cover_not_image' }); }
+          if (post.cover && post.cover.id !== m.id) await Promise.resolve(store.trash(post.cover)).catch(() => {});
+          post.cover = m; post.updatedAt = now();
+          await save();
+          return reply({ post });
+        }
         post.media = [...(post.media || []).filter((x) => x.id !== m.id), m];
         if (/^video\//.test(m.mimeType)) post.kind = 'video';
         else if (post.kind === 'image' && post.media.length > 1) post.kind = 'carousel';
         post.updatedAt = now();
+        await save();
+        return reply({ post });
+      }
+      case 'cover-remove': {
+        if (!post?.cover) return json(res, 400, { ok: false, error: 'no_cover' });
+        await Promise.resolve(store.trash(post.cover)).catch(() => {});
+        delete post.cover; post.updatedAt = now();
         await save();
         return reply({ post });
       }

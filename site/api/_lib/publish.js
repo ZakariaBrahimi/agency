@@ -91,7 +91,9 @@ export async function publishPlatform(post, platform, { deadline, persist, targe
       const items = [];
       for (const m of post.media || []) items.push({ url: await urlFor(m, platform), video: Boolean(m.video || /^video\//.test(m.mimeType || '')) });
       const caption = captionFor(post, platform);
-      r = platform === 'facebook' ? await M.publishFacebook({ caption, items }, target) : await M.publishInstagram({ caption, items }, deadline, target);
+      // a video post's cover: a plain JPEG link (no Instagram fitting: a reel cover is 9:16)
+      const cover = post.cover && items.some((x) => x.video) ? await urlFor(post.cover, 'facebook') : null;
+      r = platform === 'facebook' ? await M.publishFacebook({ caption, items, cover }, target) : await M.publishInstagram({ caption, items, cover }, deadline, target);
     }
     delete s.lockedAt;
     if (r.pending) { s.status = 'publishing'; s.container = r.pending; return 'pending'; }
