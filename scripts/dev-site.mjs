@@ -16,6 +16,7 @@ http.createServer(async (req, res) => {
     req.url = '/api/admin/content?action=pub-media&k=' + encodeURIComponent(p.slice(7));
     p = '/api/admin/content';
   }
+  if (p === '/tiktok/callback') req.url = '/api/portal?action=tiktok-callback' + (req.url.includes('?') ? '&' + req.url.split('?')[1] : ''); // vercel.json rewrite
   if (p.startsWith('/mcp/')) { // vercel.json rewrite: the client's Claude connector
     req.url = '/api/portal?action=mcp&t=' + encodeURIComponent(p.slice(5));
     p = '/api/portal';
