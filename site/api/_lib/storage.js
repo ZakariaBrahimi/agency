@@ -10,7 +10,8 @@
 //     Drive files there (and trashes them in Drive).
 //
 // A store: { kind, calendar, load() -> { data, save, rootUrl? }, startUpload, attach, preview,
-//            trash, removePost, rename, refreshFiles, urlFor, usage }
+//            openVideo, readRange (bytes of a file, for TikTok's chunked upload), trash, removePost,
+//            rename, refreshFiles, urlFor, usage }
 import crypto from 'node:crypto';
 import { siteUrl } from './http.js';
 import * as G from './google.js';
@@ -43,6 +44,14 @@ async function driveVideo(g, id, range) {
   return r.ok ? r : null;
 }
 
+/** Bytes [start, end] of a file, as a Buffer (TikTok uploads go in chunks). */
+async function rangeOf(r) {
+  if (![200, 206].includes(r.status)) throw new Error('range ' + r.status);
+  return Buffer.from(await r.arrayBuffer());
+}
+const driveRange = (g, id, start, end) => g.call(`/drive/v3/files/${encodeURIComponent(id)}?alt=media`, { raw: true, headers: { Range: `bytes=${start}-${end}` } }).then(rangeOf);
+const cloudRange = (key, start, end) => fetch(R2.presign('GET', key, 600), { headers: { Range: `bytes=${start}-${end}` } }).then(rangeOf);
+
 async function driveFolder(g, root, post) {
   if (post.folderId) return post.folderId;
   const f = await G.createPostFolder(g, root, folderName(post));
@@ -72,6 +81,7 @@ export function nawaStore(g) {
     attach: (post, file) => driveAttach(g, post, file.id),
     preview: (m, size) => drivePreview(g, m.id, size),
     openVideo: (m, range) => driveVideo(g, m.id, range),
+    readRange: (m, start, end) => driveRange(g, m.id, start, end),
     trash: (m) => G.trashFile(g, m.id),
     removePost: (post) => (post.folderId ? G.trashFile(g, post.folderId) : null),
     rename: (post) => (post.folderId ? G.renameFile(g, post.folderId, folderName(post)) : null),
@@ -175,6 +185,11 @@ export async function clientStore(client) {
     async openVideo(m, range) {
       if (m.store === 'cloud') return { redirect: R2.presign('GET', m.key, 3600) };
       return g ? driveVideo(g, m.id, range) : null;
+    },
+    readRange(m, start, end) {
+      if (m.store === 'cloud') return cloudRange(m.key, start, end);
+      if (!g) throw new StorageError('drive_disconnected');
+      return driveRange(g, m.id, start, end);
     },
     async trash(m) {
       if (m.store === 'cloud') return R2.remove(m.key);

@@ -4,11 +4,13 @@
 // Facebook and Instagram are checked automatically: a client's Page counts as connected when it is
 // among the Pages Nawa's Meta key can manage (the client added Nawa as a partner and Nawa assigned
 // the Page to its system user), and Instagram when that Page has an Instagram business account.
-// LinkedIn and TikTok have no API access yet, so Nawa sets their status by hand.
+// LinkedIn has no API access yet, so Nawa sets its status by hand. TikTok is connected by the client
+// ("Log in with TikTok", see tiktok.js) once Nawa's TikTok app keys are set, and by hand before that.
 import { json, readJson } from './http.js';
 import { sb } from './supabase.js';
 import * as M from './meta.js';
 import * as B from './billing.js';
+import * as TT from './tiktok.js';
 import { listClients, getClient, cleanClient, cleanUser, validEmail, findUserByEmail, mailConfigured, PLATFORM_KEYS, MANUAL_STATUS } from './clients.js';
 
 export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove', 'client-cloud', 'invoice-mark', 'client-ai-revoke'];
@@ -43,8 +45,14 @@ export function platformStatus(c, pages) {
     facebook: { ...fb, auto: true, note: note('facebook') },
     instagram: { ...ig, auto: true, note: note('instagram') },
     linkedin: manual('linkedin'),
-    tiktok: manual('tiktok'),
+    tiktok: TT.ttConfigured() ? tiktokStatus(c, note('tiktok')) : manual('tiktok'),
   };
+}
+
+function tiktokStatus(c, note) {
+  const t = TT.ttOf(c);
+  if (!TT.ttConnected(c)) return { status: t.status === 'issue' ? 'issue' : 'not_started', auto: true, connect: true, note };
+  return { status: t.status === 'issue' ? 'issue' : 'active', auto: true, connect: true, note, name: t.name || (t.username ? '@' + t.username : 'TikTok'), avatar: t.avatar || '', url: t.username ? `https://www.tiktok.com/@${t.username}` : '' };
 }
 
 /** Keeps the stored Instagram id in step with the Page (it is read from Meta, never typed). */
@@ -66,13 +74,17 @@ function cleanPlatforms(input, prev = {}) {
     if (!v || typeof v !== 'object') continue;
     out[k] = {
       ...(out[k] || {}),
-      ...(v.status !== undefined && MANUAL_STATUS.includes(v.status) && (k === 'linkedin' || k === 'tiktok') ? { status: v.status } : {}),
+      // a TikTok the client connected keeps the status its connection gives
+      ...(v.status !== undefined && MANUAL_STATUS.includes(v.status) && (k === 'linkedin' || (k === 'tiktok' && !TT.ttConfigured())) ? { status: v.status } : {}),
       ...(v.url !== undefined ? { url: String(v.url).trim().slice(0, 300) } : {}),
       ...(v.note !== undefined ? { note: String(v.note).trim().slice(0, 500) } : {}),
     };
   }
   return out;
 }
+
+// the sealed TikTok connection never leaves the server
+const withoutConn = (pf = {}) => (pf.tiktok?.conn ? { ...pf, tiktok: (({ conn, ...t }) => t)(pf.tiktok) } : pf);
 
 export async function adminClients(req, res, action) {
   if (!sb.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });
@@ -97,7 +109,7 @@ export async function adminClients(req, res, action) {
       ok: true, mail: mailConfigured(), meta: M.metaTokenConfigured(), price_dzd: B.priceDzd(settings),
       pages: pages ? pages.map((p) => ({ ...p, used: used.has(p.id) })) : null,
       // the sealed Drive connection never leaves the server
-      clients: clients.map(({ drive_conn, ...c }, i) => ({ ...c, status: platformStatus(c, pages), storage: storage[i], ai: links.find((l) => l.client_id === c.id) ? { ...links.find((l) => l.client_id === c.id), pending: pending(c.id) } : null })), ...extra,
+      clients: clients.map(({ drive_conn, ...c }, i) => ({ ...c, platforms: withoutConn(c.platforms), status: platformStatus(c, pages), storage: storage[i], ai: links.find((l) => l.client_id === c.id) ? { ...links.find((l) => l.client_id === c.id), pending: pending(c.id) } : null })), ...extra,
     });
   };
   if (req.method === 'GET') return reply({ fresh: new URL(req.url, 'http://x').searchParams.has('fresh') });

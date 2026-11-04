@@ -8,9 +8,12 @@ import { siteUrl } from './http.js';
 import { seal, unseal } from './seal.js';
 import * as M from './meta.js';
 import * as R2 from './r2.js';
+import * as TT from './tiktok.js';
 import { captionFor } from '../../assets/js/content-schema.js';
 
 export const META_PLATFORMS = ['facebook', 'instagram'];
+/** The platforms a target can publish to on its own: Meta's, plus TikTok once the client connected it. */
+export const directPlatforms = (target) => [...META_PLATFORMS, ...(target?.client && TT.ttConnected(target.client) ? ['tiktok'] : [])];
 const MAX_TRIES = 3;
 const LOCK_MS = 5 * 60e3;
 const LINK_MS = 30 * 60e3;
@@ -80,13 +83,14 @@ export function isDue(s, now = Date.now()) {
  * gives the link Meta downloads each file from (see the stores in storage.js).
  * Returns 'published' | 'pending' | 'failed'.
  */
-export async function publishPlatform(post, platform, { deadline, persist, target = M.nawaTarget(), urlFor }) {
+export async function publishPlatform(post, platform, { deadline, persist, target = M.nawaTarget(), urlFor, readRange }) {
   const s = post.schedule[platform];
   s.lockedAt = new Date().toISOString();
   await persist();
   try {
     let r;
-    if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline, target);
+    if (platform === 'tiktok') r = await publishTikTok(post, s, target.client, readRange, deadline);
+    else if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline, target);
     else {
       const items = [];
       for (const m of post.media || []) items.push({ url: await urlFor(m, platform), video: Boolean(m.video || /^video\//.test(m.mimeType || '')) });
@@ -103,8 +107,35 @@ export async function publishPlatform(post, platform, { deadline, persist, targe
   } catch (e) {
     console.error(`publish ${platform} ${post.id}:`, e.code, e.subcode, e.message);
     delete s.lockedAt;
-    if (e.container || s.status === 'publishing') { delete s.container; s.status = 'scheduled'; }
-    s.error = { message: M.explain(e), at: new Date().toISOString(), tries: (s.error?.tries || 0) + 1 };
+    // a TikTok post already handed over is never sent twice: only TikTok saying it failed clears it
+    if (e.container || (s.status === 'publishing' && platform !== 'tiktok')) { delete s.container; s.status = 'scheduled'; }
+    s.error = { message: e.tt ? e.message : M.explain(e), at: new Date().toISOString(), tries: (s.error?.tries || 0) + 1 };
     return 'failed';
   }
+}
+
+// ---------- TikTok (Direct Post of one video; see tiktok.js) ----------
+const isVid = (m) => Boolean(m.video || /^video\//.test(m.mimeType || ''));
+async function publishTikTok(post, s, client, readRange, deadline) {
+  if (!client || !TT.ttConnected(client)) throw new TT.TikTokError('tiktok_not_connected', 'تيك توك غير مربوط. اربطه من «المنصات».');
+  if (!s.container) {
+    const bad = TT.checkSettings(post.tiktok);
+    if (bad) throw new TT.TikTokError(bad, 'اختر إعدادات تيك توك في المنشور (من يشاهد، والتفاعل) ثم أعد الجدولة.');
+    const media = post.media || [];
+    const video = media.length === 1 && isVid(media[0]) ? media[0] : null;
+    if (!video) throw new TT.TikTokError('tiktok_video_only', 'تيك توك هنا يقبل منشورًا بفيديو واحد فقط.');
+    if (!video.size) throw new TT.TikTokError('tiktok_size', 'تعذّر معرفة حجم الفيديو. أعد رفعه.');
+    const { publishId } = await TT.postVideo(client, {
+      caption: captionFor(post, 'tiktok'), settings: post.tiktok, size: Number(video.size), mimeType: video.mimeType,
+      read: (a, b) => readRange(video, a, b), deadline,
+    });
+    s.container = publishId;
+  }
+  // TikTok processes the video for a while: check a few times, then leave it to the next runs
+  for (let i = 0; i < 4 && Date.now() < deadline - 10e3; i++) {
+    const st = await TT.postStatus(client, s.container);
+    if (st.done) return { id: st.id, url: st.url || (TT.ttOf(client).username ? `https://www.tiktok.com/@${TT.ttOf(client).username}` : '') };
+    await new Promise((ok) => setTimeout(ok, Number(process.env.TIKTOK_POLL_MS || 3000)));
+  }
+  return { pending: s.container };
 }

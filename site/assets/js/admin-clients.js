@@ -145,14 +145,15 @@ function openClient(id) {
       <ul class="cl-pfrows">${PLATFORM_ORDER.map((k) => {
         const s = c.status[k]; const p = PLATFORMS[k];
         return `<li class="cl-pfrow">
-          <div class="cl-pfname"><i class="cl-ic tone-${STATUS[s.status]?.tone}">${icon(k, 16)}</i><b>${L(p.name)}</b>${pill(s.status)}${s.name ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener" class="muted">${esc(s.name)} ↗</a>` : ''}<span class="muted cl-auto">${p.auto ? 'تحقق تلقائي' : 'تحديث يدوي'}</span></div>
+          <div class="cl-pfname"><i class="cl-ic tone-${STATUS[s.status]?.tone}">${icon(k, 16)}</i><b>${L(p.name)}</b>${pill(s.status)}${s.name ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener" class="muted">${esc(s.name)} ↗</a>` : ''}<span class="muted cl-auto">${s.connect ? 'يربطه العميل من حسابه' : p.auto ? 'تحقق تلقائي' : 'تحديث يدوي'}</span></div>
           ${k === 'facebook' ? `<label class="ct-field"><span>صفحة العميل</span>${pages ? `<select data-page>
               <option value="">— لم تُحدَّد —</option>${pageOpts.map((pg) => `<option value="${esc(pg.id)}"${pg.id === c.fb_page_id ? ' selected' : ''}>${esc(pg.name)}${pg.ig ? ` · @${esc(pg.ig.username)}` : ''}</option>`).join('')}
               ${c.fb_page_id && !pageOpts.some((pg) => pg.id === c.fb_page_id) ? `<option value="${esc(c.fb_page_id)}" selected>${esc(c.fb_page_id)} (لا وصول بعد)</option>` : ''}
             </select>` : `<input data-page dir="ltr" value="${esc(c.fb_page_id || '')}" placeholder="Page ID">`}</label>
             <p class="muted">تظهر هنا الصفحات التي وصلنا الوصول إليها. بعد قبول طلب الشراكة: Business Settings ← System users ← أضف الصفحة لمستخدم النظام، ثم «تحقق الآن».</p>` : ''}
           ${k === 'instagram' ? '<p class="muted">يُقرأ من صفحة فيسبوك تلقائيًا.</p>' : ''}
-          ${!p.auto ? `<div class="ct-row"><label class="ct-field"><span>الحالة</span><select data-status="${k}">${MANUAL_STATUS.map((st) => `<option value="${st}"${st === s.status ? ' selected' : ''}>${L(STATUS[st].label)}</option>`).join('')}</select></label>
+          ${k === 'tiktok' && s.connect ? `<p class="muted">${s.status === 'active' ? 'ربطه العميل بـ «تسجيل الدخول بتيك توك». الفيديوهات المجدولة تُنشر تلقائيًا.' : 'لم يربطه العميل بعد: يضغط «ربط تيك توك» في «المنصات».'}</p>` : ''}
+          ${!p.auto && !s.connect ? `<div class="ct-row"><label class="ct-field"><span>الحالة</span><select data-status="${k}">${MANUAL_STATUS.map((st) => `<option value="${st}"${st === s.status ? ' selected' : ''}>${L(STATUS[st].label)}</option>`).join('')}</select></label>
             <label class="ct-field"><span>رابط الحساب</span><input data-url="${k}" dir="ltr" value="${esc(s.url || '')}" placeholder="https://"></label></div>` : ''}
           <label class="ct-field"><span>ملاحظة يراها العميل</span><input data-note="${k}" maxlength="500" value="${esc(s.note || '')}"></label>
         </li>`;

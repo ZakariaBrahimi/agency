@@ -17,6 +17,9 @@
 // POST ?action=storage-pref { pref }       where new uploads go: 'auto' (Drive first) | 'cloud' («تخزين نواة» always)
 // POST ?action=move-to-cloud              moves Drive files into «تخزين نواة», a batch per call -> { moved, failed, remaining }
 // POST ?action=platform-done { platform }   LinkedIn/TikTok: the client finished the steps -> «قيد المراجعة», Nawa is told on Telegram
+// GET  ?action=tiktok-connect              "Log in with TikTok" (once Nawa's TikTok app keys are set; see _lib/tiktok.js)
+// GET  /tiktok/callback (?action=tiktok-callback)   TikTok sends the browser back here -> /portal#platforms/tiktok-…
+// POST ?action=tiktok-disconnect           revokes Nawa's access to the client's TikTok
 // GET  ?action=ai-link                     the Claude connector link (no token: it is shown once)
 // POST ?action=ai-link                     a new private link -> { url } (replaces the old one)
 // POST ?action=ai-revoke                   stops the link
@@ -34,6 +37,8 @@ import { platformStatus, pagesOrNull, syncInstagram } from './_lib/clients-admin
 import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
 import { sb } from './_lib/supabase.js';
 import * as AI from './_lib/mcp.js';
+import * as TT from './_lib/tiktok.js';
+import { getClient } from './_lib/clients.js';
 
 export default async function handler(req, res) {
   const url = new URL(req.url, 'http://x');
@@ -43,6 +48,17 @@ export default async function handler(req, res) {
   try {
     // the Claude connector authenticates with its own private link, not the portal session
     if (action === 'mcp') return await AI.handleMcp(req, res, url.searchParams.get('t'));
+    // TikTok's return: outside the portal cookie's path, so it is checked with its own state (see tiktok.js)
+    if (action === 'tiktok-callback' && req.method === 'GET') {
+      let to = 'tiktok-failed';
+      try { if (TT.ttConfigured()) to = await TT.handleCallback(req, url, getClient); }
+      catch (e) { console.error('tiktok callback', e.code, e.message); }
+      TT.clearNonce(res);
+      res.statusCode = 302;
+      res.setHeader('Location', `/portal#platforms/${to}`);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
     if (action === 'otp-send' && req.method === 'POST') {
       const email = normEmail((await readJson(req)).email);
       if (!validEmail(email)) return json(res, 400, { ok: false, error: 'bad_email' });
@@ -82,6 +98,19 @@ export default async function handler(req, res) {
         nawa: await B.getSettings().then(({ contact }) => ({ linkedin_name: contact.linkedin_name, linkedin_url: contact.linkedin_url })).catch(() => ({})),
         proposals: await sb.select('client_content', `select=data&client_id=eq.${encodeURIComponent(client.id)}`).then(([r]) => (r?.data?.posts || []).filter((p) => p.proposal).length).catch(() => 0),
       });
+    }
+
+    // ---- TikTok: the client connects their own account
+    if (action === 'tiktok-connect' && req.method === 'GET') {
+      if (!TT.ttConfigured()) return json(res, 503, { ok: false, error: 'tiktok_not_configured' });
+      res.statusCode = 302;
+      res.setHeader('Location', TT.authUrl(res, client, user));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
+    if (action === 'tiktok-disconnect' && req.method === 'POST') {
+      await TT.disconnect(client);
+      return json(res, 200, { ok: true, status: platformStatus(client, await pagesOrNull(false)) });
     }
 
     // ---- a manual platform's steps are done: Nawa checks and turns it on

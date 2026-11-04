@@ -769,3 +769,35 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .ct-covertext .muted { font-size: 13px; line-height: 1.6; }
 .ct-coveracts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
+
+/* TikTok posting settings (in the TikTok row of «الموافقة والجدولة»): TikTok's required screen */
+.ct-tt { grid-column: 1 / -1; display: grid; gap: 12px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.ct-tt .ct-field { margin: 0; }
+.ct-tt input[type="checkbox"] { width: 16px; height: 16px; padding: 0; flex: none; accent-color: var(--indigo); }
+.ct-tt-acct { display: flex; align-items: center; gap: 10px; }
+.ct-tt-acct img { border-radius: 50%; object-fit: cover; flex: none; }
+.ct-tt-acct span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; min-width: 0; }
+.ct-tt-acct small { flex-basis: 100%; }
+.ct-tt-allow { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ct-tt-allow legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.ct-tt .ct-check.off { opacity: .6; cursor: not-allowed; }
+.ct-tt-cc { display: grid; gap: 10px; }
+.ct-switch { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.ct-switch input { margin-top: 4px; }
+.ct-switch span { display: grid; gap: 2px; }
+.ct-tt-brands { display: grid; gap: 8px; padding-inline-start: 26px; }
+.ct-tt-brands .ct-check { border-radius: 14px; align-items: flex-start; }
+.ct-tt-brands .ct-check input { margin-top: 3px; }
+.ct-tt-consent { margin: 0; font-size: 14px; }
+.ct-tt-later { margin: 0; font-size: 13px; }
+
+/* portal: TikTok connected with "Log in with TikTok" */
+.pt-ttacct { display: flex; align-items: center; gap: 12px; background: #E3F6E9; color: #17703A; border-radius: 14px; padding: 12px 14px; }
+.pt-ttacct img { border-radius: 50%; object-fit: cover; flex: none; }
+.pt-ttacct span { display: grid; min-width: 0; }
+.pt-ttacct a { color: inherit; overflow-wrap: anywhere; }
+.pt-ttacts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.pt-ttbtn { display: inline-flex; align-items: center; gap: 10px; justify-self: start; }
+.pt-ttbtn .pt-logo { inline-size: 26px; block-size: 26px; border-radius: 8px; }
+.pt-ttmsg { margin: 0; background: #E3F6E9; color: #17703A; border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+.pt-ttmsg.bad { background: #FDECEC; color: #B42318; }

@@ -7,7 +7,8 @@ import { Readable } from 'node:stream';
 import { json, readJson, siteUrl } from './http.js';
 import * as G from './google.js';
 import * as M from './meta.js';
-import { META_PLATFORMS, isDue, publishPlatform } from './publish.js';
+import { isDue, publishPlatform, directPlatforms } from './publish.js';
+import * as TT from './tiktok.js';
 import { StorageError } from './storage.js';
 import { seal, unseal } from './seal.js';
 import { kv } from './supabase.js';
@@ -77,16 +78,17 @@ export async function rememberConnection(conn) {
   try { await kv.set('google', seal('nawa-google-store', conn)); storedConn = conn.refresh; } catch (e) { console.error('kv', e.message); }
 }
 
-// Publishes a tenant's due Facebook/Instagram entries, oldest first, until the deadline.
+// Publishes a tenant's due Facebook/Instagram (and connected TikTok) entries, oldest first, until the deadline.
 export async function runSchedule(store, target = M.nawaTarget(), deadline = Date.now() + 50e3) {
   const { data, save } = await store.load();
   const due = [];
-  for (const post of data.posts) for (const pf of META_PLATFORMS) if (post.platforms?.includes(pf) && isDue(post.schedule?.[pf])) due.push({ post, pf });
+  const direct = directPlatforms(target);
+  for (const post of data.posts) for (const pf of direct) if (post.platforms?.includes(pf) && isDue(post.schedule?.[pf])) due.push({ post, pf });
   due.sort((a, b) => (a.post.schedule[a.pf].at < b.post.schedule[b.pf].at ? -1 : 1));
   const results = [];
   for (const { post, pf } of due) {
     if (Date.now() > deadline - 15e3) break;
-    const r = await publishPlatform(post, pf, { deadline, persist: save, target, urlFor: store.urlFor });
+    const r = await publishPlatform(post, pf, { deadline, persist: save, target, urlFor: store.urlFor, readRange: store.readRange });
     results.push({ post: post.id, platform: pf, result: r });
     post.updatedAt = now();
     if (r === 'published') await syncEvents(store, data, post).catch((e) => console.error('events', e.message));
@@ -101,8 +103,10 @@ export async function storedConnection() {
   return unseal('nawa-google-store', await kv.get('google').catch(() => null));
 }
 
-/** The Meta target of a client row (its Page and Instagram account, once Nawa has access). */
-export const clientTarget = (c) => ({ page: c.fb_page_id || '', ig: c.ig_user_id || '' });
+/** The publishing target of a client row: its Page and Instagram account (once Nawa has access), and the row itself for TikTok. */
+export const clientTarget = (c) => ({ page: c.fb_page_id || '', ig: c.ig_user_id || '', client: c });
+// TikTok is published directly only once the client connected it; its settings must be chosen first
+const ttDirect = (target) => Boolean(target.client && TT.ttConnected(target.client));
 
 /**
  * Handles one content request. ctx: { store, conn, ownConnection, asClient, target, action, url }.
@@ -167,9 +171,16 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
       return reply({ post });
     }
     if (req.method === 'GET' && action === 'meta') {
-      if (!M.metaTokenConfigured() || !(target.page || target.ig)) return json(res, 200, { ok: true, configured: false });
-      try { return json(res, 200, { ok: true, configured: true, accounts: await M.accounts(target) }); }
-      catch (e) { return json(res, 200, { ok: true, configured: true, error: M.explain(e) }); }
+      const tiktok = target.client ? { configured: TT.ttConfigured(), ...TT.ttPublic(target.client) } : null;
+      if (!M.metaTokenConfigured() || !(target.page || target.ig)) return json(res, 200, { ok: true, configured: false, tiktok });
+      try { return json(res, 200, { ok: true, configured: true, accounts: await M.accounts(target), tiktok }); }
+      catch (e) { return json(res, 200, { ok: true, configured: true, error: M.explain(e), tiktok }); }
+    }
+    // what the client's TikTok account allows right now (asked each time the post's TikTok settings are shown)
+    if (req.method === 'GET' && action === 'tiktok-creator') {
+      if (!ttDirect(target)) return json(res, 409, { ok: false, error: 'tiktok_not_connected' });
+      try { return json(res, 200, { ok: true, creator: await TT.creatorInfo(target.client) }); }
+      catch (e) { if (e.tt) return json(res, 409, { ok: false, error: e.code, message: e.message }); throw e; }
     }
     if (req.method === 'GET') { if (ownConnection && conn) await rememberConnection(conn); return reply(); }
     if (req.method !== 'POST') return json(res, 405, { ok: false });
@@ -288,14 +299,18 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         const future = isAt(at) && at > new Date(Date.now() + 3600e3).toISOString().slice(0, 16); // Algiers = UTC+1
         post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() };
         delete post.proposal;
-        if (future && post.platforms.length) {
+        // TikTok waits for its settings (who can watch, interactions), which only the client chooses
+        const ttWait = post.platforms.includes('tiktok') && ttDirect(target) && Boolean(TT.checkSettings(post.tiktok));
+        const pfs = post.platforms.filter((pf) => !(pf === 'tiktok' && ttWait));
+        if (future && pfs.length) {
           post.date = at; post.schedule ||= {};
-          for (const pf of post.platforms) post.schedule[pf] = { at, status: 'scheduled', approvedAt: now() };
+          for (const pf of pfs) post.schedule[pf] = { at, status: 'scheduled', approvedAt: now() };
+          if (pfs.includes('tiktok')) post.tiktok.consentAt = now();
         }
         post.updatedAt = now();
         await syncEvents(store, data, post);
         await save();
-        return reply({ post, scheduled: Boolean(future && post.platforms.length) });
+        return reply({ post, scheduled: Boolean(future && pfs.length), tiktok_settings: ttWait });
       }
       case 'proposal-reject': {
         if (!post?.proposal) return json(res, 400, { ok: false, error: 'not_a_proposal' });
@@ -306,12 +321,27 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         await save();
         return reply();
       }
+      case 'tiktok-settings': {
+        if (!post) return json(res, 400, { ok: false, error: 'bad_id' });
+        const t = TT.cleanSettings(body.tiktok);
+        if (t.brand_paid && t.privacy === 'SELF_ONLY') return json(res, 400, { ok: false, error: 'tiktok_brand_private' });
+        post.tiktok = { ...t, ...(post.tiktok?.consentAt ? { consentAt: post.tiktok.consentAt } : {}) };
+        post.updatedAt = now();
+        await save();
+        return reply({ post });
+      }
       case 'schedule': {
         if (!post) return json(res, 400, { ok: false, error: 'bad_id' });
         if (post.proposal) { post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() }; delete post.proposal; } // scheduling it is approving it
         const pfs = Array.isArray(body.platforms) ? body.platforms.filter((x) => post.platforms.includes(x)) : [];
         if (!pfs.length) return json(res, 400, { ok: false, error: 'no_platforms' });
         if (!isAt(body.at)) return json(res, 400, { ok: false, error: 'bad_date' });
+        // scheduling TikTok is posting it: its settings must be chosen, and that click is the consent
+        if (pfs.includes('tiktok') && ttDirect(target) && post.schedule?.tiktok?.status !== 'published') {
+          const bad = TT.checkSettings(post.tiktok);
+          if (bad) return json(res, 400, { ok: false, error: bad });
+          post.tiktok.consentAt = now();
+        }
         post.schedule ||= {};
         for (const pf of pfs) {
           const old = post.schedule[pf];
@@ -343,9 +373,13 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         return reply({ post });
       }
       case 'publish': {
-        if (!post || !META_PLATFORMS.includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: 'bad_platform' });
+        if (!post || !directPlatforms(target).includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: body.platform === 'tiktok' ? 'tiktok_not_connected' : 'bad_platform' });
+        if (body.platform === 'tiktok') {
+          const bad = TT.checkSettings(post.tiktok);
+          if (bad) return json(res, 400, { ok: false, error: bad });
+        } else if (!M.metaTokenConfigured() || !(body.platform === 'facebook' ? target.page : target.ig)) return json(res, 409, { ok: false, error: store.kind === 'client' ? 'platform_not_connected' : 'meta_not_configured' });
         if (post.proposal) { post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() }; delete post.proposal; }
-        if (!M.metaTokenConfigured() || !(body.platform === 'facebook' ? target.page : target.ig)) return json(res, 409, { ok: false, error: store.kind === 'client' ? 'platform_not_connected' : 'meta_not_configured' });
+        if (body.platform === 'tiktok') post.tiktok.consentAt = now();
         post.schedule ||= {};
         const s = post.schedule[body.platform];
         if (s?.status === 'published') return json(res, 409, { ok: false, error: 'already_published' });
@@ -354,7 +388,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         if (!s) post.schedule[body.platform] = { at: new Date(Date.now() + 3600e3).toISOString().slice(0, 16), status: 'scheduled', approvedAt: now() }; // Algiers = UTC+1
         else delete s.error;
         if (ownConnection && conn) await rememberConnection(conn);
-        const result = await publishPlatform(post, body.platform, { deadline: Date.now() + 45e3, persist: save, target, urlFor: store.urlFor });
+        const result = await publishPlatform(post, body.platform, { deadline: Date.now() + 45e3, persist: save, target, urlFor: store.urlFor, readRange: store.readRange });
         post.updatedAt = now();
         await syncEvents(store, data, post).catch((e) => console.error('events', e.message));
         await save();
@@ -362,7 +396,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
       }
       case 'auto': {
         const s = post?.schedule?.[body.platform];
-        if (!s || !META_PLATFORMS.includes(body.platform)) return json(res, 400, { ok: false, error: 'not_scheduled' });
+        if (!s || !directPlatforms(target).includes(body.platform)) return json(res, 400, { ok: false, error: 'not_scheduled' });
         if (body.value) { delete s.auto; delete s.error; } else s.auto = false;
         post.updatedAt = now();
         await save();

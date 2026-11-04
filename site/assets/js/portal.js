@@ -222,6 +222,31 @@ function stepList(k, p, interactive) {
   }).join('')}</ol>${p.shots?.some(Boolean) ? `<p class="pt-shotnote">${esc(t('shotNote'))}</p>` : ''}`;
 }
 
+// TikTok, once Nawa's TikTok app is set up: the client connects their own account ("Log in with TikTok")
+const TTP = {
+  ar: { steps: ['اضغط «ربط تيك توك».', 'سجّل الدخول إلى حسابك على تيك توك ووافق على الأذونات.', 'تعود إلى هنا ويظهر حسابك مربوطًا. اختر تيك توك في منشور فيديو من «المحتوى»، ثم حدّد إعداداته وجدوِله.'], connect: 'ربط تيك توك', scopes: 'تطلب نواة: معلومات ملفك الأساسية (الاسم والصورة)، وإذن نشر الفيديوهات التي توافق عليها فقط. لا يُنشر شيء دون موافقتك.', as: 'مربوط بحساب', how: 'في «المحتوى»: افتح منشور فيديو واختر تيك توك، ثم حدّد من يشاهده والتفاعل، وجدوِله أو انشره الآن.', disconnect: 'فصل تيك توك', confirm: 'تأكيد: فصل تيك توك', reconnect: 'إعادة الربط', issue: 'انتهى ربط تيك توك. أعد ربطه لمواصلة النشر.', 'tiktok-connected': 'رُبط حساب تيك توك ✓', 'tiktok-denied': 'لم تكتمل الموافقة على تيك توك.', 'tiktok-failed': 'تعذّر ربط تيك توك. حاول مرة أخرى.', 'tiktok-scope': 'يلزم إذن نشر الفيديو: أعد الربط ووافق على كل الأذونات.', off: 'فُصل تيك توك.' },
+  en: { steps: ['Press “Connect TikTok”.', 'Sign in to your TikTok account and approve.', 'You come back here with your account connected. In “Content”, pick TikTok on a video post, choose its settings and schedule it.'], connect: 'Connect TikTok', scopes: 'Nawa asks for your basic profile (name and photo) and permission to post only the videos you approve. Nothing is posted without your approval.', as: 'Connected as', how: 'In “Content”: open a video post, pick TikTok, choose who can watch and the interactions, then schedule it or post now.', disconnect: 'Disconnect TikTok', confirm: 'Confirm: disconnect TikTok', reconnect: 'Reconnect', issue: 'Your TikTok connection expired. Reconnect to keep posting.', 'tiktok-connected': 'TikTok account connected ✓', 'tiktok-denied': 'TikTok approval wasn’t completed.', 'tiktok-failed': 'Couldn’t connect TikTok. Please try again.', 'tiktok-scope': 'Posting permission is needed: reconnect and approve all permissions.', off: 'TikTok disconnected.' },
+  fr: { steps: ['Appuyez sur « Connecter TikTok ».', 'Connectez-vous à votre compte TikTok et acceptez.', 'Vous revenez ici avec votre compte connecté. Dans « Contenu », choisissez TikTok sur une publication vidéo, réglez-la et planifiez-la.'], connect: 'Connecter TikTok', scopes: 'Nawa demande votre profil de base (nom et photo) et l’autorisation de publier uniquement les vidéos que vous validez. Rien n’est publié sans votre accord.', as: 'Connecté en tant que', how: 'Dans « Contenu » : ouvrez une publication vidéo, choisissez TikTok, réglez la visibilité et les interactions, puis planifiez ou publiez.', disconnect: 'Déconnecter TikTok', confirm: 'Confirmer : déconnecter TikTok', reconnect: 'Reconnecter', issue: 'La connexion TikTok a expiré. Reconnectez-la pour continuer.', 'tiktok-connected': 'Compte TikTok connecté ✓', 'tiktok-denied': 'L’autorisation TikTok n’a pas abouti.', 'tiktok-failed': 'Connexion à TikTok impossible. Réessayez.', 'tiktok-scope': 'L’autorisation de publier est nécessaire : reconnectez et acceptez tout.', off: 'TikTok déconnecté.' },
+};
+const ttp = (k) => (TTP[lang] || TTP.ar)[k];
+function tiktokPanel(k, p, s) {
+  const msg = state.ttMsgKey ? `<p class="pt-ttmsg${/connected|off/.test(state.ttMsgKey) ? '' : ' bad'}" role="status">${esc(ttp(state.ttMsgKey))}</p>` : '';
+  if (s.status === 'active') return `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}${msg}
+      <div class="pt-ttacct">${s.avatar ? `<img src="${esc(s.avatar)}" alt="" width="44" height="44">` : ''}<span><small class="muted">${esc(ttp('as'))}</small><b>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>` : esc(s.name)}</b></span></div>
+      <p class="muted">${esc(ttp('how'))}</p>
+      <div class="pt-ttacts"><button type="button" class="btn btn-lime" data-go="content">${esc(t('goContent'))}</button><button type="button" class="link-btn ct-danger" id="ptTtOff">${esc(ttp('disconnect'))}</button></div>
+    </div>`;
+  return `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}${msg}
+      ${s.status === 'issue' ? `<p class="pt-ttmsg bad">${esc(ttp('issue'))}</p>` : ''}
+      <div class="pt-stepcount"><b>${esc(t('stepsTitle'))}</b></div>
+      <ol class="pt-steps">${ttp('steps').map((x, i) => `<li><span class="pt-num"><span>${i + 1}</span></span><div class="pt-stepbody">${esc(x)}</div></li>`).join('')}</ol>
+      <a class="btn btn-dark pt-ttbtn" href="/api/portal?action=tiktok-connect"><i class="pt-logo" style="--c:${p.color}">${icon(k, 18)}</i>${esc(ttp(s.status === 'issue' ? 'reconnect' : 'connect'))}</a>
+      <p class="muted pt-foot">${esc(ttp('scopes'))}</p>
+    </div>`;
+}
+
 function drawPlatforms() {
   const st = state.me.status;
   const active = PLATFORM_ORDER.filter((k) => st[k]?.status === 'active').length;
@@ -231,7 +256,8 @@ function drawPlatforms() {
   const k = state.pf, p = k && PLATFORMS[k], s = k ? st[k] || { status: 'not_started' } : null;
 
   let panel;
-  if (!k) {
+  if (k === 'tiktok' && s.connect) panel = tiktokPanel(k, p, s);
+  else if (!k) {
     panel = `<div class="ct-card pt-panel pt-allset"><b>${esc(t('allSetTitle'))}</b><p class="muted">${esc(t('allActive'))}</p><button type="button" class="btn btn-lime" data-go="content">${esc(t('goContent'))}</button></div>`;
   } else if (s.status === 'active') {
     panel = `<div class="ct-card pt-panel">
@@ -282,6 +308,13 @@ function drawPlatforms() {
     setTick(k, Number(b.dataset.tick), b.getAttribute('aria-pressed') !== 'true'); drawPlatforms();
     $('ptPlatforms').querySelector(`[data-tick="${b.dataset.tick}"]`)?.focus();
   }));
+  const off = $('ptTtOff');
+  if (off) off.onclick = async () => {
+    if (!off.dataset.armed) { off.dataset.armed = '1'; off.textContent = ttp('confirm'); setTimeout(() => { if (off.isConnected) { delete off.dataset.armed; off.textContent = ttp('disconnect'); } }, 4000); return; }
+    off.disabled = true;
+    try { state.me.status = (await call('tiktok-disconnect', {})).status; state.ttMsgKey = 'off'; drawPlatforms(); }
+    catch { off.disabled = false; }
+  };
   const tell = $('ptTell');
   if (tell) tell.onclick = async () => {
     tell.disabled = true;
@@ -643,6 +676,8 @@ async function boot() {
   try { state.me = await call('me'); }
   catch (e) { return showLogin(gmsg ? t(gmsg) : ''); }
   $('booting').hidden = true; $('ptLogin').hidden = true; $('ptApp').hidden = false; $('ptLogout').hidden = false;
+  const tm = h.match(/^platforms\/(tiktok-(?:connected|denied|failed|scope))$/);
+  if (tm) { history.replaceState(null, '', location.pathname); state.pf = 'tiktok'; state.ttMsgKey = tm[1]; }
   drawHello(); drawPlatforms(); drawPropBadge();
   const sm = { 'storage/drive-connected': 'd_connected', 'storage/drive-denied': 'd_denied', 'storage/drive-failed': 'd_failed' }[h];
   if (h.startsWith('storage')) {

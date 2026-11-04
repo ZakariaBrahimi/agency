@@ -40,8 +40,13 @@ const ERR = {
   plan_ended: 'خطة «تخزين نواة» غير نشطة. اختر خطة أو جدّدها من «التخزين» لمتابعة الرفع.',
   drive_disconnected: 'Google Drive غير مربوط. أعد ربطه من «التخزين».',
   storage_not_configured: 'قاعدة البيانات غير مربوطة (Supabase).',
+  tiktok_privacy: 'اختر في إعدادات تيك توك من يمكنه مشاهدة الفيديو.',
+  tiktok_brand: 'المحتوى التجاري مفعّل: اختر «علامتك التجارية» أو «محتوى ممول»، أو أوقفه.',
+  tiktok_brand_private: 'المحتوى الممول لا يمكن أن يكون «أنا فقط».',
+  tiktok_not_connected: 'تيك توك غير مربوط: اربطه من «المنصات».',
+  tiktok_video_only: 'تيك توك هنا يقبل منشورًا بفيديو واحد فقط.',
 };
-const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || 'حدث خطأ. حاول مرة أخرى.');
+const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || e?.msg || 'حدث خطأ. حاول مرة أخرى.');
 
 const state = { loaded: false, status: null, posts: [], settings: {}, rootUrl: '', email: '', view: 'calendar', filter: 'all', month: null, open: null, dirty: false, meta: null };
 try { state.view = localStorage.getItem('nawa.ct.view') || 'calendar'; } catch {}
@@ -51,7 +56,7 @@ async function call(path, { method = 'GET', body } = {}) {
   const r = await fetch(path, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
   const d = await r.json().catch(() => ({}));
   if (r.status === 401) { window.dispatchEvent(new Event('nawa:signed-out')); throw Object.assign(new Error('signed_out'), { code: 'signed_out' }); }
-  if (!r.ok || d.ok === false) throw Object.assign(new Error(d.error || 'error'), { code: d.error || 'error' });
+  if (!r.ok || d.ok === false) throw Object.assign(new Error(d.error || 'error'), { code: d.error || 'error', msg: d.message || '' });
   return d;
 }
 const act = (action, body) => call(api(action), { method: 'POST', body });
@@ -130,8 +135,9 @@ function metaLine(p, pf) {
   const s = p.schedule?.[pf];
   const media = p.media || [];
   if (s?.remote?.url) return `<span class="ct-meta ok">✓ نُشر ${s.publishedAt ? fmtTime(s.publishedAt) : ''} · <a href="${esc(s.remote.url)}" target="_blank" rel="noopener">عرض المنشور ↗</a></span>`;
-  if (s?.status === 'publishing') return '<span class="ct-meta">⏳ إنستغرام يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.</span>';
+  if (s?.status === 'publishing') return `<span class="ct-meta">⏳ ${pf === 'tiktok' ? 'تيك توك يعالج الفيديو، وقد يستغرق ظهوره بضع دقائق.' : 'إنستغرام يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.'}</span>`;
   const warn = pf === 'instagram' && !media.length ? '<span class="ct-meta bad">إنستغرام يحتاج صورة أو فيديو قبل النشر.</span>'
+    : pf === 'tiktok' && !ttVideo(p) ? '<span class="ct-meta bad">تيك توك هنا يقبل منشورًا بفيديو واحد فقط.</span>'
     : pf === 'facebook' && media.length > 1 && media.some((m) => m.video || /^video\//.test(m.mimeType || '')) ? '<span class="ct-meta bad">فيسبوك لا يجمع الفيديو مع الصور في منشور واحد.</span>' : '';
   const err = s?.error ? `<span class="ct-meta bad">${esc(s.error.message)}${s.error.tries >= 3 ? ' توقفت المحاولات التلقائية: صحّح ثم اضغط «انشر الآن».' : ''}</span>` : '';
   const when = s && s.status === 'scheduled' ? (s.auto === false ? '<span class="ct-meta">النشر التلقائي متوقف: انشر يدويًا أو فعّله.</span>' : `<span class="ct-meta">⏱ يُنشر تلقائيًا في موعده على ${PLATFORMS[pf].name}.</span>`) : '';
@@ -516,7 +522,8 @@ function drawEditor(p) {
       try {
         if (state.dirty) await save(true);
         const d = await act('proposal-approve', { id: p.id }); absorb(d); render(); drawEditor(current());
-        toast(d.scheduled ? 'اعتُمد وجُدول في موعده.' : 'اعتُمد. اختر الموعد ثم جدوِله.');
+        toast(d.tiktok_settings ? (d.scheduled ? 'اعتُمد وجُدول. بقي تيك توك: اختر إعداداته في الأسفل ثم جدوِله.' : 'اعتُمد. اختر إعدادات تيك توك في الأسفل ثم جدوِله.')
+          : d.scheduled ? 'اعتُمد وجُدول في موعده.' : 'اعتُمد. اختر الموعد ثم جدوِله.');
       } catch (err) { b.disabled = false; toast(errText(err), true); }
     };
     // (the editor is a form, so the reason box is a plain block, not a nested form)
@@ -683,20 +690,23 @@ function drawSchedule(p) {
     </div>
     <ul class="ct-pfrows">${pfs.map((pf) => {
       const s = p.schedule?.[pf]; const st = platformStatus(p, pf);
-      const direct = state.meta?.configured && AUTO_PLATFORMS.includes(pf);
+      const tt = pf === 'tiktok' && Boolean(state.meta?.tiktok?.connected);
+      const direct = tt || (state.meta?.configured && AUTO_PLATFORMS.includes(pf));
+      const ttBlock = tt && st !== 'published' && !ttReady(p); // TikTok's settings must be chosen first
       const canPublish = direct && st !== 'published' && st !== 'publishing' && !(pf === 'instagram' && !(p.media || []).length);
       return `<li class="ct-pfrow">
         <span class="ct-pfname"><b>${PLATFORMS[pf].name}</b><span class="pill ct-st st-${st}">${STATUS[st]}${s?.at ? ` · <span dir="ltr">${esc(s.at.replace('T', ' '))}</span>` : ''}</span></span>
         <input type="datetime-local" data-at="${pf}" value="${esc(s?.at || def)}" aria-label="موعد ${PLATFORMS[pf].name}">
         <span class="ct-pfbtns">
-          <button type="button" class="btn btn-ghost-dark" data-one="${pf}">${s ? 'تحديث الموعد' : 'جدولة هنا فقط'}</button>
-          ${canPublish ? `<button type="button" class="btn btn-dark" data-now="${pf}">انشر الآن على ${PLATFORMS[pf].name}</button>` : ''}
+          <button type="button" class="btn btn-ghost-dark" data-one="${pf}"${ttBlock ? ' disabled' : ''}>${s ? 'تحديث الموعد' : 'جدولة هنا فقط'}</button>
+          ${canPublish ? `<button type="button" class="btn btn-dark" data-now="${pf}"${ttBlock ? ' disabled' : ''}>انشر الآن على ${PLATFORMS[pf].name}</button>` : ''}
           ${direct && s && st === 'scheduled' ? `<button type="button" class="link-btn" data-auto="${pf}" data-v="${s.auto === false}">${s.auto === false ? 'تفعيل النشر التلقائي' : 'إيقاف النشر التلقائي'}</button>` : ''}
           ${s && !(direct && (st !== 'published' || s.remote)) ? `<button type="button" class="btn btn-ghost-dark" data-pub="${pf}" data-v="${st !== 'published'}">${st === 'published' ? 'إلغاء «منشور»' : 'تم النشر ✓'}</button>` : ''}
           ${s && st !== 'published' ? `<button type="button" class="link-btn ct-danger" data-un="${pf}">إلغاء الجدولة</button>` : ''}
           <button type="button" class="copy-ico" data-copy="${pf}" aria-label="نسخ نص ${PLATFORMS[pf].name}" title="نسخ نص ${PLATFORMS[pf].name}">${COPY_ICON}</button>
         </span>
         ${direct ? `<span class="ct-metas">${metaLine(p, pf)}</span>` : ''}
+        ${tt && st !== 'published' && st !== 'publishing' ? '<div class="ct-tt" id="ceTT"></div>' : ''}
       </li>`;
     }).join('')}</ul>` : '<p class="muted">اختر منصة واحدة على الأقل في الأعلى ثم احفظ.</p>'}`;
 
@@ -723,9 +733,81 @@ function drawSchedule(p) {
     let result = '';
     await run(async () => { const d = await act('publish', { id: p.id, platform: pf }); result = d.result; return d; },
       `نُشر على ${PLATFORMS[pf].name}.`);
-    if (result === 'pending') toast('إنستغرام يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.');
+    if (result === 'pending') toast(pf === 'tiktok' ? 'أُرسل إلى تيك توك. قد يستغرق ظهور الفيديو بضع دقائق.' : 'إنستغرام يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.');
+    else if (result === 'published' && pf === 'tiktok') toast('نُشر على تيك توك. قد يستغرق ظهوره في الحساب بضع دقائق.');
     else if (result === 'failed') toast(current()?.schedule?.[pf]?.error?.message || 'تعذّر النشر.', true);
   }));
+  drawTikTok(p);
+}
+
+// ---------- TikTok: what TikTok requires before a Direct Post ----------
+// The account it goes to (asked from TikTok each time), who can watch (no default), interactions (off
+// by default, greyed out when the account turned them off), the commercial content disclosure, the
+// consent line, and the video's length against the account's limit.
+const TTX = {
+  ar: { to: 'سيُنشر على حساب تيك توك', who: 'من يمكنه مشاهدة الفيديو؟', pick: 'اختر…', PUBLIC_TO_EVERYONE: 'الجميع', MUTUAL_FOLLOW_FRIENDS: 'الأصدقاء', FOLLOWER_OF_CREATOR: 'المتابعون', SELF_ONLY: 'أنا فقط', allow: 'السماح للمستخدمين بـ', comment: 'التعليق', duet: 'الثنائي (Duet)', stitch: 'الدمج (Stitch)', off: 'متوقف في إعدادات حسابك', disclose: 'الإفصاح عن محتوى تجاري', discloseSub: 'فعّله إذا كان الفيديو يروّج لك أو لعلامة تجارية أو منتج أو خدمة.', own: 'علامتك التجارية', ownSub: 'تروّج لنفسك أو لنشاطك.', paid: 'محتوى ممول', paidSub: 'تروّج لعلامة تجارية أخرى أو لطرف ثالث.', pickOne: 'اختر واحدًا على الأقل لتتمكن من النشر.', labelOwn: 'سيُوسم الفيديو بـ «محتوى ترويجي» (Promotional content).', labelPaid: 'سيُوسم الفيديو بـ «شراكة مدفوعة» (Paid partnership).', noPrivate: 'المحتوى الممول لا يمكن أن يكون خاصًا.', consent: 'بالنشر، أنت توافق على', music: 'تأكيد استخدام الموسيقى', bc: 'سياسة المحتوى الممول', and: 'و', tail: ' في تيك توك.', later: 'بعد النشر، قد يستغرق ظهور الفيديو في حسابك بضع دقائق.', tooLong: (a, b) => `مدة الفيديو ${a} ث، والحد في هذا الحساب ${b} ث. قصّره ثم أعد رفعه.`, oneVideo: 'تيك توك هنا يقبل منشورًا بفيديو واحد فقط: ارفع فيديو واحدًا.', loading: 'جارٍ التحقق من حساب تيك توك…', saved: 'حُفظت إعدادات تيك توك.' },
+  en: { to: 'Posting to TikTok account', who: 'Who can watch this video?', pick: 'Select…', PUBLIC_TO_EVERYONE: 'Everyone', MUTUAL_FOLLOW_FRIENDS: 'Friends', FOLLOWER_OF_CREATOR: 'Followers', SELF_ONLY: 'Only me', allow: 'Allow users to', comment: 'Comment', duet: 'Duet', stitch: 'Stitch', off: 'turned off in your account settings', disclose: 'Disclose commercial content', discloseSub: 'Turn on if this video promotes yourself, a brand, product or service.', own: 'Your brand', ownSub: 'You are promoting yourself or your own business.', paid: 'Branded content', paidSub: 'You are promoting another brand or a third party.', pickOne: 'Select at least one to publish.', labelOwn: 'Your video will be labeled “Promotional content”.', labelPaid: 'Your video will be labeled “Paid partnership”.', noPrivate: 'Branded content visibility cannot be set to private.', consent: 'By posting, you agree to TikTok’s', music: 'Music Usage Confirmation', bc: 'Branded Content Policy', and: ' and ', tail: '.', later: 'After posting, it may take a few minutes for the video to appear on your profile.', tooLong: (a, b) => `This video is ${a}s; this account allows up to ${b}s. Trim it and upload it again.`, oneVideo: 'TikTok here takes a post with exactly one video: upload one video.', loading: 'Checking your TikTok account…', saved: 'TikTok settings saved.' },
+};
+const tx = (k, ...a) => { const d = TTX[document.documentElement.lang === 'ar' ? 'ar' : 'en']; return typeof d[k] === 'function' ? d[k](...a) : d[k]; };
+const ttVideo = (p) => ((p.media || []).length === 1 && isVideo(p.media[0]) ? p.media[0] : null);
+const ttDur = {}; // video id -> seconds, read in the browser
+function ttReady(p) {
+  const t = p.tiktok || {}, c = state.ttCreator?.id === p.id ? state.ttCreator.c : null, v = ttVideo(p);
+  if (!v || !t.privacy || (c && !c.privacy.includes(t.privacy))) return false;
+  if (t.commercial && !t.brand_own && !t.brand_paid) return false;
+  if (t.brand_paid && t.privacy === 'SELF_ONLY') return false;
+  if (c?.max_duration && ttDur[v.id] > c.max_duration) return false;
+  return true;
+}
+async function drawTikTok(p) {
+  const box = $('ceTT'); if (!box) return;
+  if (state.ttCreator?.id !== p.id || Date.now() - state.ttCreator.at > 120e3) {
+    box.innerHTML = `<p class="muted">${esc(tx('loading'))}</p>`;
+    try { state.ttCreator = { id: p.id, at: Date.now(), c: (await call(api('tiktok-creator'))).creator }; }
+    catch (e) { if ($('ceTT')) $('ceTT').innerHTML = `<p class="ct-meta bad">${esc(errText(e))}</p>`; return; }
+    if (current()?.id !== p.id || !$('ceTT')) return;
+    return drawSchedule(current()); // the buttons depend on what the account allows
+  }
+  const c = state.ttCreator.c, t = p.tiktok || {}, v = ttVideo(p);
+  // the video's length, read once from the file
+  if (v && ttDur[v.id] === undefined) {
+    ttDur[v.id] = 0;
+    const el = document.createElement('video'); el.preload = 'metadata'; el.muted = true; el.src = videoSrc(v);
+    el.onloadedmetadata = () => { ttDur[v.id] = Math.round(el.duration || 0); el.removeAttribute('src'); const cur = current(); if (cur?.id === p.id && $('ceTT')) drawSchedule(cur); };
+  }
+  const tooLong = v && c.max_duration && ttDur[v.id] > c.max_duration;
+  const link = (href, label) => `<a href="${href}" target="_blank" rel="noopener">${esc(label)}</a>`;
+  const music = link('https://www.tiktok.com/legal/page/global/music-usage-confirmation/en', tx('music'));
+  const bc = link('https://www.tiktok.com/legal/page/global/bc-policy/en', tx('bc'));
+  box.innerHTML = `
+    <div class="ct-tt-acct">${c.avatar ? `<img src="${esc(c.avatar)}" alt="" width="36" height="36">` : ''}<span><small class="muted">${esc(tx('to'))}</small><b>${esc(c.nickname || c.username)}</b>${c.username ? ` <bdi dir="ltr" class="muted">@${esc(c.username)}</bdi>` : ''}</span></div>
+    ${!v ? `<p class="ct-meta bad">${esc(tx('oneVideo'))}</p>` : tooLong ? `<p class="ct-meta bad">${esc(tx('tooLong', ttDur[v.id], c.max_duration))}</p>` : ''}
+    <label class="ct-field"><span>${esc(tx('who'))}</span><select id="ttPrivacy"><option value=""${t.privacy ? '' : ' selected'} disabled>${esc(tx('pick'))}</option>${c.privacy.map((x) => {
+      const off = x === 'SELF_ONLY' && t.brand_paid;
+      return `<option value="${x}"${t.privacy === x ? ' selected' : ''}${off ? ` disabled title="${esc(tx('noPrivate'))}"` : ''}>${esc(tx(x))}${off ? ` · ${esc(tx('noPrivate'))}` : ''}</option>`;
+    }).join('')}</select></label>
+    <fieldset class="ct-tt-allow"><legend>${esc(tx('allow'))}</legend>
+      ${['comment', 'duet', 'stitch'].map((k) => { const off = c[`${k}_disabled`]; return `<label class="ct-check${off ? ' off' : ''}"><input type="checkbox" data-tt="${k}"${t[k] && !off ? ' checked' : ''}${off ? ' disabled' : ''}> ${esc(tx(k))}${off ? ` <small class="muted">(${esc(tx('off'))})</small>` : ''}</label>`; }).join('')}
+    </fieldset>
+    <div class="ct-tt-cc">
+      <label class="ct-switch"><input type="checkbox" data-tt="commercial"${t.commercial ? ' checked' : ''}><span><b>${esc(tx('disclose'))}</b><small class="muted">${esc(tx('discloseSub'))}</small></span></label>
+      ${t.commercial ? `<div class="ct-tt-brands">
+        <label class="ct-check"><input type="checkbox" data-tt="brand_own"${t.brand_own ? ' checked' : ''}> <span><b>${esc(tx('own'))}</b> <small class="muted">${esc(tx('ownSub'))}</small></span></label>
+        <label class="ct-check"><input type="checkbox" data-tt="brand_paid"${t.brand_paid ? ' checked' : ''}> <span><b>${esc(tx('paid'))}</b> <small class="muted">${esc(tx('paidSub'))}</small></span></label>
+        ${!t.brand_own && !t.brand_paid ? `<p class="ct-meta bad">${esc(tx('pickOne'))}</p>` : `<p class="ct-meta">${esc(tx(t.brand_paid ? 'labelPaid' : 'labelOwn'))}</p>`}
+      </div>` : ''}
+    </div>
+    <p class="ct-tt-consent">${esc(tx('consent'))} ${t.commercial && t.brand_paid ? `${bc}${esc(tx('and'))}${music}` : music}${esc(tx('tail'))}</p>
+    <p class="muted ct-tt-later">${esc(tx('later'))}</p>`;
+  const saveTT = async (patch) => {
+    const cur = current(); const next = { ...(cur.tiktok || {}), ...patch };
+    if (!next.commercial) { next.brand_own = false; next.brand_paid = false; }
+    if (next.brand_paid && next.privacy === 'SELF_ONLY') next.privacy = '';
+    cur.tiktok = next; drawSchedule(cur); // at once, then saved
+    try { absorb(await act('tiktok-settings', { id: cur.id, tiktok: next })); } catch (e) { toast(errText(e), true); }
+  };
+  $('ttPrivacy').onchange = (e) => saveTT({ privacy: e.target.value });
+  box.querySelectorAll('[data-tt]').forEach((el) => el.addEventListener('change', () => saveTT({ [el.dataset.tt]: el.checked })));
 }
 
 // ---------- boot ----------
