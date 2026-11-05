@@ -45,6 +45,7 @@ const ERR = {
   tiktok_brand_private: 'المحتوى الممول لا يمكن أن يكون «أنا فقط».',
   tiktok_not_connected: 'تيك توك غير مربوط: اربطه من «المنصات».',
   tiktok_video_only: 'تيك توك هنا يقبل منشورًا بفيديو واحد فقط.',
+  linkedin_not_connected: 'لينكدإن غير مربوط: اربطه واختر الصفحة من «المنصات».',
 };
 const errText = (e) => (e?.code?.startsWith('caption_too_long') ? 'النص أطول من حد المنصة.' : ERR[e?.code] || e?.msg || 'حدث خطأ. حاول مرة أخرى.');
 
@@ -135,9 +136,11 @@ function metaLine(p, pf) {
   const s = p.schedule?.[pf];
   const media = p.media || [];
   if (s?.remote?.url) return `<span class="ct-meta ok">✓ نُشر ${s.publishedAt ? fmtTime(s.publishedAt) : ''} · <a href="${esc(s.remote.url)}" target="_blank" rel="noopener">عرض المنشور ↗</a></span>`;
-  if (s?.status === 'publishing') return `<span class="ct-meta">⏳ ${pf === 'tiktok' ? 'تيك توك يعالج الفيديو، وقد يستغرق ظهوره بضع دقائق.' : 'إنستغرام يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.'}</span>`;
+  if (s?.status === 'publishing') return `<span class="ct-meta">⏳ ${pf === 'tiktok' ? 'تيك توك يعالج الفيديو، وقد يستغرق ظهوره بضع دقائق.' : pf === 'linkedin' ? 'لينكدإن يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.' : 'إنستغرام يعالج الفيديو، ويُنشر تلقائيًا خلال دقائق.'}</span>`;
   const warn = pf === 'instagram' && !media.length ? '<span class="ct-meta bad">إنستغرام يحتاج صورة أو فيديو قبل النشر.</span>'
     : pf === 'tiktok' && !ttVideo(p) ? '<span class="ct-meta bad">تيك توك هنا يقبل منشورًا بفيديو واحد فقط.</span>'
+    : pf === 'linkedin' && media.some((m) => isVideo(m)) && media.length > 1 ? '<span class="ct-meta bad">لينكدإن يقبل فيديو واحدًا بلا صور في المنشور الواحد.</span>'
+    : pf === 'linkedin' && media.length > 20 ? '<span class="ct-meta bad">لينكدإن يقبل 20 صورة على الأكثر.</span>'
     : pf === 'facebook' && media.length > 1 && media.some((m) => m.video || /^video\//.test(m.mimeType || '')) ? '<span class="ct-meta bad">فيسبوك لا يجمع الفيديو مع الصور في منشور واحد.</span>' : '';
   const err = s?.error ? `<span class="ct-meta bad">${esc(s.error.message)}${s.error.tries >= 3 ? ' توقفت المحاولات التلقائية: صحّح ثم اضغط «انشر الآن».' : ''}</span>` : '';
   const when = s && s.status === 'scheduled' ? (s.auto === false ? '<span class="ct-meta">النشر التلقائي متوقف: انشر يدويًا أو فعّله.</span>' : `<span class="ct-meta">⏱ يُنشر تلقائيًا في موعده على ${PLATFORMS[pf].name}.</span>`) : '';
@@ -691,7 +694,8 @@ function drawSchedule(p) {
     <ul class="ct-pfrows">${pfs.map((pf) => {
       const s = p.schedule?.[pf]; const st = platformStatus(p, pf);
       const tt = pf === 'tiktok' && Boolean(state.meta?.tiktok?.connected);
-      const direct = tt || (state.meta?.configured && AUTO_PLATFORMS.includes(pf));
+      const li = pf === 'linkedin' && Boolean(state.meta?.linkedin?.ready);
+      const direct = tt || li || (state.meta?.configured && AUTO_PLATFORMS.includes(pf));
       const ttBlock = tt && st !== 'published' && !ttReady(p); // TikTok's settings must be chosen first
       const canPublish = direct && st !== 'published' && st !== 'publishing' && !(pf === 'instagram' && !(p.media || []).length);
       return `<li class="ct-pfrow">
@@ -733,7 +737,7 @@ function drawSchedule(p) {
     let result = '';
     await run(async () => { const d = await act('publish', { id: p.id, platform: pf }); result = d.result; return d; },
       `نُشر على ${PLATFORMS[pf].name}.`);
-    if (result === 'pending') toast(pf === 'tiktok' ? 'أُرسل إلى تيك توك. قد يستغرق ظهور الفيديو بضع دقائق.' : 'إنستغرام يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.');
+    if (result === 'pending') toast(pf === 'tiktok' ? 'أُرسل إلى تيك توك. قد يستغرق ظهور الفيديو بضع دقائق.' : pf === 'linkedin' ? 'لينكدإن يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.' : 'إنستغرام يعالج الفيديو. سيُنشر تلقائيًا خلال دقائق.');
     else if (result === 'published' && pf === 'tiktok') toast('نُشر على تيك توك. قد يستغرق ظهوره في الحساب بضع دقائق.');
     else if (result === 'failed') toast(current()?.schedule?.[pf]?.error?.message || 'تعذّر النشر.', true);
   }));

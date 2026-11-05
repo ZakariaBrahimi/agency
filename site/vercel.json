@@ -24,6 +24,10 @@
       "destination": "/api/admin/content?action=pub-media&k=:k"
     },
     {
+      "source": "/linkedin/callback",
+      "destination": "/api/portal?action=linkedin-callback"
+    },
+    {
       "source": "/tiktok/callback",
       "destination": "/api/portal?action=tiktok-callback"
     },

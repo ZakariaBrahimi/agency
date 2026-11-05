@@ -9,6 +9,7 @@ import * as G from './google.js';
 import * as M from './meta.js';
 import { isDue, publishPlatform, directPlatforms } from './publish.js';
 import * as TT from './tiktok.js';
+import * as LI from './linkedin.js';
 import { StorageError } from './storage.js';
 import { seal, unseal } from './seal.js';
 import { kv } from './supabase.js';
@@ -172,9 +173,10 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
     }
     if (req.method === 'GET' && action === 'meta') {
       const tiktok = target.client ? { configured: TT.ttConfigured(), ...TT.ttPublic(target.client) } : null;
-      if (!M.metaTokenConfigured() || !(target.page || target.ig)) return json(res, 200, { ok: true, configured: false, tiktok });
-      try { return json(res, 200, { ok: true, configured: true, accounts: await M.accounts(target), tiktok }); }
-      catch (e) { return json(res, 200, { ok: true, configured: true, error: M.explain(e), tiktok }); }
+      const linkedin = target.client ? { configured: LI.liConfigured(), ...LI.liPublic(target.client) } : null;
+      if (!M.metaTokenConfigured() || !(target.page || target.ig)) return json(res, 200, { ok: true, configured: false, tiktok, linkedin });
+      try { return json(res, 200, { ok: true, configured: true, accounts: await M.accounts(target), tiktok, linkedin }); }
+      catch (e) { return json(res, 200, { ok: true, configured: true, error: M.explain(e), tiktok, linkedin }); }
     }
     // what the client's TikTok account allows right now (asked each time the post's TikTok settings are shown)
     if (req.method === 'GET' && action === 'tiktok-creator') {
@@ -373,11 +375,11 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
         return reply({ post });
       }
       case 'publish': {
-        if (!post || !directPlatforms(target).includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: body.platform === 'tiktok' ? 'tiktok_not_connected' : 'bad_platform' });
+        if (!post || !directPlatforms(target).includes(body.platform) || !post.platforms.includes(body.platform)) return json(res, 400, { ok: false, error: body.platform === 'tiktok' ? 'tiktok_not_connected' : body.platform === 'linkedin' ? 'linkedin_not_connected' : 'bad_platform' });
         if (body.platform === 'tiktok') {
           const bad = TT.checkSettings(post.tiktok);
           if (bad) return json(res, 400, { ok: false, error: bad });
-        } else if (!M.metaTokenConfigured() || !(body.platform === 'facebook' ? target.page : target.ig)) return json(res, 409, { ok: false, error: store.kind === 'client' ? 'platform_not_connected' : 'meta_not_configured' });
+        } else if (body.platform !== 'linkedin' && (!M.metaTokenConfigured() || !(body.platform === 'facebook' ? target.page : target.ig))) return json(res, 409, { ok: false, error: store.kind === 'client' ? 'platform_not_connected' : 'meta_not_configured' });
         if (post.proposal) { post.from = { by: post.proposal.by, at: post.proposal.at, approvedAt: now() }; delete post.proposal; }
         if (body.platform === 'tiktok') post.tiktok.consentAt = now();
         post.schedule ||= {};

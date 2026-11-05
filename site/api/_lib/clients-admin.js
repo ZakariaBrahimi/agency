@@ -4,13 +4,14 @@
 // Facebook and Instagram are checked automatically: a client's Page counts as connected when it is
 // among the Pages Nawa's Meta key can manage (the client added Nawa as a partner and Nawa assigned
 // the Page to its system user), and Instagram when that Page has an Instagram business account.
-// LinkedIn has no API access yet, so Nawa sets its status by hand. TikTok is connected by the client
-// ("Log in with TikTok", see tiktok.js) once Nawa's TikTok app keys are set, and by hand before that.
+// LinkedIn and TikTok are connected by the client (sign-in with LinkedIn / TikTok, see linkedin.js and
+// tiktok.js) once Nawa's app keys are set; before that Nawa sets their status by hand.
 import { json, readJson } from './http.js';
 import { sb } from './supabase.js';
 import * as M from './meta.js';
 import * as B from './billing.js';
 import * as TT from './tiktok.js';
+import * as LI from './linkedin.js';
 import { listClients, getClient, cleanClient, cleanUser, validEmail, findUserByEmail, mailConfigured, PLATFORM_KEYS, MANUAL_STATUS } from './clients.js';
 
 export const CLIENT_ACTIONS = ['clients', 'client-create', 'client-update', 'client-delete', 'client-user-add', 'client-user-remove', 'client-cloud', 'invoice-mark', 'client-ai-revoke'];
@@ -44,9 +45,16 @@ export function platformStatus(c, pages) {
   return {
     facebook: { ...fb, auto: true, note: note('facebook') },
     instagram: { ...ig, auto: true, note: note('instagram') },
-    linkedin: manual('linkedin'),
+    linkedin: LI.liConfigured() ? linkedinStatus(c, note('linkedin')) : manual('linkedin'),
     tiktok: TT.ttConfigured() ? tiktokStatus(c, note('tiktok')) : manual('tiktok'),
   };
+}
+
+function linkedinStatus(c, note) {
+  const l = LI.liOf(c);
+  if (!LI.liConnected(c)) return { status: l.status === 'issue' ? 'issue' : 'not_started', auto: true, connect: true, note };
+  if (!l.page?.id) return { status: l.status === 'issue' ? 'issue' : 'waiting_client', auto: true, connect: true, note, pages: l.pages || [] };
+  return { status: l.status === 'issue' ? 'issue' : 'active', auto: true, connect: true, note, name: l.page.name, url: LI.pageUrl(l.page), pages: l.pages || [] };
 }
 
 function tiktokStatus(c, note) {
@@ -75,7 +83,7 @@ function cleanPlatforms(input, prev = {}) {
     out[k] = {
       ...(out[k] || {}),
       // a TikTok the client connected keeps the status its connection gives
-      ...(v.status !== undefined && MANUAL_STATUS.includes(v.status) && (k === 'linkedin' || (k === 'tiktok' && !TT.ttConfigured())) ? { status: v.status } : {}),
+      ...(v.status !== undefined && MANUAL_STATUS.includes(v.status) && ((k === 'linkedin' && !LI.liConfigured()) || (k === 'tiktok' && !TT.ttConfigured())) ? { status: v.status } : {}),
       ...(v.url !== undefined ? { url: String(v.url).trim().slice(0, 300) } : {}),
       ...(v.note !== undefined ? { note: String(v.note).trim().slice(0, 500) } : {}),
     };
@@ -84,7 +92,7 @@ function cleanPlatforms(input, prev = {}) {
 }
 
 // the sealed TikTok connection never leaves the server
-const withoutConn = (pf = {}) => (pf.tiktok?.conn ? { ...pf, tiktok: (({ conn, ...t }) => t)(pf.tiktok) } : pf);
+const withoutConn = (pf = {}) => Object.fromEntries(Object.entries(pf).map(([k, v]) => [k, v?.conn ? (({ conn, ...t }) => t)(v) : v]));
 
 export async function adminClients(req, res, action) {
   if (!sb.ready()) return json(res, 503, { ok: false, error: 'storage_not_configured' });

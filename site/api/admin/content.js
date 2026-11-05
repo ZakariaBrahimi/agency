@@ -122,7 +122,7 @@ async function runAll(g) {
   const clients = await sb.select('clients', 'select=*&active=is.true').catch(() => []);
   for (const c of clients) {
     if (Date.now() > deadline - 15e3) break;
-    if (!c.fb_page_id && !c.ig_user_id && !c.platforms?.tiktok?.conn) continue; // nothing it could publish to
+    if (!c.fb_page_id && !c.ig_user_id && !c.platforms?.tiktok?.conn && !c.platforms?.linkedin?.conn) continue; // nothing it could publish to
     try { results.push(...(await runSchedule(await clientStore(c), clientTarget(c), deadline)).map((r) => ({ ...r, client: c.id }))); }
     catch (e) { console.error('cron client', c.id, e.message); }
   }

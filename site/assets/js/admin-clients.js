@@ -153,6 +153,7 @@ function openClient(id) {
             <p class="muted">تظهر هنا الصفحات التي وصلنا الوصول إليها. بعد قبول طلب الشراكة: Business Settings ← System users ← أضف الصفحة لمستخدم النظام، ثم «تحقق الآن».</p>` : ''}
           ${k === 'instagram' ? '<p class="muted">يُقرأ من صفحة فيسبوك تلقائيًا.</p>' : ''}
           ${k === 'tiktok' && s.connect ? `<p class="muted">${s.status === 'active' ? 'ربطه العميل بـ «تسجيل الدخول بتيك توك». الفيديوهات المجدولة تُنشر تلقائيًا.' : 'لم يربطه العميل بعد: يضغط «ربط تيك توك» في «المنصات».'}</p>` : ''}
+          ${k === 'linkedin' && s.connect ? `<p class="muted">${s.status === 'active' ? 'ربطه العميل بحسابه على لينكدإن واختار الصفحة. المنشورات المجدولة تُنشر عليها تلقائيًا.' : s.status === 'waiting_client' ? 'ربطه العميل، وبقي أن يختار الصفحة في «المنصات».' : 'لم يربطه العميل بعد: يضغط «ربط لينكدإن» في «المنصات».'}</p>` : ''}
           ${!p.auto && !s.connect ? `<div class="ct-row"><label class="ct-field"><span>الحالة</span><select data-status="${k}">${MANUAL_STATUS.map((st) => `<option value="${st}"${st === s.status ? ' selected' : ''}>${L(STATUS[st].label)}</option>`).join('')}</select></label>
             <label class="ct-field"><span>رابط الحساب</span><input data-url="${k}" dir="ltr" value="${esc(s.url || '')}" placeholder="https://"></label></div>` : ''}
           <label class="ct-field"><span>ملاحظة يراها العميل</span><input data-note="${k}" maxlength="500" value="${esc(s.note || '')}"></label>

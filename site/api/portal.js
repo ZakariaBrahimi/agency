@@ -20,6 +20,10 @@
 // GET  ?action=tiktok-connect              "Log in with TikTok" (once Nawa's TikTok app keys are set; see _lib/tiktok.js)
 // GET  /tiktok/callback (?action=tiktok-callback)   TikTok sends the browser back here -> /portal#platforms/tiktok-…
 // POST ?action=tiktok-disconnect           revokes Nawa's access to the client's TikTok
+// GET  ?action=linkedin-connect            sign in with LinkedIn (once Nawa's LinkedIn app keys are set; see _lib/linkedin.js)
+// GET  /linkedin/callback (?action=linkedin-callback)   -> /portal#platforms/linkedin-…
+// POST ?action=linkedin-page { id }        which of the client's LinkedIn Pages Nawa posts to
+// POST ?action=linkedin-disconnect
 // GET  ?action=ai-link                     the Claude connector link (no token: it is shown once)
 // POST ?action=ai-link                     a new private link -> { url } (replaces the old one)
 // POST ?action=ai-revoke                   stops the link
@@ -38,6 +42,7 @@ import { telegramReady, sendMessage, escapeHtml } from './_lib/telegram.js';
 import { sb } from './_lib/supabase.js';
 import * as AI from './_lib/mcp.js';
 import * as TT from './_lib/tiktok.js';
+import * as LI from './_lib/linkedin.js';
 import { getClient } from './_lib/clients.js';
 
 export default async function handler(req, res) {
@@ -49,6 +54,16 @@ export default async function handler(req, res) {
     // the Claude connector authenticates with its own private link, not the portal session
     if (action === 'mcp') return await AI.handleMcp(req, res, url.searchParams.get('t'));
     // TikTok's return: outside the portal cookie's path, so it is checked with its own state (see tiktok.js)
+    if (action === 'linkedin-callback' && req.method === 'GET') {
+      let to = 'linkedin-failed';
+      try { if (LI.liConfigured()) to = await LI.handleCallback(req, url, getClient); }
+      catch (e) { console.error('linkedin callback', e.code, e.message); }
+      LI.clearNonce(res);
+      res.statusCode = 302;
+      res.setHeader('Location', `/portal#platforms/${to}`);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
     if (action === 'tiktok-callback' && req.method === 'GET') {
       let to = 'tiktok-failed';
       try { if (TT.ttConfigured()) to = await TT.handleCallback(req, url, getClient); }
@@ -110,6 +125,23 @@ export default async function handler(req, res) {
     }
     if (action === 'tiktok-disconnect' && req.method === 'POST') {
       await TT.disconnect(client);
+      return json(res, 200, { ok: true, status: platformStatus(client, await pagesOrNull(false)) });
+    }
+
+    // ---- LinkedIn: the client connects and picks their company Page
+    if (action === 'linkedin-connect' && req.method === 'GET') {
+      if (!LI.liConfigured()) return json(res, 503, { ok: false, error: 'linkedin_not_configured' });
+      res.statusCode = 302;
+      res.setHeader('Location', LI.authUrl(res, client, user));
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end();
+    }
+    if (action === 'linkedin-page' && req.method === 'POST') {
+      if (!(await LI.choosePage(client, (await readJson(req)).id))) return json(res, 400, { ok: false, error: 'bad_page' });
+      return json(res, 200, { ok: true, status: platformStatus(client, await pagesOrNull(false)) });
+    }
+    if (action === 'linkedin-disconnect' && req.method === 'POST') {
+      await LI.disconnect(client);
       return json(res, 200, { ok: true, status: platformStatus(client, await pagesOrNull(false)) });
     }
 

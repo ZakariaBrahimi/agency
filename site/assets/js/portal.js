@@ -247,6 +247,34 @@ function tiktokPanel(k, p, s) {
     </div>`;
 }
 
+// LinkedIn, once Nawa's LinkedIn app is set up: the client signs in and picks the company Page
+const LIP = {
+  ar: { steps: ['اضغط «ربط لينكدإن».', 'سجّل الدخول بحسابك الشخصي الذي يدير صفحة شركتك على لينكدإن، ووافق.', 'اختر صفحة الشركة التي ننشر عليها. ثم اختر لينكدإن في منشوراتك من «المحتوى».'], connect: 'ربط لينكدإن', scopes: 'تطلب نواة إذن النشر على صفحات الشركات التي تديرها فقط، ولا تنشر على حسابك الشخصي. لا يُنشر شيء دون موافقتك.', page: 'ننشر على صفحة', pick: 'أي صفحة ننشر عليها؟', choose: 'اختيار هذه الصفحة', change: 'تغيير الصفحة', how: 'في «المحتوى»: اختر لينكدإن في المنشور ثم جدوِله أو انشره الآن. يقبل النص وحده، أو صورة، أو حتى 20 صورة، أو فيديو واحدًا.', disconnect: 'فصل لينكدإن', confirm: 'تأكيد: فصل لينكدإن', reconnect: 'إعادة الربط', issue: 'انتهى ربط لينكدإن. أعد ربطه لمواصلة النشر.', 'linkedin-connected': 'رُبط لينكدإن ✓', 'linkedin-nopage': 'حسابك على لينكدإن لا يدير أي صفحة شركة. اطلب من مسؤول الصفحة أن يضيفك «مسؤولًا» أو «مسؤول محتوى»، ثم أعد الربط.', 'linkedin-denied': 'لم تكتمل الموافقة على لينكدإن.', 'linkedin-failed': 'تعذّر ربط لينكدإن. حاول مرة أخرى.', 'linkedin-scope': 'يلزم إذن النشر على الصفحة: أعد الربط ووافق على كل الأذونات.', off: 'فُصل لينكدإن.', picked: 'اختيرت الصفحة ✓' },
+  en: { steps: ['Press “Connect LinkedIn”.', 'Sign in with the personal account that manages your company’s LinkedIn Page, and approve.', 'Choose the company Page we post to. Then pick LinkedIn on your posts in “Content”.'], connect: 'Connect LinkedIn', scopes: 'Nawa only asks to post to the company Pages you manage, never to your personal profile. Nothing is posted without your approval.', page: 'Posting to Page', pick: 'Which Page should we post to?', choose: 'Use this Page', change: 'Change Page', how: 'In “Content”: pick LinkedIn on a post, then schedule it or post now. Text only, one image, up to 20 images, or one video.', disconnect: 'Disconnect LinkedIn', confirm: 'Confirm: disconnect LinkedIn', reconnect: 'Reconnect', issue: 'Your LinkedIn connection expired. Reconnect to keep posting.', 'linkedin-connected': 'LinkedIn connected ✓', 'linkedin-nopage': 'Your LinkedIn account doesn’t manage any company Page. Ask the Page’s admin to add you as “Super admin” or “Content admin”, then reconnect.', 'linkedin-denied': 'LinkedIn approval wasn’t completed.', 'linkedin-failed': 'Couldn’t connect LinkedIn. Please try again.', 'linkedin-scope': 'Permission to post to your Page is needed: reconnect and approve all permissions.', off: 'LinkedIn disconnected.', picked: 'Page selected ✓' },
+  fr: { steps: ['Appuyez sur « Connecter LinkedIn ».', 'Connectez-vous avec le compte personnel qui gère la Page LinkedIn de votre entreprise, et acceptez.', 'Choisissez la Page d’entreprise où publier. Puis choisissez LinkedIn sur vos publications dans « Contenu ».'], connect: 'Connecter LinkedIn', scopes: 'Nawa demande seulement à publier sur les Pages d’entreprise que vous gérez, jamais sur votre profil personnel. Rien n’est publié sans votre accord.', page: 'Publication sur la Page', pick: 'Sur quelle Page publier ?', choose: 'Utiliser cette Page', change: 'Changer de Page', how: 'Dans « Contenu » : choisissez LinkedIn sur une publication, puis planifiez-la ou publiez. Texte seul, une image, jusqu’à 20 images, ou une vidéo.', disconnect: 'Déconnecter LinkedIn', confirm: 'Confirmer : déconnecter LinkedIn', reconnect: 'Reconnecter', issue: 'La connexion LinkedIn a expiré. Reconnectez-la pour continuer.', 'linkedin-connected': 'LinkedIn connecté ✓', 'linkedin-nopage': 'Votre compte LinkedIn ne gère aucune Page d’entreprise. Demandez à l’admin de la Page de vous ajouter comme « Super admin » ou « Admin de contenu », puis reconnectez.', 'linkedin-denied': 'L’autorisation LinkedIn n’a pas abouti.', 'linkedin-failed': 'Connexion à LinkedIn impossible. Réessayez.', 'linkedin-scope': 'L’autorisation de publier sur la Page est nécessaire : reconnectez et acceptez tout.', off: 'LinkedIn déconnecté.', picked: 'Page choisie ✓' },
+};
+const lip = (k) => (LIP[lang] || LIP.ar)[k];
+function linkedinPanel(k, p, s) {
+  const msg = state.liMsgKey ? `<p class="pt-ttmsg${/connected|off|picked/.test(state.liMsgKey) ? '' : ' bad'}" role="status">${esc(lip(state.liMsgKey))}</p>` : '';
+  const pages = s.pages || [];
+  const picker = pages.length && (s.status === 'waiting_client' || state.liPick) ? `<div class="pt-lipick"><b>${esc(lip('pick'))}</b>${pages.map((pg) => `<button type="button" class="pt-lipage${s.name === pg.name && s.status === 'active' ? ' on' : ''}" data-lipage="${esc(pg.id)}"><i class="pt-logo" style="--c:${p.color}">${icon(k, 16)}</i><span><b>${esc(pg.name)}</b>${pg.vanity ? `<small dir="ltr">linkedin.com/company/${esc(pg.vanity)}</small>` : ''}</span><em>${esc(lip('choose'))}</em></button>`).join('')}</div>` : '';
+  if (s.status === 'active' || (s.status === 'waiting_client' && pages.length)) return `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}${msg}
+      ${s.status === 'active' ? `<div class="pt-ttacct"><i class="pt-logo" style="--c:${p.color}">${icon(k, 20)}</i><span><small class="muted">${esc(lip('page'))}</small><b>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)} ↗</a>` : esc(s.name)}</b></span></div>` : ''}
+      ${picker}
+      ${s.status === 'active' ? `<p class="muted">${esc(lip('how'))}</p>` : ''}
+      <div class="pt-ttacts">${s.status === 'active' ? `<button type="button" class="btn btn-lime" data-go="content">${esc(t('goContent'))}</button>` : ''}${s.status === 'active' && pages.length > 1 && !state.liPick ? `<button type="button" class="link-btn" id="ptLiChange">${esc(lip('change'))}</button>` : ''}<button type="button" class="link-btn ct-danger" id="ptLiOff">${esc(lip('disconnect'))}</button></div>
+    </div>`;
+  return `<div class="ct-card pt-panel">
+      ${panelHead(k, p, s)}${msg}
+      ${s.status === 'issue' ? `<p class="pt-ttmsg bad">${esc(lip('issue'))}</p>` : ''}
+      <div class="pt-stepcount"><b>${esc(t('stepsTitle'))}</b></div>
+      <ol class="pt-steps">${lip('steps').map((x, i) => `<li><span class="pt-num"><span>${i + 1}</span></span><div class="pt-stepbody">${esc(x)}</div></li>`).join('')}</ol>
+      <a class="btn btn-dark pt-ttbtn" href="/api/portal?action=linkedin-connect"><i class="pt-logo" style="--c:${p.color}">${icon(k, 18)}</i>${esc(lip(s.status === 'issue' ? 'reconnect' : 'connect'))}</a>
+      <p class="muted pt-foot">${esc(lip('scopes'))}</p>
+    </div>`;
+}
+
 function drawPlatforms() {
   const st = state.me.status;
   const active = PLATFORM_ORDER.filter((k) => st[k]?.status === 'active').length;
@@ -257,6 +285,7 @@ function drawPlatforms() {
 
   let panel;
   if (k === 'tiktok' && s.connect) panel = tiktokPanel(k, p, s);
+  else if (k === 'linkedin' && s.connect) panel = linkedinPanel(k, p, s);
   else if (!k) {
     panel = `<div class="ct-card pt-panel pt-allset"><b>${esc(t('allSetTitle'))}</b><p class="muted">${esc(t('allActive'))}</p><button type="button" class="btn btn-lime" data-go="content">${esc(t('goContent'))}</button></div>`;
   } else if (s.status === 'active') {
@@ -308,6 +337,19 @@ function drawPlatforms() {
     setTick(k, Number(b.dataset.tick), b.getAttribute('aria-pressed') !== 'true'); drawPlatforms();
     $('ptPlatforms').querySelector(`[data-tick="${b.dataset.tick}"]`)?.focus();
   }));
+  $('ptPlatforms').querySelectorAll('[data-lipage]').forEach((b) => b.addEventListener('click', async () => {
+    b.disabled = true;
+    try { state.me.status = (await call('linkedin-page', { id: b.dataset.lipage })).status; state.liPick = false; state.liMsgKey = 'picked'; drawPlatforms(); }
+    catch { b.disabled = false; }
+  }));
+  if ($('ptLiChange')) $('ptLiChange').onclick = () => { state.liPick = true; drawPlatforms(); };
+  const liOff = $('ptLiOff');
+  if (liOff) liOff.onclick = async () => {
+    if (!liOff.dataset.armed) { liOff.dataset.armed = '1'; liOff.textContent = lip('confirm'); setTimeout(() => { if (liOff.isConnected) { delete liOff.dataset.armed; liOff.textContent = lip('disconnect'); } }, 4000); return; }
+    liOff.disabled = true;
+    try { state.me.status = (await call('linkedin-disconnect', {})).status; state.liMsgKey = 'off'; state.liPick = false; drawPlatforms(); }
+    catch { liOff.disabled = false; }
+  };
   const off = $('ptTtOff');
   if (off) off.onclick = async () => {
     if (!off.dataset.armed) { off.dataset.armed = '1'; off.textContent = ttp('confirm'); setTimeout(() => { if (off.isConnected) { delete off.dataset.armed; off.textContent = ttp('disconnect'); } }, 4000); return; }
@@ -678,6 +720,8 @@ async function boot() {
   $('booting').hidden = true; $('ptLogin').hidden = true; $('ptApp').hidden = false; $('ptLogout').hidden = false;
   const tm = h.match(/^platforms\/(tiktok-(?:connected|denied|failed|scope))$/);
   if (tm) { history.replaceState(null, '', location.pathname); state.pf = 'tiktok'; state.ttMsgKey = tm[1]; }
+  const lm = h.match(/^platforms\/(linkedin-(?:connected|nopage|denied|failed|scope))$/);
+  if (lm) { history.replaceState(null, '', location.pathname); state.pf = 'linkedin'; state.liMsgKey = lm[1]; }
   drawHello(); drawPlatforms(); drawPropBadge();
   const sm = { 'storage/drive-connected': 'd_connected', 'storage/drive-denied': 'd_denied', 'storage/drive-failed': 'd_failed' }[h];
   if (h.startsWith('storage')) {

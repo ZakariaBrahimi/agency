@@ -801,3 +801,14 @@ input[type="datetime-local"]::-webkit-date-and-time-value { text-align: start; }
 .pt-ttbtn .pt-logo { inline-size: 26px; block-size: 26px; border-radius: 8px; }
 .pt-ttmsg { margin: 0; background: #E3F6E9; color: #17703A; border-radius: 14px; padding: 10px 14px; font-weight: 700; }
 .pt-ttmsg.bad { background: #FDECEC; color: #B42318; }
+
+/* portal: choosing the LinkedIn Page */
+.pt-lipick { display: grid; gap: 8px; }
+.pt-lipage { display: flex; align-items: center; gap: 12px; text-align: start; background: var(--paper); border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 12px; font: inherit; color: var(--text); cursor: pointer; }
+.pt-lipage:hover, .pt-lipage:focus-visible { border-color: var(--indigo); }
+.pt-lipage.on { border-color: #17703A; background: #E3F6E9; }
+.pt-lipage .pt-logo { inline-size: 30px; block-size: 30px; border-radius: 9px; }
+.pt-lipage span { display: grid; min-width: 0; flex: 1; }
+.pt-lipage small { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: start; }
+.pt-lipage em { font-style: normal; font-weight: 700; color: var(--indigo); white-space: nowrap; }
+.pt-ttacct .pt-logo { inline-size: 40px; block-size: 40px; }

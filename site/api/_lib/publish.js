@@ -9,11 +9,16 @@ import { seal, unseal } from './seal.js';
 import * as M from './meta.js';
 import * as R2 from './r2.js';
 import * as TT from './tiktok.js';
+import * as LI from './linkedin.js';
 import { captionFor } from '../../assets/js/content-schema.js';
 
 export const META_PLATFORMS = ['facebook', 'instagram'];
-/** The platforms a target can publish to on its own: Meta's, plus TikTok once the client connected it. */
-export const directPlatforms = (target) => [...META_PLATFORMS, ...(target?.client && TT.ttConnected(target.client) ? ['tiktok'] : [])];
+/** The platforms a target can publish to on its own: Meta's, plus TikTok and LinkedIn once the client connected them. */
+export const directPlatforms = (target) => [
+  ...META_PLATFORMS,
+  ...(target?.client && TT.ttConnected(target.client) ? ['tiktok'] : []),
+  ...(target?.client && LI.liReady(target.client) ? ['linkedin'] : []),
+];
 const MAX_TRIES = 3;
 const LOCK_MS = 5 * 60e3;
 const LINK_MS = 30 * 60e3;
@@ -90,6 +95,10 @@ export async function publishPlatform(post, platform, { deadline, persist, targe
   try {
     let r;
     if (platform === 'tiktok') r = await publishTikTok(post, s, target.client, readRange, deadline);
+    else if (platform === 'linkedin') r = await LI.publish(target.client, {
+      caption: captionFor(post, 'linkedin'), items: (post.media || []).map((m) => ({ m, video: isVid(m) })),
+      read: readRange, jpeg: (buf) => toJpeg(buf, false), cover: post.cover || null, container: s.container, deadline,
+    });
     else if (platform === 'instagram' && s.container) r = await M.finishInstagram(s.container, deadline, target);
     else {
       const items = [];
