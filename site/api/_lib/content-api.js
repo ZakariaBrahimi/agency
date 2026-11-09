@@ -13,7 +13,7 @@ import * as LI from './linkedin.js';
 import { StorageError } from './storage.js';
 import { seal, unseal } from './seal.js';
 import { kv } from './supabase.js';
-import { PLATFORMS, PLATFORM_IDS, KINDS, checkPost, isAt, captionFor, STARTER_PLAN } from '../../assets/js/content-schema.js';
+import { PLATFORMS, PLATFORM_IDS, KINDS, checkPost, isAt, normAt, captionFor, STARTER_PLAN } from '../../assets/js/content-schema.js';
 
 
 const newId = () => 'p_' + crypto.randomBytes(6).toString('hex');
@@ -23,6 +23,7 @@ function clean(input) {
   const out = {};
   for (const k of ['title', 'kind', 'date', 'platforms', 'captions', 'notes']) if (input[k] !== undefined) out[k] = input[k];
   if (typeof out.title === 'string') out.title = out.title.trim();
+  if (out.date !== undefined) out.date = normAt(out.date);
   if (out.platforms) out.platforms = [...new Set(out.platforms)];
   if (out.captions) out.captions = Object.fromEntries(Object.entries(out.captions).map(([k, v]) => [k, String(v)]));
   return out;
@@ -188,6 +189,7 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
     if (req.method !== 'POST') return json(res, 405, { ok: false });
 
     const body = await readJson(req);
+    if (body.at !== undefined) body.at = normAt(body.at);
     const post = body.id ? find(body.id) : null;
     if (body.id && !post) return json(res, 404, { ok: false, error: 'not_found' });
 
@@ -212,6 +214,11 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
           post.media = [...order.map((id) => byId.get(id)), ...(post.media || []).filter((m) => !order.includes(m.id))];
         }
         const renamed = fields.title !== undefined && fields.title !== post.title || fields.date !== undefined && fields.date.slice(0, 10) !== (post.date || '').slice(0, 10);
+        // the planned time moved: platforms scheduled at the old planned time move with it (published,
+        // publishing and ones given their own time stay)
+        if (fields.date && post.date && fields.date !== post.date) {
+          for (const sc of Object.values(post.schedule || {})) if (sc.status === 'scheduled' && sc.at === post.date && !sc.lockedAt) { sc.at = fields.date; delete sc.error; }
+        }
         Object.assign(post, fields, { updatedAt: now() });
         // a platform taken off the post loses its schedule
         for (const pf of Object.keys(post.schedule || {})) if (!post.platforms.includes(pf)) delete post.schedule[pf];
@@ -351,6 +358,9 @@ export async function contentApi(req, res, { store, conn = null, ownConnection =
           post.schedule[pf] = old?.status === 'published' ? { ...old, at: body.at }
             : { at: body.at, status: 'scheduled', approvedAt: now(), ...(old?.auto === false ? { auto: false } : {}) };
         }
+        // all the post's platforms at one time: that is its planned time too
+        const times = new Set(post.platforms.map((pf) => post.schedule[pf]?.at).filter(Boolean));
+        if (times.size === 1 && post.platforms.every((pf) => post.schedule[pf])) post.date = [...times][0];
         post.updatedAt = now();
         await syncEvents(store, data, post);
         await save();

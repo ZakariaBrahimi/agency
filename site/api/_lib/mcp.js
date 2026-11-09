@@ -17,7 +17,7 @@ import { seal, unseal } from './seal.js';
 import { sb } from './supabase.js';
 import { clientStore, StorageError } from './storage.js';
 import { platformStatus, pagesOrNull } from './clients-admin.js';
-import { PLATFORMS, KINDS, checkPost, postStatus, captionFor } from '../../assets/js/content-schema.js';
+import { PLATFORMS, KINDS, checkPost, postStatus, captionFor, normAt } from '../../assets/js/content-schema.js';
 
 export const DAILY_DRAFTS = 30;
 export const TRASH_DAYS = 30;
@@ -298,6 +298,7 @@ function draftFields(a, partial = false) {
   if (a.title !== undefined) f.title = String(a.title).trim().slice(0, 200);
   if (a.kind !== undefined) { need(KINDS[a.kind], `kind must be one of: ${KIND_IDS.join(', ')}.`); f.kind = a.kind; }
   if (a.suggested_at !== undefined) {
+    a.suggested_at = normAt(a.suggested_at);
     need(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(a.suggested_at), 'suggested_at must look like 2026-11-05T19:00 (Algiers time).');
     need(a.suggested_at >= algiers().slice(0, 16), 'suggested_at is in the past. Pick a future time (Algiers time).');
     f.date = a.suggested_at;

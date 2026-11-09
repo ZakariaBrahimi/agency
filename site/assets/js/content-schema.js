@@ -28,6 +28,11 @@ export const AUTO_PLATFORMS = ['facebook', 'instagram'];
 
 const AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 export const isAt = (s) => typeof s === 'string' && AT.test(s);
+/**
+ * A time as stored: "YYYY-MM-DDTHH:MM" (Algiers). Browsers can send seconds ("19:00:00", "19:00:00.000")
+ * or a space instead of the T; those are cut to the minute. Anything else is returned unchanged.
+ */
+export const normAt = (s) => { const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(:\d{2}(\.\d+)?)?$/.exec(String(s ?? '').trim()); return m ? `${m[1]}T${m[2]}` : s; };
 
 /** The caption a platform will use: its own text if set, otherwise the shared one. */
 export const captionFor = (post, platform) => (post.captions?.[platform] || '').trim() || (post.captions?.all || '').trim();

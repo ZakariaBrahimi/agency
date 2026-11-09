@@ -3,7 +3,7 @@
 // Runs in two places with the same tools:
 // - /admin  (window.NAWA_CT unset): Nawa's own content, or any client's (the switcher at the top)
 // - /portal (window.NAWA_CT = { api: '/api/portal', mode: 'client' }): a client's own content
-import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus } from './content-schema.js?v=20261023b';
+import { PLATFORMS, PLATFORM_IDS, KINDS, STATUS, AUTO_PLATFORMS, captionFor, platformStatus, postStatus, isAt, normAt } from './content-schema.js?v=20261109a';
 import { COPY_ICON } from './portal-schema.js?v=20261103d';
 import { STORY_SETS, storyFiles, storyCover } from './stories-schema.js?v=20261023b';
 
@@ -60,7 +60,8 @@ async function call(path, { method = 'GET', body } = {}) {
   if (!r.ok || d.ok === false) throw Object.assign(new Error(d.error || 'error'), { code: d.error || 'error', msg: d.message || '' });
   return d;
 }
-const act = (action, body) => call(api(action), { method: 'POST', body });
+let acting = 0; // requests in flight: the background refresh waits for them
+const act = async (action, body) => { acting++; try { return await call(api(action), { method: 'POST', body }); } finally { acting--; } };
 function absorb(d) {
   if (d.posts) state.posts = d.posts;
   if (d.settings) state.settings = d.settings;
@@ -446,7 +447,7 @@ function formPatch() {
   return {
     title: $('ceTitle').value,
     kind: $('ceKind').value,
-    date: $('ceDate').value,
+    date: normAt($('ceDate').value),
     platforms: PLATFORM_IDS.filter((pf) => $('cePf_' + pf).checked),
     captions,
     notes: $('ceNotes').value,
@@ -516,6 +517,7 @@ function drawEditor(p) {
     capTab = b.dataset.cap; drawCaption(p2);
   }));
   $('ceCaption').addEventListener('input', countCaption);
+  $('ceDate').addEventListener('input', () => followPlanned(normAt($('ceDate').value)));
   $('ceCopy').onclick = (e) => copy(e.currentTarget, capTab === 'all' ? $('ceCaption').value : ($('ceCaption').value.trim() || current().captions?.all || ''));
   $('ceSave').onclick = () => save();
   $('ceClose').onclick = close;
@@ -687,6 +689,7 @@ function drawSchedule(p) {
   box.innerHTML = `<div class="ct-sec-head"><h3>الموافقة والجدولة</h3></div>
     <p class="muted">الجدولة هي موافقتك: تضيف حدثًا في تقويم «Nawa · Content» مع تذكير قبل ساعة. يُحفظ أي تعديل غير محفوظ أولًا.</p>
     ${state.meta?.configured ? `<p class="ct-metabar">${state.meta.accounts ? `<b>النشر المباشر مفعّل</b> · فيسبوك: <bdi>${esc(state.meta.accounts.page)}</bdi> · إنستغرام: <bdi dir="ltr">@${esc(state.meta.accounts.ig)}</bdi>. المنشورات المجدولة على هاتين المنصتين تُنشر وحدها في موعدها (خلال 5 دقائق).` : `<b>Meta:</b> ${esc(state.meta.error || 'تعذّر التحقق من الحساب.')}`}</p>` : ''}
+    <p class="ct-meta" id="ceSchedNote" hidden>عند الحفظ، تنتقل المنصات المجدولة في الموعد المخطط القديم إلى الموعد الجديد.</p>
     ${pfs.length ? `<div class="ct-all">
       <input type="datetime-local" id="ceAllAt" value="${esc(def)}" aria-label="موعد كل المنصات">
       <button type="button" class="btn btn-lime" id="ceAll">جدولة على كل المنصات (${pfs.length})</button>
@@ -721,6 +724,11 @@ function drawSchedule(p) {
       absorb(await fn()); render(); drawEditor(current()); toast(okMsg);
     } catch (e) { toast(errText(e), true); drawSchedule(current()); }
   };
+  // the time for all platforms fills the platforms not scheduled yet; a scheduled row whose time was
+  // changed lights its «تحديث الموعد» button
+  if ($('ceAllAt')) $('ceAllAt').addEventListener('input', () => { const v = normAt($('ceAllAt').value); if (!isAt(v)) return; box.querySelectorAll('[data-at]').forEach((i) => { if (!current().schedule?.[i.dataset.at]) i.value = v; }); markRows(); });
+  box.querySelectorAll('[data-at]').forEach((i) => i.addEventListener('input', () => markRows()));
+  markRows();
   if ($('ceAll')) $('ceAll').onclick = () => run(() => act('schedule', { id: p.id, platforms: current().platforms, at: $('ceAllAt').value }), 'جُدول على كل المنصات وأُضيف إلى التقويم.');
   box.querySelectorAll('[data-one]').forEach((b) => b.addEventListener('click', () => {
     const pf = b.dataset.one;
@@ -743,6 +751,51 @@ function drawSchedule(p) {
   }));
   drawTikTok(p);
 }
+
+// The planned time («الموعد المخطط») leads: the time for all platforms and the platforms not scheduled
+// yet follow it as it is typed; platforms scheduled at the old planned time move with it on save.
+function followPlanned(v) {
+  const p = current(); if (!p || !isAt(v)) return;
+  if ($('ceAllAt')) $('ceAllAt').value = v;
+  let moves = false;
+  document.querySelectorAll('#ceSched [data-at]').forEach((i) => {
+    const sc = p.schedule?.[i.dataset.at];
+    if (!sc) i.value = v;
+    else if (sc.status === 'scheduled' && sc.at === p.date && v !== p.date) { i.value = v; moves = true; }
+    else if (sc.status === 'scheduled' && sc.at === p.date) i.value = sc.at;
+  });
+  if ($('ceSchedNote')) $('ceSchedNote').hidden = !moves;
+  markRows(moves);
+}
+function markRows(saveMoves = false) {
+  const p = current(); if (!p) return;
+  document.querySelectorAll('#ceSched [data-at]').forEach((i) => {
+    const sc = p.schedule?.[i.dataset.at], b = document.querySelector(`#ceSched [data-one="${i.dataset.at}"]`);
+    // a row moved by the planned time is saved with the post, not with its own button
+    const differs = sc && sc.status === 'scheduled' && normAt(i.value) !== sc.at && !(saveMoves && sc.at === p.date);
+    if (b) { b.classList.toggle('btn-lime', Boolean(differs)); b.classList.toggle('btn-ghost-dark', !differs); }
+  });
+}
+
+// Keeps the calendar and the open post in step with changes made elsewhere (Claude, another device,
+// the scheduler): checked every 20 seconds while the page is visible, and when it comes back.
+async function refresh() {
+  if (!state.loaded || state.busy || acting || document.hidden) return;
+  const sig = (posts) => posts.map((x) => `${x.id}:${x.updatedAt || ''}`).join('|');
+  const before = sig(state.posts), openBefore = current();
+  let d; try { d = await call(api()); } catch { return; }
+  if (acting || sig(d.posts || []) === before) return;
+  absorb(d); render();
+  if (!openBefore) return;
+  const now = current();
+  if (!now) { state.dirty = false; close(); toast('حُذف هذا المنشور من مكان آخر (مثلًا Claude).', true); return; }
+  if (now.updatedAt === openBefore.updatedAt) return;
+  if (state.dirty) { if ($('ceSaved')) $('ceSaved').textContent = 'تغيّر هذا المنشور من مكان آخر. احفظ تعديلاتك لتطغى عليه، أو أغلقه وافتحه من جديد.'; return; }
+  drawEditor(now); toast('حُدّث المنشور بتعديل من مكان آخر.');
+}
+setInterval(refresh, 20e3);
+window.addEventListener('focus', refresh);
+document.addEventListener('visibilitychange', refresh);
 
 // ---------- TikTok: what TikTok requires before a Direct Post ----------
 // The account it goes to (asked from TikTok each time), who can watch (no default), interactions (off
