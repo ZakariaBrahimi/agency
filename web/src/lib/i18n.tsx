@@ -22,9 +22,9 @@ function initialLang(): Lang {
   return "ar";
 }
 
-export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, set] = React.useState<Lang>("ar");
-  React.useEffect(() => set(initialLang()), []);
+export function LangProvider({ children, fixed }: { children: React.ReactNode; fixed?: Lang }) {
+  const [lang, set] = React.useState<Lang>(fixed || "ar");
+  React.useEffect(() => { if (!fixed) set(initialLang()); }, [fixed]);
   React.useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";

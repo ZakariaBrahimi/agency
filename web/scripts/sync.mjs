@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const OUT = path.resolve('out'), SITE = path.resolve('../site');
-const PAGES = ['portal.html'];
+const PAGES = ['portal.html', 'admin.html'];
 fs.rmSync(path.join(SITE, '_next'), { recursive: true, force: true });
 fs.cpSync(path.join(OUT, '_next'), path.join(SITE, '_next'), { recursive: true });
 for (const p of PAGES) fs.copyFileSync(path.join(OUT, p), path.join(SITE, p));

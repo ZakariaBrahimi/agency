@@ -157,3 +157,20 @@
   .copy-ico.done .i-copy { display: none; }
   .copy-ico.done .i-done { display: block; }
 }
+
+/* Madar preview in the admin editor (markdown rendered by madar-schema.js) */
+@layer components {
+  .md-preview { line-height: 2; font-size: 1.05rem; }
+  .md-preview > * + * { margin-top: 0.9em; }
+  .md-preview h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.4em; }
+  .md-preview h3 { font-size: 1.2rem; font-weight: 700; margin-top: 1.2em; }
+  .md-preview ul { list-style: disc; padding-inline-start: 1.5rem; }
+  .md-preview ol { list-style: decimal; padding-inline-start: 1.5rem; }
+  .md-preview blockquote, .md-preview aside { border-inline-start: 4px solid var(--lime); background: var(--muted); padding: 0.75rem 1rem; border-radius: 0.6rem; }
+  .md-preview a { color: var(--indigo); text-decoration: underline; }
+  .md-preview code { font-family: ui-monospace, monospace; background: var(--muted); padding: 0.1rem 0.35rem; border-radius: 0.35rem; }
+  .md-preview pre { background: var(--ink); color: #fff; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; }
+  .md-preview pre code { background: transparent; }
+  .md-preview img { border-radius: 0.75rem; }
+  .md-preview mark { background: var(--lime); }
+}
