@@ -21,7 +21,12 @@ const AUTH = () => env('LINKEDIN_MOCK_BASE') || 'https://www.linkedin.com';
 const API = () => env('LINKEDIN_MOCK_BASE') || 'https://api.linkedin.com';
 const ID = () => env('LINKEDIN_CLIENT_ID');
 const SECRET = () => env('LINKEDIN_CLIENT_SECRET');
-const VERSION = () => env('LINKEDIN_VERSION') || '202510';
+// LinkedIn's REST API takes a monthly version (YYYYMM) and retires each one after about a year, so the
+// version follows the calendar: last month's (a new one can appear late in its month), stepping back a month
+// at a time if LinkedIn says a version doesn't exist. LINKEDIN_VERSION pins one if ever needed.
+const monthsAgo = (n) => { const d = new Date(); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - n); return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
+let goodVersion = '';
+const VERSIONS = () => (env('LINKEDIN_VERSION') ? [env('LINKEDIN_VERSION')] : [...new Set([goodVersion, ...[1, 2, 3, 4, 5, 6].map(monthsAgo)].filter(Boolean))]);
 // posting as a Page, and listing the Pages the person administers
 export const SCOPES = () => env('LINKEDIN_SCOPES') || 'w_organization_social rw_organization_admin';
 const POSTERS = ['ADMINISTRATOR', 'CONTENT_ADMINISTRATOR', 'DIRECT_SPONSORED_CONTENT_POSTER'];
@@ -84,10 +89,10 @@ async function tokenCall(params) {
 export async function handleCallback(req, url, getClient) {
   const raw = (req.headers.cookie || '').split(/;\s*/).find((c) => c.startsWith(COOKIE + '='));
   const st = unseal(STATE, url.searchParams.get('state') || '');
-  if (!st || st.e < Date.now() || !raw || raw.slice(COOKIE.length + 1) !== st.n) return 'linkedin-failed';
+  if (!st || st.e < Date.now() || !raw || raw.slice(COOKIE.length + 1) !== st.n) { console.error('linkedin callback: state/cookie mismatch', { state: Boolean(st), expired: st ? st.e < Date.now() : null, cookie: Boolean(raw) }); return 'linkedin-failed'; }
   if (url.searchParams.get('error') || !url.searchParams.get('code')) return 'linkedin-denied';
   const client = await getClient(st.c);
-  if (!client || !client.active) return 'linkedin-failed';
+  if (!client || !client.active) { console.error('linkedin callback: client missing or inactive'); return 'linkedin-failed'; }
   const conn = await tokenCall({ grant_type: 'authorization_code', code: url.searchParams.get('code'), redirect_uri: redirectUri() });
   if (conn.scope && !conn.scope.split(/[ ,]/).includes('w_organization_social')) return 'linkedin-scope';
   const pages = await adminPages(conn.access);
@@ -135,11 +140,16 @@ const MESSAGES = {
   429: 'بلغ لينكدإن حد النشر مؤقتًا. سيُعاد المحاولة لاحقًا.',
 };
 async function api(token, method, path, body, { raw = false } = {}) {
-  const r = await fetch(API() + path, {
-    method,
-    headers: { Authorization: `Bearer ${token}`, 'LinkedIn-Version': VERSION(), 'X-Restli-Protocol-Version': '2.0.0', ...(body ? { 'Content-Type': 'application/json' } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let r;
+  for (const v of VERSIONS()) {
+    r = await fetch(API() + path, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, 'LinkedIn-Version': v, 'X-Restli-Protocol-Version': '2.0.0', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (r.status !== 426) { goodVersion = v; break; } // 426: this version is not (or no longer) active
+    console.warn('linkedin version refused', v);
+  }
   if (raw && r.ok) return r;
   const d = await r.json().catch(() => ({}));
   if (!r.ok) {
