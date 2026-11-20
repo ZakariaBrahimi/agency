@@ -1,0 +1,84 @@
+<title>Nawa Ad Copy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
+<style>
+/* Layout: ad library. Each creative sits beside its three copy fields, grouped by service, with a sticky filter row. */
+:root{--bg:#F6F5F2;--surface:#FFFFFF;--fg:#0B1220;--muted:#5A6170;--line:#E3E1DB;--accent:#5B4BFF;--lime:#C6F432;--on-lime:#0B1220;--warn-bg:#FFF4D6;--warn-fg:#6B4E00;
+--ar:"IBM Plex Sans Arabic",Tahoma,sans-serif;--lat:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1220;--surface:#151D2E;--fg:#F3F4F7;--muted:#A9B0C0;--line:#273047;--accent:#8A7FFF;--warn-bg:#3A3112;--warn-fg:#F2D78A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1220;--surface:#151D2E;--fg:#F3F4F7;--muted:#A9B0C0;--line:#273047;--accent:#8A7FFF;--warn-bg:#3A3112;--warn-fg:#F2D78A;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--ar);font-size:16px;line-height:1.7}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header h1{font-size:clamp(28px,4vw,40px);line-height:1.25;text-wrap:balance;margin:0}
+header p{color:var(--muted);margin:8px 0 0;max-width:62ch}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--lime);margin-inline-end:10px;vertical-align:middle}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:8px;flex-wrap:wrap;padding-block:16px;margin-top:20px;border-bottom:1px solid var(--line)}
+.filters button{font:500 15px var(--ar);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 16px;border-radius:99px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters button:focus-visible,.cp:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+section.svc{margin-top:44px}
+section.svc>h2{font-size:24px;margin:0 0 4px}
+section.svc>p{color:var(--muted);margin:0 0 20px}
+.ad{display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px;margin-bottom:18px}
+.ad img{width:100%;border-radius:12px;display:block;aspect-ratio:4/5;object-fit:cover;max-width:100%}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.id{font:600 14px var(--lat);color:var(--muted);direction:ltr}
+.fields{display:grid;gap:16px;margin-top:10px}
+.f{min-width:0}
+.f .lab{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.f .lab small{font:500 12px var(--lat);direction:ltr}
+.f .txt{margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
+.f.h .txt{font-size:20px;font-weight:700;line-height:1.5}
+.cp{margin-inline-start:auto;font:500 13px var(--ar);background:transparent;color:var(--accent);border:1px solid var(--line);border-radius:99px;padding:3px 12px;cursor:pointer}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:12px;padding:10px 14px;font-size:14px}
+.cta{font-size:13px;background:var(--lime);color:var(--on-lime);border-radius:99px;padding:3px 12px;font-weight:700}
+@media (max-width:720px){.ad{grid-template-columns:1fr;padding:16px}.ad img{max-width:340px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<header><h1><span class="dot"></span>نصوص إعلانات نواة</h1>
+<p>18 تصميمًا، 3 لكل خدمة. لكل إعلان: العنوان (Headline)، النص الأساسي (Primary text)، والوصف (Description)، جاهزة للصق في مدير إعلانات ميتا. الصور بمقاس 1080×1350 (4:5).</p></header>
+<nav class="filters" id="filters" aria-label="الخدمات"></nav>
+<main id="list"></main>
+</div>
+<script>
+const SVC=[
+ ['web','المواقع والتطبيقات','نبني موقعك أو تطبيقك من الفكرة إلى الإطلاق.'],
+ ['brand','الهوية البصرية','شعار وألوان ودليل هوية وحسابات جاهزة.'],
+ ['social','تصاميم السوشيال ميديا','تقويم شهري وتصاميم ونشر مجدول.'],
+ ['ads','الإعلانات الممولة','حملات ميتا وتيك توك ومتابعة أسبوعية.'],
+ ['growth','النتائج والتطوير','تقارير شهرية وتوصيات وتحسين مستمر.'],
+ ['pay','الدفع الإلكتروني','الدفع بالبطاقة الذهبية وCIB على موقعك أو متجرك.'],
+];
+const ADS={
+'web-1':{cta:'ابدأ مشروعك',h:'موقعك يعمل عندك 24/7',p:'زبونك يبحث عنك في الليل، في العطلة، وأنت نائم.\nموقع احترافي يعرّف بمشروعك، يجيب عن أسئلته، ويستقبل طلباته في أي وقت.\n\nنصمّمه ونبنيه ونطلقه بالعربية والفرنسية والإنجليزية، وسريعًا على الهاتف.\nاكتب لنا وابدأ مشروعك هذا الأسبوع.',d:'موقع احترافي بثلاث لغات'},
+'web-2':{cta:'احجز جلسة تعارف',h:'عندك فكرة؟ نحن نبنيها',p:'من الفكرة إلى منتج يعمل في أيدي زبائنك:\n١. ورشة نفهم فيها مشروعك وجمهورك\n٢. تصميم تفاعلي تجرّبه قبل البرمجة\n٣. تطوير على دفعات، وتجرّب كل دفعة بنفسك\n٤. إطلاق ومتابعة، والكود ملكك بالكامل\n\nاحجز جلسة تعارف مجانية لمدة نصف ساعة.',d:'جلسة تعارف مجانية'},
+'web-3':{cta:'ابدأ مشروعك',h:'زبائنك يبحثون عنك. هل سيجدونك؟',p:'إذا لم يكن لمشروعك موقع، فزبونك سيجد منافسك أولًا.\nصفحة هبوط لحملتك، موقع تعريفي لشركتك، أو متجر إلكتروني لمنتجاتك: نبني ما يناسبك، بالعربية والفرنسية والإنجليزية.',d:'صفحة هبوط، موقع، أو متجر'},
+'brand-1':{cta:'ابدأ مشروعك',h:'علامة تُعرف من النظرة الأولى',p:'الزبون يحكم على مشروعك في ثوانٍ.\nنصمّم لك شعارًا وألوانًا وخطوطًا تحكي قصتك، مع دليل هوية وقوالب جاهزة يستعملها فريقك في كل منشور ومطبوعة.',d:'شعار + ألوان + دليل هوية'},
+'brand-2':{cta:'ابدأ مشروعك',h:'نفس المشروع. انطباع مختلف',p:'شعار من الإنترنت، ألوان تتغيّر في كل منشور، وحسابات بلا غلاف ولا نبذة؟\nهوية واحدة ثابتة تجعل مشروعك يبدو بحجم ما يستحق، وتجعل الزبون يتذكّرك.\n\nأرنا ما عندك اليوم، ونقترح لك البداية.',d:'هوية بصرية متكاملة'},
+'brand-3':{cta:'ابدأ مشروعك',h:'هوية كاملة وحضور جاهز',p:'كل ما يراه زبونك أول مرة، في باقة واحدة:\n✓ الشعار والألوان والخطوط\n✓ دليل الهوية وقوالب جاهزة\n✓ صور وأغلفة ونبذات حسابات فيسبوك وإنستغرام وتيك توك ولينكدإن\n✓ صفحة هبوط بلغتين أو ثلاث',d:'باقة الهوية والحضور'},
+'social-1':{cta:'ابدأ مشروعك',h:'توقّف عن السؤال: ماذا ننشر اليوم؟',p:'نخطّط محتوى شهرك كاملًا، نصمّمه بهوية مشروعك، ثم ننشره في مواعيده تلقائيًا.\nأنت تراجع وتوافق من بوابة نواة، ونحن نتكفّل بالباقي.',d:'محتوى شهري جاهز'},
+'social-2':{cta:'ابدأ مشروعك',h:'شهر كامل من المحتوى، مجدول',p:'تقويم محتوى شهري: منشورات، كاروسيل، وأغلفة ريلز.\nترى كل منشور قبل نشره، توافق عليه أو تطلب تعديله، ثم يُنشر تلقائيًا في يومه وساعته.',d:'تقويم شهري + نشر تلقائي'},
+'social-3':{cta:'ابدأ مشروعك',h:'تصميم واحد، بمقاس كل منصة',p:'إنستغرام، فيسبوك، تيك توك، ولينكدإن: لكل منصة مقاسها وجمهورها.\nنصمّم محتواك متّسقًا مع هويتك، ونكيّفه لكل منصة، وننشره من مكان واحد.',d:'نشر على 4 منصات'},
+'ads-1':{cta:'ابدأ مشروعك',h:'نوصل منتجك لمن يبحث عنه',warn:true,p:'حملات مستهدفة على فيسبوك وإنستغرام وتيك توك.\nنختار الجمهور، نصمّم عدة نسخ ونختبرها، ونتابع النتائج كل أسبوع لنضع الميزانية حيث تعطي أفضل نتيجة.',d:'إعلانات ميتا وتيك توك'},
+'ads-2':{cta:'ابدأ مشروعك',h:'لا تحرق ميزانيتك بـ«ترويج المنشور»',p:'زر «ترويج» يصرف المال بسرعة، لكنه نادرًا ما يجلب زبائن.\nحملة حقيقية تبدأ بـ:\n١. جمهور محدّد بدقة\n٢. عدة نسخ إبداعية تُختبر معًا\n٣. البكسل وتتبّع التحويلات\n٤. تقرير أسبوعي بتكلفة كل نتيجة',d:'حملات مدروسة، لا ترويج عشوائي'},
+'ads-3':{cta:'ابدأ مشروعك',h:'ميزانيتك تُدفع للمنصة مباشرة',p:'نحن ندير حملاتك على ميتا وتيك توك، وأنت تبقى المالك.\nتُدفع الميزانية من حسابك مباشرة للمنصة، وتبقى الحسابات والبيانات ملكك دائمًا. نحن نوجّهها نحو الإعلانات الأنجح.',d:'شفافية كاملة في الميزانية'},
+'growth-1':{cta:'ابدأ مشروعك',h:'نقرأ الأرقام ونخبرك بما تعنيه',warn:true,p:'الوصول، التفاعل، والتحويلات: أرقام كثيرة، وسؤال واحد يهمّك: ماذا أفعل الآن؟\nنرسل لك كل شهر تقريرًا واضحًا بلغة بسيطة، مع توصيات محدّدة للشهر القادم.',d:'تقرير شهري بتوصيات'},
+'growth-2':{cta:'ابدأ مشروعك',h:'كل شهر أفضل من الذي قبله',p:'نتعلّم من النتائج، نعدّل المحتوى والإعلانات والمنتج، ثم نطلق من جديد.\nدورة مستمرة تجعل كل شهر يبني على ما نجح في الشهر الذي قبله.',d:'نتعلّم، نعدّل، نطلق'},
+'growth-3':{cta:'ابدأ مشروعك',h:'كم كلّفك كل زبون؟',warn:true,p:'إذا لم تعرف تكلفة الزبون الواحد، فأنت لا تعرف إن كانت إعلاناتك مربحة.\nلوحة متابعة للوصول والتفاعل والتحويلات، وتكلفة كل نتيجة في كل حملة، مع توصيات محدّدة كل شهر.',d:'لوحة متابعة + تقرير شهري'},
+'pay-1':{cta:'ابدأ مشروعك',h:'متجرك يقبل الذهبية وCIB',p:'زبونك يريد الشراء الآن، لا انتظار التوصيل ليدفع.\nنضيف إلى موقعك أو متجرك الدفع الإلكتروني بالبطاقة الذهبية وبطاقة CIB، ليدفع من هاتفه في دقيقة.',d:'الدفع الإلكتروني لمتجرك'},
+'pay-2':{cta:'فعّل الدفع الإلكتروني',h:'طلبات مدفوعة مسبقًا، ومرتجعات أقل',p:'الدفع عند الاستلام فقط يعني طلبات تُرفض عند الباب ومصاريف توصيل ضائعة.\n✓ دفع آمن بالبطاقة الذهبية وCIB\n✓ بوابة دفع مرتبطة بموقعك أو متجرك\n✓ إشعار فوري مع كل عملية دفع\n✓ نتكفّل بالربط والتجربة من البداية',d:'الذهبية وCIB على موقعك'},
+'pay-3':{cta:'ابدأ مشروعك',h:'من «أريد أن أطلب» إلى «تم الدفع»',p:'موقع أو متجر جاهز للبيع، والدفع فيه بالبطاقة التي يحملها زبونك: الذهبية أو CIB.\nكل شيء في صفحة واحدة، من اختيار المنتج إلى تأكيد الدفع.',d:'موقع + دفع إلكتروني'},
+};
+const LAB={h:['العنوان','Headline'],p:['النص الأساسي','Primary text'],d:['الوصف','Description']};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+document.getElementById('list').innerHTML=SVC.map(([k,name,sub])=>`<section class="svc" data-svc="${k}"><h2>${name}</h2><p>${sub}</p>${[1,2,3].map(n=>{const id=`${k}-${n}`,a=ADS[id];return `<article class="ad"><img src="img/${id}.jpg" alt="${esc(a.h)}" loading="lazy" width="1080" height="1350"><div style="min-width:0"><div class="meta"><span class="id">${id}.png</span><span class="cta">الزر: ${a.cta}</span></div>${a.warn?'<p class="warn">الأرقام في التصميم توضيحية. استبدلها بنتائج حقيقية أو أضف عليها «مثال» قبل النشر.</p>':''}<div class="fields">${['h','p','d'].map(f=>`<div class="f ${f}"><div class="lab">${LAB[f][0]} <small>${LAB[f][1]}</small><button class="cp" type="button" data-t="${esc(a[f])}">نسخ</button></div><div class="txt">${esc(a[f])}</div></div>`).join('')}</div></div></article>`}).join('')}</section>`).join('');
+const fl=document.getElementById('filters');
+fl.innerHTML=[['all','الكل'],...SVC.map(s=>[s[0],s[1]])].map(([k,n],i)=>`<button type="button" data-k="${k}" aria-pressed="${i==0}">${n}</button>`).join('');
+fl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fl.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('section.svc').forEach(s=>s.hidden=!(b.dataset.k=='all'||s.dataset.svc==b.dataset.k));});
+document.addEventListener('click',e=>{const b=e.target.closest('.cp');if(!b)return;const done=()=>{b.textContent='نُسخ';setTimeout(()=>b.textContent='نسخ',1500)};
+const sel=()=>{const r=document.createRange();r.selectNodeContents(b.closest('.f').querySelector('.txt'));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='حدّد ثم انسخ'};
+try{navigator.clipboard.writeText(b.dataset.t).then(done,sel)}catch(_){sel()}});
+document.documentElement.dir='rtl';document.documentElement.lang='ar';
+</script>
